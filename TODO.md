@@ -1,0 +1,23 @@
+- Fix bots stuck on wall
+    - Shrink edge region to < 2*radius
+    - If stay in gray region for long enough, change turn direction
+- Why are bots passing/ghosting through dead kilobots?
+- Write up bugs/issues for Mike
+    - Turn direction
+    - Angle wrapping
+- Add pattern detection
+    - Set which feature to detect (in setup or robot_init)
+    - Belief about that feature (and maybe certainty)
+    - Belief/certainty about overall pattern
+    - Feature detection functions (including when to start/end detection)
+    - Communicating info about pattern/feature (voter models?)
+    - Somewhere store pattern type options (start with binary classification)
+- Maybe make point_in_polygon/point_in_circle XOR so you can get concentric rings (`PATTERN_RINGS`)
+- Do robots send information about their feature knowledge, pattern belief, or both?
+- How do the other robots incorporate this knowledge into their beliefs?
+    - No difference in pattern belief update based on own feature detection type
+    - Handled by message receiving function (might call helper function)
+    - Shouldn't alter feature knowledge, just pattern belief
+    - Shouldn't totally adopt neighbor pattern belief, since then you wouldn't get benefit of different agent types
+    - Should account for randomness involved in detection (might solve self/converge over long enough time - will have to test)
+- Maybe don't make observation duration match RW straight duration (esp. for short RW)
