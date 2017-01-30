@@ -1,10 +1,12 @@
 #pragma once
 #include "robot.h"
+#ifndef KILOLIB_H
+#define KILOLIB_H
 #undef RGB
 
-#define ir 1
-#define NORMAL 1
-#define tolerance 60
+const uint8_t ir = 1;
+const uint8_t NORMAL = 1;
+const uint8_t tolerance = 60;
 
 typedef double distance_measurement_t;
 
@@ -206,3 +208,4 @@ public:
 		return buffer;
 	}
 };
+#endif

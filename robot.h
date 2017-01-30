@@ -2,17 +2,18 @@
 #include <iostream>
 #ifndef ROBOT_H
 #define ROBOT_H
-#define motion_error_std .001
-#define PI 3.14159265358979324
-#define GAUSS 10000
-#define right 2
-#define left 3
-#define sensor_lightsource 1
-#define radius 16
-#define X 0
-#define Y 1
-#define T 2
-#define SECOND 32
+
+const double motion_error_std = .001;
+const double PI = 3.14159265358979324;
+const uint32_t GAUSS = 10000;
+const uint8_t right = 2;
+const uint8_t left = 3;
+const uint8_t sensor_lightsource = 1;
+const uint8_t radius = 16;
+const uint8_t X = 0;
+const uint8_t Y = 1;
+const uint8_t T = 2;
+const uint8_t SECOND = 32;
 
 struct rgb { double red, green, blue; };
 
@@ -20,10 +21,10 @@ class robot
 {
 public:
 	int id;
-	double pos[3];//x,y,theta position in real world, dont use these in controller, thats cheating!!
-	double motor_error;//value of how motors differ from ideal, dont use these, thats cheating!!
-	double comm_range = 60; //communication range between robots
-	double color[3]; //robot color output, values 0-1
+	double pos[3];  //x,y,theta position in real world, dont use these in controller, thats cheating!!
+	double motor_error;  //value of how motors differ from ideal, dont use these, thats cheating!!
+	double comm_range = 60;  //communication range between robots
+	double color[3];  //robot color output, values 0-1
 
     // TEMPORARY: Make variables accessible in main loop for debugging purposes
     uint8_t curr_level;
