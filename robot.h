@@ -29,6 +29,7 @@ public:
     // TEMPORARY: Make variables accessible in main loop for debugging purposes
     uint8_t curr_level;
     uint8_t collision_turn_dir;
+    uint32_t collision_timer;
 
     // Pull the arena width/height from main to the class. I don't know if this
     // is actually the proper way to pull this information.

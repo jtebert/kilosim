@@ -34,7 +34,7 @@ rgb RGB(double r, double g, double b)
 double time_sim;  //simulation time
 double zoom, view_x, view_y; //var. for zoom and scroll
 
-int num_robots = 25;  //number of robots running
+int num_robots = 50;  //number of robots running
 
 robot** robots; //creates an array of robots
 int* safe_distance;
@@ -47,6 +47,7 @@ FILE *results;
 char log_buffer[255];
 char log_file_buffer[buffer_size];
 
+uint32_t max_collision_timer = 30 * SECOND;  // TODO: Not sure on this duration
 
 bool log_debug_info = true;
 char log_file_name[255] = "simulation.log";
@@ -269,17 +270,20 @@ bool run_simulation_step()
 		double temp_x = speed*cos(theta) + r->pos[0];
 		double temp_y = speed*sin(theta) + r->pos[1];
         int collision_type = find_collisions(index, temp_x, temp_y);
-		if (collision_type == 0)
-		{
+		if (collision_type == 0) {  // No collision
 			r->pos[0] = temp_x;
 			r->pos[1] = temp_y;
-        } else if (collision_type == 1) {
-            // If hitting another robot, turn until you're not
+            r->collision_timer = 0;
+        } else if (collision_type == 1) {  // Hitting another kilobot
             if (r->collision_turn_dir == 0) {
                 theta -= rotation_step;  // left/CCW
             } else {
                 theta += rotation_step;  // right/CW
             }
+            if (r->collision_timer > max_collision_timer) {  // Change turn dir
+                r->collision_turn_dir = (r->collision_turn_dir + 1) % 2;
+            }
+            r->collision_timer++;
 		}
         // TODO: If hitting for long time (TBD), switch turn direction of robot
         // If a bot is touching the wall, move it the difference so it is exactly on the edge
