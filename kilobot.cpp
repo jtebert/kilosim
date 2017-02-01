@@ -88,7 +88,7 @@ const uint8_t AGENT_SHORT_RW = 1;
 const uint8_t AGENT_LONG_RW = 2;
 const uint8_t AGENT_RW = 3;
 const uint8_t AGENT_TEST = 4;
-uint8_t agent_type = AGENT_LONG_RW;
+uint8_t agent_type = AGENT_FOLLOW_EDGE;
 
 // Test agent parameters
 const uint8_t TEST_DEFAULT = 0;
@@ -126,7 +126,7 @@ const uint8_t FEATURE_TEMPORAL = 0;  // temporal
 const uint8_t FEATURE_CURVATURE = 1;  // curvature
 const uint8_t FEATURE_COLORS = 2;  // color
 #define NUM_FEATURES 3
-uint8_t detect_which_feature = FEATURE_COLORS;  // Set in setup()
+uint8_t detect_which_feature = FEATURE_CURVATURE;  // Set in setup()
 uint8_t feature_belief = 127;  // Feature belief 0-255
 uint32_t feature_observe_start_time;
 bool is_feature_disseminating = false;
@@ -143,7 +143,6 @@ uint16_t detect_color_level;
 uint32_t color_light_dur = 0;
 uint32_t color_dark_dur = 0;
 uint32_t detect_feature_start_time = 0;
-uint32_t detect_level_start_time = 0;
 // States of feature observation
 const uint8_t DETECT_FEATURE_INIT = 0;  // Begin
 const uint8_t DETECT_FEATURE_OBSERVE = 1;  // Continue (includes reset to init)
@@ -350,7 +349,8 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 // FEATURE DETECTION FUNCTIONS
 
 void detect_feature_curvature() {
-    // TODO: Detect duration of time spent turning left vs right
+    // Detect duration of time spent turning left vs right
+    // TODO: If it loses edge, make sure time spent spinning isn't included in the left/right duration accumulators
 
     if (detect_feature_state == DETECT_FEATURE_INIT) {
         //set_color(RGB(0,0,1));
@@ -390,20 +390,20 @@ void detect_feature_curvature() {
             // then start observing if it has
             detect_curvature_dir = TURN_NONE;
         }
-        if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time >= max_explore_dur) {
-            printf("%d\t%d\n", curvature_left_dur, curvature_right_dur);
+        if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > max_explore_dur) {
+            //printf("%d\t%d\n", curvature_left_dur, curvature_right_dur);
             double confidence;
             // TODO: Update this section for curvature instead of color
             if (curvature_left_dur > curvature_right_dur) {
-                set_color(RGB(1,0,0));
+                //set_color(RGB(1,0,0));
                 feature_belief = 255;
                 confidence = (double)curvature_left_dur / (color_light_dur + curvature_right_dur);
             } else if (curvature_left_dur < curvature_right_dur) {
-                set_color(RGB(1,0,1));
+                //set_color(RGB(1,0,1));
                 feature_belief = 0;
                 confidence = (double)curvature_right_dur / (curvature_left_dur + curvature_right_dur);
             } else {
-                set_color(RGB(1,1,1));
+                //set_color(RGB(1,1,1));
                 feature_belief = 127;
                 confidence = 0;
             }
@@ -445,50 +445,29 @@ void detect_feature_color() {
             color_dark_dur = 0;
             // Start observations (begin timer, set level, change state)
             detect_feature_start_time = kilo_ticks;
-            detect_level_start_time = kilo_ticks;
             detect_color_level = curr_light_level;
             detect_feature_state = DETECT_FEATURE_OBSERVE;
-            //printf("START OBSERVATION. Color: %d\n", detect_color_level);
         }
     } else if (detect_feature_state == DETECT_FEATURE_OBSERVE) {
         // Check for color change
-        if (detect_color_level != curr_light_level || !is_feature_detect_safe || kilo_ticks - detect_feature_start_time >= max_explore_dur) {
-            /*if (kilo_ticks - detect_feature_start_time >= max_explore_dur) {
-                printf("MAX DURATION REACHED (%d)\n", kilo_ticks);
-            } else if (detect_color_level != curr_light_level) {
-                printf("COLOR CHANGE: %d -> %d\n", detect_color_level, curr_light_level);
-            } else {
-                printf("INTO BORDER\n");
-            }*/
-
+        if (detect_color_level != curr_light_level || !is_feature_detect_safe) {
             // Add to accumulators if light level changes (including to gray)
             // OR if robot is no longer "safe" to observe features
             if (detect_color_level == LIGHT) {
-                color_light_dur += kilo_ticks - detect_level_start_time;
+                color_light_dur += kilo_ticks - detect_feature_start_time;
             } else if (detect_color_level == DARK) {
-                color_dark_dur += kilo_ticks - detect_level_start_time;
+                color_dark_dur += kilo_ticks - detect_feature_start_time;
             }
-
-            //printf("Colors:\t%d\t%d\n", color_light_dur, color_dark_dur);
-
             detect_color_level = curr_light_level;
             if (curr_light_level != GRAY) {
                 // Don't start new observation when in the borderlands
-                detect_level_start_time = kilo_ticks;
+                detect_feature_start_time = kilo_ticks;
                 // If in borderlands, it will check each tick if it's moved out,
                 // then start observing if it has
             }
         }
-        if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time >= max_explore_dur) {
-            //printf("Colors:\t%d\t%d\n", color_light_dur, color_dark_dur);
-
-            // DEBUG
-            if (color_dark_dur == 0 && color_light_dur == 0) {
-                //printf("%d\n", curr_light_level);
-                //printf("SAFE: %d\n", is_feature_detect_safe);
-                //printf("%d\t%d\n", kilo_ticks- detect_feature_start_time, max_explore_dur);
-            }
-
+        if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > max_explore_dur) {
+            //printf("%d\t%d\n", color_light_dur, color_dark_dur);
             double confidence;
             if (color_light_dur > color_dark_dur) {
                 //set_color(RGB(0,1,0));
@@ -506,7 +485,6 @@ void detect_feature_color() {
             // Not safe = observation period ended. Return to init state until
             // robot says it's safe to start observing again
             detect_feature_state = DETECT_FEATURE_INIT;
-            //printf("STATE RESET TO INIT\n");
             // Update message that's being sent (message_tx should take care of the rest)
             //out_message.data[2] = feature_belief;
             // Prevent the current/new feature belief from being overwritten (some sort of flag or another detect_feature_state?)
@@ -514,7 +492,6 @@ void detect_feature_color() {
             // Determine dissemination duration (exponentially related to confidence in belief: mean ratio of light vs dark * some constant)
             dissemination_duration = exp_rand(dissemination_duration_constant * confidence);
             dissemination_start_time = kilo_ticks;
-            //printf("\n");
         }
     }
 }
@@ -551,11 +528,11 @@ void update_pattern_beliefs() {
         // Set belief values in array accordingly
         is_updating_belief = false;
         if (pattern_belief[2] < 127) {
-            set_color(RGB(1, .5, 0.));
+            //set_color(RGB(1, .5, 0.));
         } else if (pattern_belief[2] > 127) {
-            set_color(RGB(0,1,0));
+            //set_color(RGB(0,1,0));
         } else {
-            set_color(RGB(1,1,1));
+            //set_color(RGB(1,1,1));
         }
     }
 }
@@ -760,11 +737,11 @@ void follow_edge() {
 			ef_turn_dir = ef_turn_dir^1;
 			spinup_motors();
 			if (ef_turn_dir == TURN_LEFT) {
-				set_motors(kilo_turn_left, kilo_turn_right*.9);
+				set_motors(kilo_turn_left, 0);
 			} else if (ef_turn_dir == TURN_RIGHT) {
-				set_motors(kilo_turn_left*.9, kilo_turn_right);
+				set_motors(0, kilo_turn_right);
 			}
-		} else if (kilo_ticks > (ef_last_changed + 30*SECOND)) {
+		} else if (kilo_ticks > (ef_last_changed + 10*SECOND)) {
 			// If a lot of time has passed since finding a "switch," consider the edge lost and return to edge search
 			ef_state = EF_INIT;
             is_feature_detect_safe = false;
@@ -842,7 +819,7 @@ void loop() {
         neighbor_info_array_locked = false;
 
         if (kilo_ticks > last_printed + 16) {
-            print_neighbor_info_array();
+            //print_neighbor_info_array();
             last_printed = kilo_ticks;
         }
 

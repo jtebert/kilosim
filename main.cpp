@@ -47,8 +47,6 @@ FILE *results;
 char log_buffer[255];
 char log_file_buffer[buffer_size];
 
-uint32_t max_collision_timer = 30 * SECOND;  // TODO: Not sure on this duration
-
 bool log_debug_info = true;
 char log_file_name[255] = "simulation.log";
 bool showscene = true;
@@ -280,8 +278,10 @@ bool run_simulation_step()
             } else {
                 theta += rotation_step;  // right/CW
             }
-            if (r->collision_timer > max_collision_timer) {  // Change turn dir
+            if (r->collision_timer > r->max_collision_timer) {  // Change turn dir
                 r->collision_turn_dir = (r->collision_turn_dir + 1) % 2;
+                r->collision_timer = 0;
+
             }
             r->collision_timer++;
 		}

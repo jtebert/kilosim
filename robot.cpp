@@ -36,6 +36,7 @@ void robot::robot_init(double x, double y, double t)
     // Pick a direction to randomly turn in event of collisions
     collision_turn_dir = rand() % 2;
     collision_timer = 0;
+    max_collision_timer = (uint32_t)rand() % (20 * SECOND) + (10 * SECOND) + 1;  // Max duration 10-30 seconds
 	//initalize robot variables
 	pos[0] = x;
 	pos[1] = y;
