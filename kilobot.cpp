@@ -127,6 +127,7 @@ const uint8_t FEATURE_CURVATURE = 1;  // curvature
 const uint8_t FEATURE_COLORS = 2;  // color
 #define NUM_FEATURES 3
 uint8_t detect_which_feature = FEATURE_CURVATURE;  // Set in setup()
+
 uint8_t feature_belief = 127;  // Feature belief 0-255
 uint32_t feature_observe_start_time;
 bool is_feature_disseminating = false;
@@ -136,13 +137,17 @@ uint32_t dissemination_start_time;
 // Accumulating variables for feature detection/determination
 uint8_t detect_curvature_dir;
 // TODO: Adjust max duration
-uint32_t max_explore_dur = 10 * SECOND;
+uint32_t max_explore_dur = 30 * SECOND;
 uint32_t curvature_right_dur = 0;
 uint32_t curvature_left_dur = 0;
+double curvature_ratio_thresh = 1.1;
+bool is_first_turn = true;
+
 uint16_t detect_color_level;
 uint32_t color_light_dur = 0;
 uint32_t color_dark_dur = 0;
 uint32_t detect_feature_start_time = 0;
+uint32_t detect_level_start_time = 0;
 // States of feature observation
 const uint8_t DETECT_FEATURE_INIT = 0;  // Begin
 const uint8_t DETECT_FEATURE_OBSERVE = 1;  // Continue (includes reset to init)
@@ -360,29 +365,33 @@ void detect_feature_curvature() {
             is_updating_belief = true;  // In loop, update pattern belief using neighbor array info
         } else if (!is_feature_disseminating && curr_light_level != GRAY && is_feature_detect_safe) {
             // Check if in correct movement state for starting observations
-            // AND color isn't GRAY (in borderlands)
-            // Reset accumulators
             curvature_left_dur = 0;
             curvature_right_dur = 0;
-            // Start observations (begin timer, set level, change state)
             detect_feature_start_time = kilo_ticks;
+            detect_level_start_time = kilo_ticks;
             detect_curvature_dir = ef_turn_dir;
             detect_feature_state = DETECT_FEATURE_OBSERVE;
+            is_first_turn = true;
         }
     } else if (detect_feature_state == DETECT_FEATURE_OBSERVE) {
         // Check for turn direction change
-        if (detect_curvature_dir != ef_turn_dir) {
+        if (detect_curvature_dir != ef_turn_dir && is_feature_detect_safe) {
             // Add to accumulators if turn direction changes
-            // If edge is lost or enter borderlands, don't record the duration of the last turn
-            if (detect_curvature_dir == TURN_LEFT) {
-                curvature_left_dur += kilo_ticks - detect_feature_start_time;
-            } else if (detect_curvature_dir == TURN_RIGHT) {
-                curvature_right_dur += kilo_ticks - detect_feature_start_time;
+            // If edge is lost or enter borderlands, don't record this turn
+            // TODO: Don't count first turn (alignment)
+            if (is_first_turn) {
+                is_first_turn = false;
+            } else {
+                if (detect_curvature_dir == TURN_LEFT) {
+                    curvature_left_dur += kilo_ticks - detect_level_start_time;
+                } else if (detect_curvature_dir == TURN_RIGHT) {
+                    curvature_right_dur += kilo_ticks - detect_level_start_time;
+                }
             }
         }
         if (detect_curvature_dir != ef_turn_dir || !is_feature_detect_safe) {
             // Don't start new observation when in the borderlands
-            detect_feature_start_time = kilo_ticks;
+            detect_level_start_time = kilo_ticks;
             detect_curvature_dir = ef_turn_dir;
         } else if (detect_light_level() == GRAY) {
             // Placeholder (won't be saved) until moved out of borderlands
@@ -391,21 +400,23 @@ void detect_feature_curvature() {
             detect_curvature_dir = TURN_NONE;
         }
         if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > max_explore_dur) {
-            //printf("%d\t%d\n", curvature_left_dur, curvature_right_dur);
+            double curvature_ratio;
             double confidence;
-            // TODO: Update this section for curvature instead of color
             if (curvature_left_dur > curvature_right_dur) {
-                //set_color(RGB(1,0,0));
-                feature_belief = 255;
+                curvature_ratio = (double)curvature_left_dur / curvature_right_dur;
                 confidence = (double)curvature_left_dur / (color_light_dur + curvature_right_dur);
-            } else if (curvature_left_dur < curvature_right_dur) {
-                //set_color(RGB(1,0,1));
-                feature_belief = 0;
-                confidence = (double)curvature_right_dur / (curvature_left_dur + curvature_right_dur);
             } else {
-                //set_color(RGB(1,1,1));
-                feature_belief = 127;
-                confidence = 0;
+                curvature_ratio = (double)curvature_right_dur / curvature_left_dur;
+                confidence = (double)curvature_right_dur / (curvature_left_dur + curvature_right_dur);
+            }
+            printf("%d\t%d\t%f\n", curvature_left_dur, curvature_right_dur, curvature_ratio);
+            if (curvature_ratio >= curvature_ratio_thresh) {
+                feature_belief = 255;
+                set_color(RGB(1,0,1));
+            } else {
+                feature_belief = 0;
+                set_color(RGB(1,1,1));
+                // TODO: Set confidence different than ratio (otherwise biases toward curvature)
             }
             // Not safe = observation period ended. Return to init state until
             // robot says it's safe to start observing again
@@ -439,36 +450,35 @@ void detect_feature_color() {
             is_updating_belief = true;  // In loop, update pattern belief using neighbor array info
         } else if (!is_feature_disseminating && curr_light_level != GRAY && is_feature_detect_safe) {
             // Check if in correct movement state for starting observations
-            // AND color isn't GRAY (in borderlands)
-            // AND feature belief dissemination finished
             color_light_dur = 0;
             color_dark_dur = 0;
-            // Start observations (begin timer, set level, change state)
             detect_feature_start_time = kilo_ticks;
+            detect_level_start_time = kilo_ticks;
             detect_color_level = curr_light_level;
             detect_feature_state = DETECT_FEATURE_OBSERVE;
         }
     } else if (detect_feature_state == DETECT_FEATURE_OBSERVE) {
         // Check for color change
-        if (detect_color_level != curr_light_level || !is_feature_detect_safe) {
+        if (detect_color_level != curr_light_level || !is_feature_detect_safe || kilo_ticks- detect_feature_start_time >= max_explore_dur) {
             // Add to accumulators if light level changes (including to gray)
             // OR if robot is no longer "safe" to observe features
             if (detect_color_level == LIGHT) {
-                color_light_dur += kilo_ticks - detect_feature_start_time;
+                color_light_dur += kilo_ticks - detect_level_start_time;
             } else if (detect_color_level == DARK) {
-                color_dark_dur += kilo_ticks - detect_feature_start_time;
+                color_dark_dur += kilo_ticks - detect_level_start_time;
             }
             detect_color_level = curr_light_level;
             if (curr_light_level != GRAY) {
                 // Don't start new observation when in the borderlands
-                detect_feature_start_time = kilo_ticks;
+                detect_level_start_time = kilo_ticks;
                 // If in borderlands, it will check each tick if it's moved out,
                 // then start observing if it has
             }
         }
         if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > max_explore_dur) {
-            //printf("%d\t%d\n", color_light_dur, color_dark_dur);
+            printf("%d\t%d\t%d\n", color_light_dur, color_dark_dur, max_explore_dur);
             double confidence;
+            // TODO: Also make confidence related to duration of observation?
             if (color_light_dur > color_dark_dur) {
                 //set_color(RGB(0,1,0));
                 feature_belief = 255;
@@ -711,7 +721,7 @@ void follow_edge() {
 		random_walk(40 * SECOND, 4.5 * SECOND);
 	} else if (ef_state == EF_SEARCH) {
 		// Move until edge is detected (light change to opposite state)
-		if (curr_light_level != ef_level) {
+		if (curr_light_level != ef_level && curr_light_level != GRAY) {
 			// Edge detected! Switch to edge following state and change expected color
 			ef_state = EF_FOLLOW;
             is_feature_detect_safe = true;
@@ -742,7 +752,7 @@ void follow_edge() {
 				set_motors(0, kilo_turn_right);
 			}
 		} else if (kilo_ticks > (ef_last_changed + 10*SECOND)) {
-			// If a lot of time has passed since finding a "switch," consider the edge lost and return to edge search
+			// Edge lost! Search for a new one
 			ef_state = EF_INIT;
             is_feature_detect_safe = false;
 		}
