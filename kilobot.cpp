@@ -88,7 +88,7 @@ const uint8_t AGENT_SHORT_RW = 1;
 const uint8_t AGENT_LONG_RW = 2;
 const uint8_t AGENT_RW = 3;
 const uint8_t AGENT_TEST = 4;
-uint8_t agent_type = AGENT_FOLLOW_EDGE;
+uint8_t agent_type = AGENT_TEST;
 
 // Test agent parameters
 const uint8_t TEST_DEFAULT = 0;
@@ -126,18 +126,19 @@ const uint8_t FEATURE_TEMPORAL = 0;  // temporal
 const uint8_t FEATURE_CURVATURE = 1;  // curvature
 const uint8_t FEATURE_COLORS = 2;  // color
 #define NUM_FEATURES 3
-uint8_t detect_which_feature = FEATURE_CURVATURE;  // Set in setup()
+uint8_t detect_which_feature = FEATURE_COLORS;  // Set in setup()
 
 uint8_t feature_belief = 127;  // Feature belief 0-255
 uint32_t feature_observe_start_time;
 bool is_feature_disseminating = false;
 uint32_t dissemination_duration_constant = 10 * SECOND;
+// TODO: Adjust max duration
+uint32_t mean_explore_duration = 10 * SECOND;
+uint32_t explore_duration;
 uint32_t dissemination_duration;
 uint32_t dissemination_start_time;
 // Accumulating variables for feature detection/determination
 uint8_t detect_curvature_dir;
-// TODO: Adjust max duration
-uint32_t max_explore_dur = 30 * SECOND;
 uint32_t curvature_right_dur = 0;
 uint32_t curvature_left_dur = 0;
 double curvature_ratio_thresh = 1.1;
@@ -399,7 +400,8 @@ void detect_feature_curvature() {
             // then start observing if it has
             detect_curvature_dir = TURN_NONE;
         }
-        if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > max_explore_dur) {
+        if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > explore_duration) {
+            // TODO: Replace explore_duration
             double curvature_ratio;
             double confidence;
             if (curvature_left_dur > curvature_right_dur) {
@@ -449,17 +451,19 @@ void detect_feature_color() {
             is_feature_disseminating = false;
             is_updating_belief = true;  // In loop, update pattern belief using neighbor array info
         } else if (!is_feature_disseminating && curr_light_level != GRAY && is_feature_detect_safe) {
-            // Check if in correct movement state for starting observations
+            // Correct movement state for starting observations
             color_light_dur = 0;
             color_dark_dur = 0;
             detect_feature_start_time = kilo_ticks;
             detect_level_start_time = kilo_ticks;
             detect_color_level = curr_light_level;
             detect_feature_state = DETECT_FEATURE_OBSERVE;
+            explore_duration = exp_rand(mean_explore_duration);
         }
     } else if (detect_feature_state == DETECT_FEATURE_OBSERVE) {
         // Check for color change
-        if (detect_color_level != curr_light_level || !is_feature_detect_safe || kilo_ticks- detect_feature_start_time >= max_explore_dur) {
+        /*if (detect_color_level != curr_light_level || !is_feature_detect_safe || kilo_ticks- detect_feature_start_time >= max_explore_dur) {*/
+        if (detect_color_level != curr_light_level || !is_feature_detect_safe || color_light_dur + color_dark_dur + kilo_ticks - detect_level_start_time >= explore_duration) {
             // Add to accumulators if light level changes (including to gray)
             // OR if robot is no longer "safe" to observe features
             if (detect_color_level == LIGHT) {
@@ -475,8 +479,9 @@ void detect_feature_color() {
                 // then start observing if it has
             }
         }
-        if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > max_explore_dur) {
-            printf("%d\t%d\t%d\n", color_light_dur, color_dark_dur, max_explore_dur);
+        /*if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > max_explore_dur) {*/
+        if (color_light_dur + color_dark_dur >= explore_duration) {
+            printf("%d\t%d\t%d\t%d\n", color_light_dur, color_dark_dur, color_light_dur + color_dark_dur, explore_duration);
             double confidence;
             // TODO: Also make confidence related to duration of observation?
             if (color_light_dur > color_dark_dur) {
@@ -538,11 +543,11 @@ void update_pattern_beliefs() {
         // Set belief values in array accordingly
         is_updating_belief = false;
         if (pattern_belief[2] < 127) {
-            //set_color(RGB(1, .5, 0.));
+            set_color(RGB(1, .5, 0.));
         } else if (pattern_belief[2] > 127) {
-            //set_color(RGB(0,1,0));
+            set_color(RGB(0,1,0));
         } else {
-            //set_color(RGB(1,1,1));
+            set_color(RGB(1,1,1));
         }
     }
 }
@@ -774,8 +779,9 @@ void test_movement() {
 		}
 	} else {
 		spinup_motors();
-        set_motors(kilo_turn_left, 0);
-		//set_motors(kilo_straight_left, kilo_straight_right);
+        set_motors(kilo_straight_left, kilo_straight_right);
+        //set_motors(kilo_turn_left, 0);
+        //set_motors(0, kilo_turn_right);
 	}
 }
 

@@ -3,7 +3,7 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
-const double motion_error_std = .001;
+const double motion_error_std = .02;
 const double PI = 3.14159265358979324;
 const uint32_t GAUSS = 10000;
 const uint8_t right = 2;
@@ -72,8 +72,8 @@ public:
 
 	virtual void *get_message() = 0;
 
-	double forward_speed = 0.5;
-    double turn_speed = 1.0;
+	double forward_speed = 24;  // mm/s
+    double turn_speed = 0.5;  // rad/s
 
 	double battery = -1;
 

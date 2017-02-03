@@ -11,5 +11,5 @@ const uint8_t SKIPFRAMES = 0;
 const int shuffles = 20;
 const int circledef = 30;
 
-int arena_width = 2400;
-int arena_height = 2400;
+int arena_width = 2438;  // mm
+int arena_height = 2438;  // mm

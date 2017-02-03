@@ -34,14 +34,14 @@ rgb RGB(double r, double g, double b)
 double time_sim;  //simulation time
 double zoom, view_x, view_y; //var. for zoom and scroll
 
-int num_robots = 20;  //number of robots running
+int num_robots = 10;  //number of robots running
 
 robot** robots; //creates an array of robots
 int* safe_distance;
 int* order;
 
 int delay = delay_init;
-int draw_delay=1;
+int draw_delay = 1;
 FILE *results;
 
 char log_buffer[255];
@@ -188,6 +188,7 @@ bool run_simulation_step()
 	lastrun++;
 
 	total_secs = lastrun / SECOND;
+    double dt = 1.0 / SECOND;  // Time change for speed determination
 
 	int secs = total_secs % 60;
 	int mins = (total_secs / 60) % 60;
@@ -230,8 +231,8 @@ bool run_simulation_step()
 					{
 						if (rd->comm_in_criteria(rs->pos[0], rs->pos[1], range, msg))
 						{
-								rs->received();
-								//break;
+							rs->received();
+							//break;
 						}
 					}
 				}
@@ -248,25 +249,33 @@ bool run_simulation_step()
 
 		double theta = r->pos[2];
 		double speed = 0;
+        double temp_x;
+		double temp_y;
 		switch (r->motor_command) {
     		case 1: {  // forward
-    			theta += r->motor_error;
-    			speed = r->forward_speed;
+    			theta += r->motor_error * dt;
+    			speed = r->forward_speed * dt;
+                temp_x = speed*cos(theta) + r->pos[0];
+        		temp_y = speed*sin(theta) + r->pos[1];
     			break;
     		}
     		case 2: {  // CW rotation
-    			theta -= rotation_step;
-    			speed = r->turn_speed;
+    			theta -= r->turn_speed * dt;
+                temp_x = r->pos[0] + radius * cos(11*PI/6+r->pos[2]) + radius * cos(5*PI/6+theta);
+                temp_y = r->pos[1] + radius * sin(11*PI/6+r->pos[2]) + radius * sin(5*PI/6+theta);
+                /*printf("(x', y'): %f\t%f\n",
+                    r->pos[0] + radius * cos(11*PI/6), r->pos[1] + radius * sin(11*PI/6));
+                printf("(%f, %f)\t(%f, %f)\n", r->pos[0], r->pos[1], temp_x, temp_y);*/
     			break;
     		}
     		case 3: { // CCW rotation
-    			theta += rotation_step;
-    			speed = r->turn_speed;
+    			theta += r->turn_speed * dt;
+                temp_x = r->pos[0] + radius * cos(7*PI/6+r->pos[2]) + radius * cos(theta+PI/6);
+                temp_y = r->pos[1] + radius * sin(7*PI/6+r->pos[2]) + radius * sin(theta+PI/6);
     			break;
     		}
 		}
-		double temp_x = speed*cos(theta) + r->pos[0];
-		double temp_y = speed*sin(theta) + r->pos[1];
+
         int collision_type = find_collisions(index, temp_x, temp_y);
 		if (collision_type == 0) {  // No collision
 			r->pos[0] = temp_x;
@@ -274,9 +283,9 @@ bool run_simulation_step()
             r->collision_timer = 0;
         } else if (collision_type == 1) {  // Hitting another kilobot
             if (r->collision_turn_dir == 0) {
-                theta -= rotation_step;  // left/CCW
+                theta -= r->turn_speed * dt;  // left/CCW
             } else {
-                theta += rotation_step;  // right/CW
+                theta += r->turn_speed * dt;  // right/CW
             }
             if (r->collision_timer > r->max_collision_timer) {  // Change turn dir
                 r->collision_turn_dir = (r->collision_turn_dir + 1) % 2;
