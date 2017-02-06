@@ -702,7 +702,6 @@ void follow_edge() {
 
 	// Get current light level
     curr_light_level = detect_light_level();
-    light_dummy = curr_light_level;
 
 	// Move accordingly
 	uint8_t wall_hit = find_wall_collision();

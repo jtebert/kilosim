@@ -267,40 +267,20 @@ bool run_simulation_step()
     		case 2: {  // CW rotation
                 phi = -r->turn_speed * dt;
     			theta += phi;
-                x_l = x + radius *cos(theta+4*PI/3);
-                y_l = y + radius * sin(theta+4*PI/3);
-                x_diff = x - x_l;
-                y_diff = y - y_l;
-                x_diff_dash = x_diff * cos(phi) - y_diff * sin(phi);
-                y_diff_dash = x_diff * sin(phi) + y_diff * cos(phi);
-                x_dash = x_l + x_diff_dash;
-                y_dash = y_l + y_diff_dash;
-                temp_x = x_dash;
-                temp_y = y_dash;
-
-                /*temp_x = r->pos[0] + radius*cos(4*PI/3+r->pos[2]) + radius*cos(r->turn_speed * dt);
-                temp_y = r->pos[1] + radius*sin(4*PI/3+r->pos[2]) + radius*sin(r->turn_speed * dt);*/
-                /*printf("(x', y'): %f\t%f\n",
-                    r->pos[0] + radius * cos(11*PI/6), r->pos[1] + radius * sin(11*PI/6));
-                printf("(%f, %f)\t(%f, %f)\n", r->pos[0], r->pos[1], temp_x, temp_y);*/
+                double temp_cos = radius * cos(theta + 4*PI/3);
+                double temp_sin = radius * sin(theta + 4*PI/3);
+                temp_x = x + temp_cos - temp_cos*cos(phi) + temp_sin*sin(phi);
+                temp_y = y + temp_sin - temp_cos*sin(phi) - temp_sin*cos(phi);
     			break;
     		}
     		case 3: { // CCW rotation
                 phi = r->turn_speed * dt;
     			theta += phi;
-                x_l = x + radius *cos(theta+2*PI/3);
-                y_l = y + radius * sin(theta+2*PI/3);
-                x_diff = x - x_l;
-                y_diff = y - y_l;
-                x_diff_dash = x_diff * cos(phi) - y_diff * sin(phi);
-                y_diff_dash = x_diff * sin(phi) + y_diff * cos(phi);
-                x_dash = x_l + x_diff_dash;
-                y_dash = y_l + y_diff_dash;
-                temp_x = x_dash;
-                temp_y = y_dash;
-                //temp_x = r->pos[0] + radius * cos(2*PI/3+r->pos[2]) + radius * cos(r->turn_speed * dt);
-                //temp_y = r->pos[1] + radius * sin(2*PI/3+r->pos[2]) + radius * sin(r->turn_speed * dt);
-    			break;
+                double temp_cos = radius * cos(theta + 2*PI/3);
+                double temp_sin = radius * sin(theta + 2*PI/3);
+                temp_x = x + temp_cos - temp_cos*cos(phi) + temp_sin*sin(phi);
+                temp_y = y + temp_sin - temp_cos*sin(phi) - temp_sin*cos(phi);
+                break;
     		}
 		}
 
@@ -322,16 +302,9 @@ bool run_simulation_step()
             }
             r->collision_timer++;
 		}
-        // TODO: If hitting for long time (TBD), switch turn direction of robot
         // If a bot is touching the wall, move it the difference so it is exactly on the edge
         r->pos[2] = wrap_angle(theta);
 		//r->pos[2] = theta;
-
-
-        if (i == 0) {
-            printf("(%f, %f) %f\t%d\n", r->pos[0], r->pos[1], r->pos[2], r->light_dummy);
-        }
-
 	}
 	static int lastsec =-1;
 	bool result = false;
@@ -365,9 +338,7 @@ bool run_simulation_step()
         }
         snapshotcounter--;
     }*/
-	if(lastrun%draw_delay==0)
-		return true;
-	return false;
+    return lastrun % draw_delay == 0;
 }
 
 void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius) {
