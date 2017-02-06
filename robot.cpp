@@ -49,9 +49,26 @@ void robot::robot_init(double x, double y, double t)
 	// Generate CLAMPED motor error (avoid extremed by regenerating)
 	motor_error = 100;
 	double motor_error_clamp = motion_error_std * 1.1;
-	while (motor_error > motor_error_clamp || motor_error < -1 * motor_error_clamp) {
+	while (abs(motor_error) > motor_error_clamp) {
 		timer = rand() / 100;
 		motor_error = robot::gauss_rand(timer)*motion_error_std;
 	}
+    // Add random variation to forward/turn speeds
+    double turn_speed_error = 100;
+    double turn_speed_error_std = turn_speed * 0.1;  // 5% of turn speed
+    double turn_speed_error_clamp = turn_speed_error_std * 1.1;
+    while (abs(turn_speed_error) > turn_speed_error_clamp) {
+		timer = rand() / 100;
+		turn_speed_error = robot::gauss_rand(timer)*turn_speed_error_std;
+	}
+    turn_speed = turn_speed + turn_speed_error;
+    double forward_speed_error = 100;
+    double forward_speed_error_std = forward_speed * 0.1;  // 5% of turn speed
+    double forward_speed_error_clamp = forward_speed_error_std * 1.1;
+    while (abs(forward_speed_error) > forward_speed_error_clamp) {
+		timer = rand() / 100;
+		forward_speed_error = robot::gauss_rand(timer)*forward_speed_error_std;
+	}
+    forward_speed = forward_speed + forward_speed_error;
 	init();
 }

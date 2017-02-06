@@ -39,7 +39,7 @@ circle_t circle2 = {400, 450, 150};
 std::vector<circle_t> circles = {circle1, circle2};
 
 // Rectangle defining boundary of arena (detected by light change)
-double edge_width = 32;
+double edge_width = 48;
 double a_w = arena_width - edge_width; double a_h = arena_height - edge_width;
 std::vector<point_t> arena_bounds = {{edge_width, edge_width}, {edge_width, a_h}, {a_w, a_h}, {a_w, edge_width}};
 
@@ -88,7 +88,7 @@ const uint8_t AGENT_SHORT_RW = 1;
 const uint8_t AGENT_LONG_RW = 2;
 const uint8_t AGENT_RW = 3;
 const uint8_t AGENT_TEST = 4;
-uint8_t agent_type = AGENT_FOLLOW_EDGE;
+uint8_t agent_type = AGENT_LONG_RW;
 
 // Test agent parameters
 const uint8_t TEST_DEFAULT = 0;
@@ -111,6 +111,9 @@ const uint8_t RW_STRAIGHT = 1;
 const uint8_t RW_TURN = 2;
 uint8_t rw_state = RW_INIT;
 uint32_t rw_last_changed = 0;
+uint32_t long_rw_mean_straight_dur = 240 * SECOND;  // kiloticks
+uint32_t short_rw_mean_straight_dur = 5 * SECOND;  // kiloticks
+uint32_t rw_max_turn_dur = 12 * SECOND;  // kiloticks
 // Turn/straight durations are set at the beginning of each transition to that RW state
 uint32_t rw_straight_dur;
 uint32_t rw_turn_dur;
@@ -131,9 +134,9 @@ uint8_t detect_which_feature = FEATURE_COLORS;  // Set in setup()
 uint8_t feature_belief = 127;  // Feature belief 0-255
 uint32_t feature_observe_start_time;
 bool is_feature_disseminating = false;
-uint32_t dissemination_duration_constant = 10 * SECOND;
+uint32_t dissemination_duration_constant = 60 * SECOND;
 // TODO: Adjust max duration
-uint32_t mean_explore_duration = 10 * SECOND;
+uint32_t mean_explore_duration = 60 * SECOND;
 uint32_t explore_duration;
 uint32_t dissemination_duration;
 uint32_t dissemination_start_time;
@@ -166,7 +169,7 @@ uint8_t pattern_belief[NUM_FEATURES] = {127, 127, 127};
 bool is_updating_belief = false;
 const uint8_t DMMD = 0;
 const uint8_t DMVD = 1;
-uint8_t pattern_decision_method = DMMD;
+uint8_t pattern_decision_method = DMVD;
 
 // Messages/communication
 #define NEIGHBOR_INFO_ARRAY_SIZE 20
@@ -228,7 +231,7 @@ void print_neighbor_info_array() {
 
 	printf("\n\rIndex\tID\tFeature\tBelief\tD_meas.\tN_Heard\tTime\n\r");
 	for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
-		if (neighbor_info_array[i].id != 0) {
+		//if (neighbor_info_array[i].id != 0) {
 			printf("%u\t%x\t%u\t%u\t%u\t%u\t%u\n\r",
                 //  1   2   3   4   5   6   7
 					i,
@@ -238,7 +241,7 @@ void print_neighbor_info_array() {
 					((uint8_t) neighbor_info_array[i].measured_distance),
 					neighbor_info_array[i].number_of_times_heard_from,
 					(uint16_t)(kilo_ticks - neighbor_info_array[i].time_last_heard_from));
-		}
+		//}
 	}
 }
 
@@ -373,6 +376,7 @@ void detect_feature_curvature() {
             detect_curvature_dir = ef_turn_dir;
             detect_feature_state = DETECT_FEATURE_OBSERVE;
             is_first_turn = true;
+            explore_duration = exp_rand(mean_explore_duration);
         }
     } else if (detect_feature_state == DETECT_FEATURE_OBSERVE) {
         // Check for turn direction change
@@ -513,29 +517,39 @@ void detect_feature_color() {
 void update_pattern_beliefs() {
     // TODO: Update pattern beliefs based on the contents of the neighbor array
     if (is_updating_belief) {
-        // Get all neighbors detected for each pattern
-         std::vector<std::vector<uint8_t>> neighbor_feature_beliefs(
-                 NUM_FEATURES,
-                 std::vector<uint8_t>(NEIGHBOR_INFO_ARRAY_SIZE, 0));
-        uint8_t neighbor_counts[NUM_FEATURES] = {0};
+        print_neighbor_info_array();
 
-        for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
-            uint8_t f = neighbor_info_array[i].detect_which_feature;
-            neighbor_feature_beliefs[f][neighbor_counts[f]] = neighbor_info_array[i].feature_belief;
-            neighbor_counts[f] += 1;
-        }
         if (pattern_decision_method == DMMD) {  // Majority-based decisions
             for (uint8_t f = 0; f < NUM_FEATURES; ++f) {
                 std::vector<uint8_t> histogram(UINT8_MAX+1, 0);
-                for (uint8_t i = 0; i < neighbor_counts[f]; ++i) {
-                    ++histogram[neighbor_feature_beliefs[f][i]];
+                for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
+                    if (neighbor_info_array[i].id != 0 && neighbor_info_array[i].detect_which_feature == f) {
+                        ++histogram[neighbor_info_array[i].feature_belief];
+                    }
                 }
                 pattern_belief[f] = std::max_element(histogram.begin(), histogram.end()) - histogram.begin();
             }
         } else if (pattern_decision_method == DMVD) {  // Voter-based decisions
+            // TODO: Gives floating point exception. Somewhere. Caused by DMVD
+            std::vector<uint8_t> choices(NEIGHBOR_INFO_ARRAY_SIZE);
+            uint8_t num_choices = 0;
             for (uint8_t f = 0; f < NUM_FEATURES; ++f) {
-                int ind = rand_hard() % neighbor_counts[f];
-                pattern_belief[f] = neighbor_feature_beliefs[f][ind];
+                printf("FEATURE: %d\n", f);
+                for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
+                    if (neighbor_info_array[i].id != 0 && neighbor_info_array[i].detect_which_feature == f) {
+                        choices[num_choices] = neighbor_info_array[i].feature_belief;
+                        printf("%d\n", choices[num_choices]);
+                        num_choices++;
+                    }
+                }
+                // Select from valid indices
+                if (num_choices != 0) {
+                    int ind = rand_hard() % num_choices;
+                    pattern_belief[f] = choices[ind];
+                    printf("New belief: %d\n", pattern_belief[f]);
+                } else {
+                    printf("No belief update\n");
+                }
             }
         }
         // Use either DMMD or DMVD (probably set a variable somewhere for that)
@@ -722,7 +736,7 @@ void follow_edge() {
 		ef_state = EF_SEARCH;
         is_feature_detect_safe = false;
 		rw_state = RW_INIT;
-		random_walk(40 * SECOND, 4.5 * SECOND);
+		random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
 	} else if (ef_state == EF_SEARCH) {
 		// Move until edge is detected (light change to opposite state)
 		if (curr_light_level != ef_level && curr_light_level != GRAY) {
@@ -741,7 +755,7 @@ void follow_edge() {
 			// TODO: Doesn't have to be left, picked arbitrarily
 		} else {
 			// Keep doing random walk search for an edge
-			random_walk(40 * SECOND, 4.5 * SECOND);
+			random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
 		}
 	} else if (ef_state == EF_FOLLOW) {
 		// EDGE FOLLOWING: When color change is detected, rotate+forward until change is detected, then go the other way.
@@ -778,8 +792,8 @@ void test_movement() {
 		}
 	} else {
 		spinup_motors();
-        //set_motors(kilo_straight_left, kilo_straight_right);
-        set_motors(kilo_turn_left, 0);
+        set_motors(kilo_straight_left, kilo_straight_right);
+        //set_motors(kilo_turn_left, 0);
         //set_motors(0, kilo_turn_right);
 	}
 }
@@ -809,9 +823,9 @@ void loop() {
 		if (agent_type == AGENT_FOLLOW_EDGE) {
 			follow_edge();
 		} else if (agent_type == AGENT_SHORT_RW) {
-			random_walk(5 * SECOND, 4.5 * SECOND);
+			random_walk(short_rw_mean_straight_dur, rw_max_turn_dur);
 		} else if (agent_type == AGENT_LONG_RW) {
-			random_walk(40 * SECOND, 4.5 * SECOND);
+			random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
 		} else if (agent_type == AGENT_TEST) {
 			test_movement();
 		}

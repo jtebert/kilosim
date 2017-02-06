@@ -34,7 +34,7 @@ rgb RGB(double r, double g, double b)
 double time_sim;  //simulation time
 double zoom, view_x, view_y; //var. for zoom and scroll
 
-int num_robots = 10;  //number of robots running
+int num_robots = 20;  //number of robots running
 
 robot** robots; //creates an array of robots
 int* safe_distance;
@@ -291,9 +291,9 @@ bool run_simulation_step()
             r->collision_timer = 0;
         } else if (collision_type == 1) {  // Hitting another kilobot
             if (r->collision_turn_dir == 0) {
-                theta -= r->turn_speed * dt;  // left/CCW
+                theta = r->pos[2] - r->turn_speed * dt;  // left/CCW
             } else {
-                theta += r->turn_speed * dt;  // right/CW
+                theta = r->pos[2] + r->turn_speed * dt;  // right/CW
             }
             if (r->collision_timer > r->max_collision_timer) {  // Change turn dir
                 r->collision_turn_dir = (r->collision_turn_dir + 1) % 2;
