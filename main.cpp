@@ -249,13 +249,11 @@ bool run_simulation_step()
 		robot *r = robots[index];
 
 		double theta = r->pos[2];
-        double temp_x;
-		double temp_y;
         double x = r->pos[0];
         double y = r->pos[1];
-
-        double x_l, y_l, x_diff, y_diff, x_diff_dash, y_diff_dash, x_dash, y_dash, phi;
-
+        double temp_x = x;;
+        double temp_y = y;
+        double temp_cos, temp_sin, phi;
 		switch (r->motor_command) {
     		case 1: {  // forward
     			//theta += r->motor_error * dt;
@@ -267,8 +265,8 @@ bool run_simulation_step()
     		case 2: {  // CW rotation
                 phi = -r->turn_speed * dt;
     			theta += phi;
-                double temp_cos = radius * cos(theta + 4*PI/3);
-                double temp_sin = radius * sin(theta + 4*PI/3);
+                temp_cos = radius * cos(theta + 4*PI/3);
+                temp_sin = radius * sin(theta + 4*PI/3);
                 temp_x = x + temp_cos - temp_cos*cos(phi) + temp_sin*sin(phi);
                 temp_y = y + temp_sin - temp_cos*sin(phi) - temp_sin*cos(phi);
     			break;
@@ -276,8 +274,8 @@ bool run_simulation_step()
     		case 3: { // CCW rotation
                 phi = r->turn_speed * dt;
     			theta += phi;
-                double temp_cos = radius * cos(theta + 2*PI/3);
-                double temp_sin = radius * sin(theta + 2*PI/3);
+                temp_cos = radius * cos(theta + 2*PI/3);
+                temp_sin = radius * sin(theta + 2*PI/3);
                 temp_x = x + temp_cos - temp_cos*cos(phi) + temp_sin*sin(phi);
                 temp_y = y + temp_sin - temp_cos*sin(phi) - temp_sin*cos(phi);
                 break;
@@ -338,7 +336,12 @@ bool run_simulation_step()
         }
         snapshotcounter--;
     }*/
-    return lastrun % draw_delay == 0;
+
+    if(lastrun%draw_delay==0)
+        return true;
+    return false;
+
+    //return lastrun % draw_delay == 0;
 }
 
 void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius) {
