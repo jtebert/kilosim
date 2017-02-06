@@ -189,6 +189,7 @@ bool run_simulation_step()
 
 	total_secs = lastrun / SECOND;
     double dt = 1.0 / SECOND;  // Time change for speed determination
+    //double dt = .1;
 
 	int secs = total_secs % 60;
 	int mins = (total_secs / 60) % 60;
@@ -248,30 +249,57 @@ bool run_simulation_step()
 		robot *r = robots[index];
 
 		double theta = r->pos[2];
-		double speed = 0;
         double temp_x;
 		double temp_y;
+        double x = r->pos[0];
+        double y = r->pos[1];
+
+        double x_l, y_l, x_diff, y_diff, x_diff_dash, y_diff_dash, x_dash, y_dash, phi;
+
 		switch (r->motor_command) {
     		case 1: {  // forward
-    			theta += r->motor_error * dt;
-    			speed = r->forward_speed * dt;
+    			//theta += r->motor_error * dt;
+    			double speed = r->forward_speed * dt;
                 temp_x = speed*cos(theta) + r->pos[0];
         		temp_y = speed*sin(theta) + r->pos[1];
     			break;
     		}
     		case 2: {  // CW rotation
-    			theta -= r->turn_speed * dt;
-                temp_x = r->pos[0] + radius * cos(11*PI/6+r->pos[2]) + radius * cos(5*PI/6+theta);
-                temp_y = r->pos[1] + radius * sin(11*PI/6+r->pos[2]) + radius * sin(5*PI/6+theta);
+                phi = -r->turn_speed * dt;
+    			theta += phi;
+                x_l = x + radius *cos(theta+4*PI/3);
+                y_l = y + radius * sin(theta+4*PI/3);
+                x_diff = x - x_l;
+                y_diff = y - y_l;
+                x_diff_dash = x_diff * cos(phi) - y_diff * sin(phi);
+                y_diff_dash = x_diff * sin(phi) + y_diff * cos(phi);
+                x_dash = x_l + x_diff_dash;
+                y_dash = y_l + y_diff_dash;
+                temp_x = x_dash;
+                temp_y = y_dash;
+
+                /*temp_x = r->pos[0] + radius*cos(4*PI/3+r->pos[2]) + radius*cos(r->turn_speed * dt);
+                temp_y = r->pos[1] + radius*sin(4*PI/3+r->pos[2]) + radius*sin(r->turn_speed * dt);*/
                 /*printf("(x', y'): %f\t%f\n",
                     r->pos[0] + radius * cos(11*PI/6), r->pos[1] + radius * sin(11*PI/6));
                 printf("(%f, %f)\t(%f, %f)\n", r->pos[0], r->pos[1], temp_x, temp_y);*/
     			break;
     		}
     		case 3: { // CCW rotation
-    			theta += r->turn_speed * dt;
-                temp_x = r->pos[0] + radius * cos(7*PI/6+r->pos[2]) + radius * cos(theta+PI/6);
-                temp_y = r->pos[1] + radius * sin(7*PI/6+r->pos[2]) + radius * sin(theta+PI/6);
+                phi = r->turn_speed * dt;
+    			theta += phi;
+                x_l = x + radius *cos(theta+2*PI/3);
+                y_l = y + radius * sin(theta+2*PI/3);
+                x_diff = x - x_l;
+                y_diff = y - y_l;
+                x_diff_dash = x_diff * cos(phi) - y_diff * sin(phi);
+                y_diff_dash = x_diff * sin(phi) + y_diff * cos(phi);
+                x_dash = x_l + x_diff_dash;
+                y_dash = y_l + y_diff_dash;
+                temp_x = x_dash;
+                temp_y = y_dash;
+                //temp_x = r->pos[0] + radius * cos(2*PI/3+r->pos[2]) + radius * cos(r->turn_speed * dt);
+                //temp_y = r->pos[1] + radius * sin(2*PI/3+r->pos[2]) + radius * sin(r->turn_speed * dt);
     			break;
     		}
 		}
@@ -298,6 +326,12 @@ bool run_simulation_step()
         // If a bot is touching the wall, move it the difference so it is exactly on the edge
         r->pos[2] = wrap_angle(theta);
 		//r->pos[2] = theta;
+
+
+        if (i == 0) {
+            printf("(%f, %f) %f\t%d\n", r->pos[0], r->pos[1], r->pos[2], r->light_dummy);
+        }
+
 	}
 	static int lastsec =-1;
 	bool result = false;
@@ -336,6 +370,24 @@ bool run_simulation_step()
 	return false;
 }
 
+void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius) {
+	int i;
+	int triangleAmount = 50; //# of triangles used to draw circle
+
+	//GLfloat radius = 0.8f; //radius
+	GLfloat twicePi = 2.0f * PI;
+
+	glBegin(GL_TRIANGLE_FAN);
+		glVertex2f(x, y); // center of circle
+		for(i = 0; i <= triangleAmount;i++) {
+			glVertex2f(
+		            x + (radius * cos(i *  twicePi / triangleAmount)),
+			    y + (radius * sin(i * twicePi / triangleAmount))
+			);
+		}
+	glEnd();
+}
+
 // Drawing routine.
 void draw_scene(void)
 {
@@ -350,14 +402,37 @@ void draw_scene(void)
 		glColor4f(0, 0, 0, 0);
 		glRectd(0, 0, arena_width, arena_height);
 
+        // Draw shapes
+        glColor3f(.3, .3, .3);
+        for (int i = 0; i < polygons.size(); i++) {
+            glBegin(GL_POLYGON);
+            for (int j = 0; j < polygons[i].size(); j++) {
+                //printf("%d\n", j);
+                //printf("%f\n", polygons[i][j].x);
+                glVertex2f(polygons[i][j].x, polygons[i][j].y);
+            }
+            glEnd();
+        }
+        for (int i = 0; i < circles.size(); i++) {
+            drawFilledCircle(circles[i].x, circles[i].y, circles[i].rad);
+        }
+
+
+        //glColor3f(1, 1, 1)
+        /*for (int i = 0; i < polygons.size(); i++) {
+            vertices = polygon_to_array(polygons[i]);
+            GLuint vbo;
+            glGenBuffers(1, &vbo);
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        }*/
+
 		glutSetWindowTitle(rt);
 		glEnable(GL_LINE_SMOOTH);
 		glLineWidth(1.0);
 		glBegin(GL_LINES);
-		for (int i = 0; i <= radius; i++)
-		{
-			for (int j = 0; j < num_robots; j++)
-			{
+		for (int i = 0; i <= radius; i++) {
+			for (int j = 0; j < num_robots; j++) {
 				glColor4f((GLfloat)robots[j]->color[0], (GLfloat)robots[j]->color[1], (GLfloat)robots[j]->color[2], 1.0);
 				glVertex2f((GLfloat)(robots[j]->pos[0]-i), (GLfloat)(robots[j]->pos[1]-ch[i]));
 				glVertex2f((GLfloat)(robots[j]->pos[0] -i), (GLfloat)(robots[j]->pos[1] + ch[i]));
@@ -365,14 +440,12 @@ void draw_scene(void)
 				glVertex2f((GLfloat)(robots[j]->pos[0] + i), (GLfloat)(robots[j]->pos[1] + ch[i]));
 			}
 		}
-		for (int j = 0; j < num_robots; j++)
-		{
+		for (int j = 0; j < num_robots; j++) {
 			glBegin(GL_LINES);
 			glColor4f(0, 0, 0, 1.0);
 			glVertex2f((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1]);
 			glVertex2f((GLfloat)(robots[j]->pos[0] + cos(robots[j]->pos[2])*radius), (GLfloat)(robots[j]->pos[1] + sin(robots[j]->pos[2])*radius));
-			if (robots[j]->dest[0] != -1)
-			{
+			if (robots[j]->dest[0] != -1) {
 				glBegin(GL_LINES);
 				glColor4f(1, 1, 1, 1.0);
 				glVertex2f((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1]);
@@ -522,7 +595,7 @@ void setup_positions()
 		double theta = rand() * 2 * PI / RAND_MAX;
 		robots[k]->robot_init(x, y, theta);
         if (k == 0) {
-            robots[k]->set_color(RGB(0,0,1));
+            //robots[k]->set_color(RGB(0,0,1));
         }
         track_id = robots[k]->id;
 		k++;
@@ -639,6 +712,8 @@ int main(int argc, char **argv)
 	else {
 		while (total_secs<timelimit)
 		{
+            char a;
+            std::cin >> a;
 			run_simulation_step();
 		}
 

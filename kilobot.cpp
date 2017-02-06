@@ -39,7 +39,7 @@ circle_t circle2 = {400, 450, 150};
 std::vector<circle_t> circles = {circle1, circle2};
 
 // Rectangle defining boundary of arena (detected by light change)
-double edge_width = 48;
+double edge_width = 32;
 double a_w = arena_width - edge_width; double a_h = arena_height - edge_width;
 std::vector<point_t> arena_bounds = {{edge_width, edge_width}, {edge_width, a_h}, {a_w, a_h}, {a_w, edge_width}};
 
@@ -88,7 +88,7 @@ const uint8_t AGENT_SHORT_RW = 1;
 const uint8_t AGENT_LONG_RW = 2;
 const uint8_t AGENT_RW = 3;
 const uint8_t AGENT_TEST = 4;
-uint8_t agent_type = AGENT_TEST;
+uint8_t agent_type = AGENT_FOLLOW_EDGE;
 
 // Test agent parameters
 const uint8_t TEST_DEFAULT = 0;
@@ -481,7 +481,6 @@ void detect_feature_color() {
         }
         /*if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > max_explore_dur) {*/
         if (color_light_dur + color_dark_dur >= explore_duration) {
-            printf("%d\t%d\t%d\t%d\n", color_light_dur, color_dark_dur, color_light_dur + color_dark_dur, explore_duration);
             double confidence;
             // TODO: Also make confidence related to duration of observation?
             if (color_light_dur > color_dark_dur) {
@@ -564,10 +563,10 @@ int16_t sample_light() {
 	// Get point at front/nose of robot
 	point_t p;
 	double t = pos[2];
-	p.x = pos[0] + radius *1 * cos(t);
-	p.y = pos[1] + radius *1* sin(t);
+	p.x = pos[0] + radius * 1 * cos(t);
+	p.y = pos[1] + radius * 1 * sin(t);
 	//p.x = pos[0];
-	//p.y = pos[1];
+    //p.y = pos[1];
     // Check if in arena boundaries. If not, return grey
     if (point_in_polygon(p, arena_bounds)) {
         // Check if in any polygon or circle
@@ -703,6 +702,7 @@ void follow_edge() {
 
 	// Get current light level
     curr_light_level = detect_light_level();
+    light_dummy = curr_light_level;
 
 	// Move accordingly
 	uint8_t wall_hit = find_wall_collision();
@@ -779,8 +779,8 @@ void test_movement() {
 		}
 	} else {
 		spinup_motors();
-        set_motors(kilo_straight_left, kilo_straight_right);
-        //set_motors(kilo_turn_left, 0);
+        //set_motors(kilo_straight_left, kilo_straight_right);
+        set_motors(kilo_turn_left, 0);
         //set_motors(0, kilo_turn_right);
 	}
 }

@@ -32,6 +32,9 @@ public:
     uint32_t collision_timer;
     uint32_t max_collision_timer;
 
+
+    uint8_t light_dummy;
+
     // Pull the arena width/height from main to the class. I don't know if this
     // is actually the proper way to pull this information.
     //printf("%d\n", arena_width);
