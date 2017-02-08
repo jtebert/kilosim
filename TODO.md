@@ -9,3 +9,4 @@
 - Determining thresholds for curvature/temporal pattern?
 - Confidence (dissemination duration) for curvature?
 - Maybe make point_in_polygon/point_in_circle XOR so you can get concentric rings (`PATTERN_RINGS`)
+- Fix: Kilobots overlap on collisions

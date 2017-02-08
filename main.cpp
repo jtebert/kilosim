@@ -330,7 +330,7 @@ bool run_simulation_step()
         snapshotcounter--;
     }*/
 
-    return lastrun % draw_delay == 0
+    return lastrun % draw_delay == 0;
 
     //return lastrun % draw_delay == 0;
 }
