@@ -83,7 +83,7 @@ public:
 	void init()
 	{
 		double two_hours = SECOND * 60 * 60 * 2;
-		battery = (1 + gauss_rand(rand())/5) * two_hours;
+        battery = (1 + gauss_rand(rand())/5) * two_hours;
 		setup();
 	}
 

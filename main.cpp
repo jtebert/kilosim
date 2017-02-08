@@ -34,7 +34,7 @@ rgb RGB(double r, double g, double b)
 double time_sim;  //simulation time
 double zoom, view_x, view_y; //var. for zoom and scroll
 
-int num_robots = 20;  //number of robots running
+int num_robots = 50;  //number of robots running
 
 robot** robots; //creates an array of robots
 int* safe_distance;
@@ -103,7 +103,60 @@ void log_info(char *s)
 		m = log_file_buffer;
 	}
 }
+
 //check to see if motion causes robots to collide
+
+
+int find_collisions(int id, double x, double y, double dt)
+{
+    // Check for collission with wall
+	if (x <= radius || x >= arena_width - radius || y <= radius || y >= arena_height - radius) return 2;
+
+	double two_r = 2 * radius;
+	int i;
+	double x_ulim = x + two_r;
+	double x_llim = x - two_r;
+	double y_ulim = y + two_r;
+	double y_llim = y - two_r;
+	for (i = 0;i < num_robots;i++) {
+		if (i != id) {
+			if (safe_distance[id*num_robots+i]) {
+				safe_distance[id*num_robots + i]--;
+			} else {
+				double dist_x = x - robots[i]->pos[0];
+				double dist_y = y - robots[i]->pos[1];
+				if (x_ulim > robots[i]->pos[0] && x_llim<robots[i]->pos[0] &&
+					y_ulim>robots[i]->pos[1] && y_llim < robots[i]->pos[1]) {
+                        //if not in the sqare limits, i dont even check the circular ones
+					double distance = sqrt(dist_x*dist_x + dist_y * dist_y);
+					if (distance < two_r) {
+						return 1;
+					}
+				} else {
+					double bd = 0;
+					if (fabs(dist_x)>fabs(dist_y)) {
+						bd = fabs(dist_x);
+					} else {
+						bd = fabs(dist_y);
+					}
+					if (bd > two_r+20) {
+						double speed = (robots[id]->forward_speed + robots[i]->forward_speed) * dt;
+						if (speed > 0) {
+							safe_distance[id*num_robots + i] = (int)((bd - (two_r + 20)) / speed);
+						} else {
+							safe_distance[id*num_robots + i] = 1000000;
+						}
+						safe_distance[i*num_robots + id] = safe_distance[id*num_robots + i];
+					}
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+
+/*
 int find_collisions(int id, double x, double y)
 {
 	double two_r = 2 * radius;
@@ -134,13 +187,13 @@ int find_collisions(int id, double x, double y)
                 } else {
                     // bd = biggest distance between 2 robots?
     				double bd = max(fabs(dist_x), fabs(dist_y));
-    				/*if (fabs(dist_x) > fabs(dist_y)) {
+    				if (fabs(dist_x) > fabs(dist_y)) {
 						bd = fabs(dist_x);
     				} else {
 						bd = fabs(dist_y);
-    				}*/
+    				}
                     if (bd > two_r + 20) {
-    					double speed = max(robots[id]->forward_speed, robots[id]->turn_speed) + max(robots[id]->forward_speed, robots[id]->turn_speed);
+    					double speed = robots[id]->forward_speed + robots[id]->forward_speed;
     					if (speed > 0) {
     						safe_distance[id*num_robots + i] = (int)((bd - (two_r + 20)) / speed);
     					} else {
@@ -153,7 +206,7 @@ int find_collisions(int id, double x, double y)
 		}
 	}
 	return 0;
-}
+}*/
 
 void save_bmp(const char *fileName)
 {
@@ -282,7 +335,7 @@ bool run_simulation_step()
     		}
 		}
 
-        int collision_type = find_collisions(index, temp_x, temp_y);
+        int collision_type = find_collisions(index, temp_x, temp_y, dt);
 		if (collision_type == 0) {  // No collision
 			r->pos[0] = temp_x;
 			r->pos[1] = temp_y;
@@ -302,10 +355,14 @@ bool run_simulation_step()
 		}
         // If a bot is touching the wall, move it the difference so it is exactly on the edge
         r->pos[2] = wrap_angle(theta);
-		//r->pos[2] = theta;
 	}
 	static int lastsec =-1;
 	bool result = false;
+
+    // TODO: log convergance info
+    //sprintf(log_buffer, "random seed: %d\n", t);
+    //log_info(log_buffer);
+
 /*
     if ((lastsec!=secs && lastrun>1 && snapshot )|| last)
     {
