@@ -105,8 +105,6 @@ void log_info(char *s)
 }
 
 //check to see if motion causes robots to collide
-
-
 int find_collisions(int id, double x, double y, double dt)
 {
     // Check for collission with wall
@@ -155,59 +153,6 @@ int find_collisions(int id, double x, double y, double dt)
 	return 0;
 }
 
-
-/*
-int find_collisions(int id, double x, double y)
-{
-	double two_r = 2 * radius;
-	int i;
-	// Check for collission with wall
-	if (x <= radius || x >= arena_width - radius || y <= radius || y >= arena_height - radius) return 2;
-	double x_ulim = x + two_r;
-	double x_llim = x - two_r;
-	double y_ulim = y + two_r;
-	double y_llim = y - two_r;
-	for (i = 0; i < num_robots; i++) {
-        // id = this robot;  i = each other robot
-		if (i != id) {
-			if (safe_distance[id*num_robots+i]) {
-				safe_distance[id*num_robots + i]--;
-			} else {
-                // Distance between x,y positions of this and other robot
-				double dist_x = x - robots[i]->pos[0];
-				double dist_y = y - robots[i]->pos[1];
-				if (x_ulim > robots[i]->pos[0] &&
-    				x_llim < robots[i]->pos[0] &&
-    				y_ulim > robots[i]->pos[1] && y_llim < robots[i]->pos[1]) {
-                    // if not in the sqare limits, i dont even check the circular ones
-                    double distance = sqrt(dist_x*dist_x + dist_y * dist_y);
-	                if (distance < two_r) {
-    					return 1;
-    				}
-                } else {
-                    // bd = biggest distance between 2 robots?
-    				double bd = max(fabs(dist_x), fabs(dist_y));
-    				if (fabs(dist_x) > fabs(dist_y)) {
-						bd = fabs(dist_x);
-    				} else {
-						bd = fabs(dist_y);
-    				}
-                    if (bd > two_r + 20) {
-    					double speed = robots[id]->forward_speed + robots[id]->forward_speed;
-    					if (speed > 0) {
-    						safe_distance[id*num_robots + i] = (int)((bd - (two_r + 20)) / speed);
-    					} else {
-    						safe_distance[id*num_robots + i] = 1000000;
-    					}
-    					safe_distance[i*num_robots + id] = safe_distance[id*num_robots + i];
-    				}
-				}
-			}
-		}
-	}
-	return 0;
-}*/
-
 void save_bmp(const char *fileName)
 {
 	// The width and the height, would be the width
@@ -242,7 +187,6 @@ bool run_simulation_step()
 
 	total_secs = lastrun / SECOND;
     double dt = 1.0 / SECOND;  // Time change for speed determination
-    //double dt = .1;
 
 	int secs = total_secs % 60;
 	int mins = (total_secs / 60) % 60;
@@ -255,11 +199,9 @@ bool run_simulation_step()
     double rotation_step = .05; //motion step size
 
 	//run a step of most or all robot controllers
-	for (i = 0; i < num_robots; i++)
-	{
+	for (i = 0; i < num_robots; i++) {
 		//run controller this time step with p_control_execute probability
-		if ((rand())<(int)(p_control_execute*RAND_MAX))
-		{
+		if ((rand())<(int)(p_control_execute*RAND_MAX)) {
 			robots[i]->robot_controller();
 		}
 	}
@@ -267,24 +209,18 @@ bool run_simulation_step()
 	int seed;
 	seed = (rand() % shuffles) * num_robots;
 	//let robots communicate
-	for (i = 0; i < num_robots; i++)
-	{
+	for (i = 0; i < num_robots; i++) {
 		int index = order[seed + i];
 		robot *rs = robots[index];
 		//if robot wants to communicate, send message to all robots within distance comm_range
 		void *msg = rs->get_message();
-		if (msg)
-		{
-			for (j = 0; j < num_robots; j++)
-			{
+		if (msg) {
+			for (j = 0; j < num_robots; j++) {
 				robot *rd = robots[j];
-				if (j != index)
-				{
+				if (j != index) {
 					double range = rs->comm_out_criteria(rd->pos[0], rd->pos[1], safe_distance[index * num_robots + j]);
-					if (range)
-					{
-						if (rd->comm_in_criteria(rs->pos[0], rs->pos[1], range, msg))
-						{
+					if (range) {
+						if (rd->comm_in_criteria(rs->pos[0], rs->pos[1], range, msg)) {
 							rs->received();
 							//break;
 						}
@@ -296,8 +232,7 @@ bool run_simulation_step()
 
 	seed = (rand() % shuffles) * num_robots;
 	//move robots
-	for (i = 0; i < num_robots; i++)
-	{
+	for (i = 0; i < num_robots; i++) {
 		int index = order[seed + i];
 		robot *r = robots[index];
 
@@ -353,7 +288,8 @@ bool run_simulation_step()
             }
             r->collision_timer++;
 		}
-        // If a bot is touching the wall, move it the difference so it is exactly on the edge
+        // If a bot is touching the wall (collision_type == 2), no position update
+
         r->pos[2] = wrap_angle(theta);
 	}
 	static int lastsec =-1;
@@ -394,9 +330,7 @@ bool run_simulation_step()
         snapshotcounter--;
     }*/
 
-    if(lastrun%draw_delay==0)
-        return true;
-    return false;
+    return lastrun % draw_delay == 0
 
     //return lastrun % draw_delay == 0;
 }
@@ -412,7 +346,7 @@ void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius) {
 		glVertex2f(x, y); // center of circle
 		for(i = 0; i <= triangleAmount;i++) {
 			glVertex2f(
-		            x + (radius * cos(i *  twicePi / triangleAmount)),
+                x + (radius * cos(i *  twicePi / triangleAmount)),
 			    y + (radius * sin(i * twicePi / triangleAmount))
 			);
 		}
@@ -428,8 +362,7 @@ void draw_scene(void)
 
 	takesnapshot = run_simulation_step();
 
-	if(takesnapshot)
-	{
+	if(takesnapshot) {
 		glColor4f(0, 0, 0, 0);
 		glRectd(0, 0, arena_width, arena_height);
 
@@ -447,16 +380,6 @@ void draw_scene(void)
         for (int i = 0; i < circles.size(); i++) {
             drawFilledCircle(circles[i].x, circles[i].y, circles[i].rad);
         }
-
-
-        //glColor3f(1, 1, 1)
-        /*for (int i = 0; i < polygons.size(); i++) {
-            vertices = polygon_to_array(polygons[i]);
-            GLuint vbo;
-            glGenBuffers(1, &vbo);
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        }*/
 
 		glutSetWindowTitle(rt);
 		glEnable(GL_LINE_SMOOTH);
@@ -506,27 +429,23 @@ void draw_scene(void)
 
 	}
 
-	if (last)
-	{
+	if (last) {
 		log_info(NULL);
 		exit(0);
 	}
-	if (total_secs >= timelimit)
-	{
+	if (total_secs >= timelimit) {
 		last = true;
 	}
 }
 
 // Initialization routine.
-void setup(void)
-{
+void setup(void) {
 	for (int i = 0; i < num_robots; i++)
 		for (int j = 0; j < shuffles; j++)
 				order[i + num_robots*j] = i;
 
 	for (int i = 0; i < num_robots - 1; i++)
-		for (int j = 0; j < shuffles; j++)
-		{
+		for (int j = 0; j < shuffles; j++) {
 			int index = j*num_robots + i;
 			int r = index + rand() % (num_robots - i);
 			int p = order[index];
@@ -550,10 +469,8 @@ void resize_window(int w, int h)
 }
 
 // Keyboard input processing routine.
-void key_input(unsigned char key, int x, int y)
-{
-	switch (key)
-	{
+void key_input(unsigned char key, int x, int y) {
+	switch (key) {
 	case 27:
 		exit(0);
 		break;
@@ -614,8 +531,7 @@ void setup_positions()
 	if (num_robots % columns) rows++;
 	int horizontal_separation = arena_width / (columns + 1);
 	int vertical_separation = (int)arena_height / (rows + 1);
-	for (int i = 0; i < num_robots; i++)
-	{
+	for (int i = 0; i < num_robots; i++) {
 		int c = i % columns + 1;
 		int r = i / columns + 1;
 		int hr = rand() % (horizontal_separation / 2) + horizontal_separation / 4;
@@ -625,57 +541,42 @@ void setup_positions()
 		robots[k] = new mykilobot();
 		double theta = rand() * 2 * PI / RAND_MAX;
 		robots[k]->robot_init(x, y, theta);
-        if (k == 0) {
-            //robots[k]->set_color(RGB(0,0,1));
-        }
         track_id = robots[k]->id;
 		k++;
 	}
 }
 
 // Main routine.
-int main(int argc, char **argv)
-{
-	for (int i = 0; i < argc-1; i++)
-	{
-		if (strcmp(argv[i],"/r")==0)
-		{
+int main(int argc, char **argv) {
+	for (int i = 0; i < argc-1; i++) {
+		if (strcmp(argv[i],"/r")==0) {
 			num_robots = stoi(argv[i + 1]);
 		}
-		if (strcmp(argv[i], "/l") == 0)
-		{
+		if (strcmp(argv[i], "/l") == 0) {
 			log_debug_info = argv[i + 1][0]=='y';
 		}
-		if (strcmp(argv[i], "/d") == 0)
-		{
+		if (strcmp(argv[i], "/d") == 0) {
 			showscene = argv[i + 1][0] == 'y';
 		}
-		if (strcmp(argv[i], "/aw") == 0)
-		{
+		if (strcmp(argv[i], "/aw") == 0) {
 			arena_width = stoi(argv[i + 1]);
 		}
-		if (strcmp(argv[i], "/ah") == 0)
-		{
+		if (strcmp(argv[i], "/ah") == 0) {
 			arena_height = stoi(argv[i + 1]);
 		}
-		if (strcmp(argv[i], "/t") == 0)
-		{
+		if (strcmp(argv[i], "/t") == 0) {
 			timelimit = stoi(argv[i + 1]);
 		}
-		if (strcmp(argv[i], "/f") == 0)
-		{
+		if (strcmp(argv[i], "/f") == 0) {
 			strcpy_safe(log_file_name,255, argv[i + 1]);
 		}
-		if (strcmp(argv[i], "/ss") == 0)
-		{
+		if (strcmp(argv[i], "/ss") == 0) {
 			snapshot = stoi(argv[i + 1]);
 		}
-		if (strcmp(argv[i], "/seed") == 0)
-		{
+		if (strcmp(argv[i], "/seed") == 0) {
 			seed = stoi(argv[i + 1]);
 		}
-		if (strcmp(argv[i], "/shape") == 0)
-		{
+		if (strcmp(argv[i], "/shape") == 0) {
 			strcpy_safe(shape_file_name, 255, argv[i + 1]);
 		}
 	}
@@ -686,12 +587,9 @@ int main(int argc, char **argv)
 	//seed random variable for different random behavior every time
 	unsigned int t = 0;
 
-	if (seed)
-	{
+	if (seed) {
 		t = seed;
-	}
-	else
-	{
+	} else {
 		t= (unsigned int) time(NULL);
 	}
 
@@ -716,13 +614,11 @@ int main(int argc, char **argv)
 
 	//do some open gl stuff
 
-	for (int i = 0; i < radius; i++)
-	{
+	for (int i = 0; i < radius; i++) {
 		ch[i] = sqrt(radius*radius - i*i);
 	}
 
-	if (showscene)
-	{
+	if (showscene) {
 		glutInit(&argc, argv);
 		glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 		glutInitWindowSize(windowWidth, windowHeight);
@@ -739,10 +635,8 @@ int main(int argc, char **argv)
 		glutIdleFunc(on_idle);
 		glutKeyboardFunc(key_input);
 		glutMainLoop();
-	}
-	else {
-		while (total_secs<timelimit)
-		{
+	} else {
+		while (total_secs<timelimit) {
             char a;
             std::cin >> a;
 			run_simulation_step();

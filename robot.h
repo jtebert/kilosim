@@ -17,8 +17,7 @@ const uint8_t SECOND = 32;
 
 struct rgb { double red, green, blue; };
 
-class robot
-{
+class robot {
 public:
 	int id;
 	double pos[3];  //x,y,theta position in real world, dont use these in controller, thats cheating!!
@@ -42,8 +41,7 @@ public:
 
 	//robot commanded motion 1=forward, 2=cw rotation, 3=ccw rotation, 4=stop
 	int motor_command;
-    virtual void set_color(rgb c)
-	{
+    virtual void set_color(rgb c) {
 		color[0] = c.red;
 		color[1] = c.green;
 		color[2] = c.blue;
@@ -84,66 +82,56 @@ public:
 	virtual bool comm_in_criteria(double source_x, double source_y, double distance, void *cd) = 0;
 
 	//useful
-	static double distance(double x1, double y1, double x2, double y2)
-	{
+	static double distance(double x1, double y1, double x2, double y2) {
 		double x = x1 - x2;
 		double y = y1 - y2;
 		double s = pow(x, 2) + pow(y, 2);
 		return sqrt(s);
 	}
-	static double find_theta(double x1, double y1, double x2, double y2)
-	{
+
+	static double find_theta(double x1, double y1, double x2, double y2) {
 		if (x1 == x2) return 0;
 		double x = x2 - x1;
 		double y = y2 - y1;
 
-		if (x >= 0 && y >= 0)
-		{
+		if (x >= 0 && y >= 0) {
 			return atan(y / x);
 		}
-		if (x < 0 && y < 0)
-		{
+		if (x < 0 && y < 0) {
 			return atan(y / x) + PI;
 		}
-		if (x < 0 && y > 0)
-		{
+		if (x < 0 && y > 0) {
 			return atan(abs(x) / y) + PI / 2;
 		}
 		return atan(x / abs(y)) + PI / 2 * 3;
 	}
-	static double gauss_rand(int timer)
-	{
+
+	static double gauss_rand(int timer) {
 		static double pseudogaus_rand[GAUSS + 1];
-		if (pseudogaus_rand[GAUSS] == 1)
-		{
+		if (pseudogaus_rand[GAUSS] == 1) {
 			return pseudogaus_rand[timer % GAUSS];
 		}
-		for (int i = 0; i < GAUSS;i++)
-		{
+		for (int i = 0; i < GAUSS;i++) {
 			pseudogaus_rand[i] = gaussrand();
 		};
 		pseudogaus_rand[GAUSS] = 1;
 		return pseudogaus_rand[timer % GAUSS];
 	}
-	static double tetha_diff(double t1, double t2)
-	{
+
+	static double tetha_diff(double t1, double t2) {
 		double diff = t1 - t2;
-		if (diff < -PI)
-		{
+		if (diff < -PI) {
 			diff += 2 * PI;
-		}
-		else if (diff>PI)
-		{
+		} else if (diff > PI) {
 			diff -= 2 * PI;
 		}
 		return diff;
 	}
-	virtual void received()=0;
+	virtual void received() = 0;
 
 
 private:
-	static double gaussrand()
-	{
+	static double gaussrand() {
 		static double V1, V2, S;
 		static int phase = 0;
 		double x;
@@ -159,13 +147,12 @@ private:
 			} while (S >= 1 || S == 0);
 
 			x = V1 * sqrt(-2 * log(S) / S);
-		}
-		else
+		} else
 			x = V2 * sqrt(-2 * log(S) / S);
 
 		phase = 1 - phase;
-
 		return x;
 	}
 };
+
 #endif

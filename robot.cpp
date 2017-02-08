@@ -2,14 +2,11 @@
 #include <iostream>
 #include "robot.h"
 
-void robot::robot_controller()
-{
-	if (battery > 0)
-	{
+void robot::robot_controller() {
+	if (battery > 0) {
 		timer++;
 		controller();
-		switch (motor_command)
-    		{
+		switch (motor_command) {
     		case 1: {
     			battery -= .5;
     		}
@@ -18,9 +15,7 @@ void robot::robot_controller()
     			battery -= .5;
     		}
 		}
-	}
-	else
-	{
+	} else {
 		forward_speed = 0;
         turn_speed = 0;
 		motor_command = 4;
@@ -31,8 +26,7 @@ void robot::robot_controller()
 	}
 }
 
-void robot::robot_init(double x, double y, double t)
-{
+void robot::robot_init(double x, double y, double t) {
     // Pick a direction to randomly turn in event of collisions
     collision_turn_dir = rand() % 2;
     collision_timer = 0;

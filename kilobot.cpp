@@ -180,8 +180,8 @@ const uint8_t DARK = 0;
 const uint8_t GRAY = 1;
 const uint8_t LIGHT = 2;
 uint16_t curr_light_level;  // DARK, GRAY, or LIGHT. Initialized/detected in setup()
-uint16_t edge_thresh = 300;         // Level to differentiate light vs. dark
-uint8_t ef_level;          // DARK or LIGHT level stored
+uint16_t edge_thresh = 300;  // Level to differentiate light vs. dark
+uint8_t ef_level;  // DARK or LIGHT level stored
 
 // States
 const uint8_t SET_LEVELS = 0;
@@ -241,7 +241,6 @@ uint8_t feature_belief = 127;  // Feature belief 0-255
 uint32_t feature_observe_start_time;
 bool is_feature_disseminating = false;
 uint32_t dissemination_duration_constant = 60 * SECOND;
-// TODO: Adjust max duration
 uint32_t mean_explore_duration = 60 * SECOND;
 uint32_t explore_duration;
 uint32_t dissemination_duration;
@@ -265,7 +264,7 @@ uint8_t detect_feature_state = DETECT_FEATURE_INIT;
 bool is_feature_detect_safe = false;  // Feature detection needs to be enabled in loop
 
 // Pattern that the bot thinks it sees (confidence based on what is consistent with its feature observations)
-// zB: curvature is consistent with stripes or rings; temporal is stripes or rings
+// Ex: curvature is consistent with stripes or rings; temporal is stripes or rings
 const uint8_t PATTERN_STRIPES = 0;
 const uint8_t PATTERN_DOTS = 1;
 const uint8_t PATTERN_RINGS = 2;
@@ -440,7 +439,6 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 		neighbor_info_array[index_to_insert].time_last_heard_from = kilo_ticks;
 		if (new_entry == true) {
 			neighbor_info_array[index_to_insert].id = rx_id;
-            //printf("ID: %d\n", rx_id);
 			neighbor_info_array[index_to_insert].measured_distance = measured_distance_instantaneous;
 			neighbor_info_array[index_to_insert].number_of_times_heard_from = 0;
 		} else {
@@ -466,10 +464,8 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 
 void detect_feature_curvature() {
     // Detect duration of time spent turning left vs right
-    // TODO: If it loses edge, make sure time spent spinning isn't included in the left/right duration accumulators
 
     if (detect_feature_state == DETECT_FEATURE_INIT) {
-        //set_color(RGB(0,0,1));
         if (is_feature_disseminating && kilo_ticks > dissemination_start_time + dissemination_duration) {
             // Check if dissemination time is finished
             is_feature_disseminating = false;
@@ -489,8 +485,6 @@ void detect_feature_curvature() {
         // Check for turn direction change
         if (detect_curvature_dir != ef_turn_dir && is_feature_detect_safe) {
             // Add to accumulators if turn direction changes
-            // If edge is lost or enter borderlands, don't record this turn
-            // TODO: Don't count first turn (alignment)
             if (is_first_turn) {
                 is_first_turn = false;
             } else {
@@ -507,12 +501,9 @@ void detect_feature_curvature() {
             detect_curvature_dir = ef_turn_dir;
         } else if (detect_light_level() == GRAY) {
             // Placeholder (won't be saved) until moved out of borderlands
-            // If in borderlands, it will check each tick if it's moved out,
-            // then start observing if it has
             detect_curvature_dir = TURN_NONE;
         }
         if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > explore_duration) {
-            // TODO: Replace explore_duration
             double curvature_ratio;
             double confidence;
             if (curvature_left_dur > curvature_right_dur) {
@@ -522,23 +513,16 @@ void detect_feature_curvature() {
                 curvature_ratio = (double)curvature_right_dur / curvature_left_dur;
                 confidence = (double)curvature_right_dur / (curvature_left_dur + curvature_right_dur);
             }
-            //printf("%d\t%d\t%f\n", curvature_left_dur, curvature_right_dur, curvature_ratio);
+            // TODO: Set confidence different than ratio (otherwise biases toward curvature)
             if (curvature_ratio >= curvature_ratio_thresh) {
                 feature_belief = 255;
                 //set_color(RGB(1,0,1));
             } else {
                 feature_belief = 0;
                 //set_color(RGB(0,1,1));
-                // TODO: Set confidence different than ratio (otherwise biases toward curvature)
             }
-            // Not safe = observation period ended. Return to init state until
-            // robot says it's safe to start observing again
             detect_feature_state = DETECT_FEATURE_INIT;
-            // Update message that's being sent (message_tx should take care of the rest)
-            //out_message.data[2] = feature_belief;
-            // Prevent the current/new feature belief from being overwritten (some sort of flag or another detect_feature_state?)
             is_feature_disseminating = true;  // Tell message_tx to send updated message
-            // Determine dissemination duration (exponentially related to confidence in belief: mean ratio of light vs dark * some constant)
             dissemination_duration = exp_rand(dissemination_duration_constant * confidence);
             dissemination_start_time = kilo_ticks;
         }
@@ -573,10 +557,8 @@ void detect_feature_color() {
         }
     } else if (detect_feature_state == DETECT_FEATURE_OBSERVE) {
         // Check for color change
-        /*if (detect_color_level != curr_light_level || !is_feature_detect_safe || kilo_ticks- detect_feature_start_time >= max_explore_dur) {*/
         if (detect_color_level != curr_light_level || !is_feature_detect_safe || color_light_dur + color_dark_dur + kilo_ticks - detect_level_start_time >= explore_duration) {
             // Add to accumulators if light level changes (including to gray)
-            // OR if robot is no longer "safe" to observe features
             if (detect_color_level == LIGHT) {
                 color_light_dur += kilo_ticks - detect_level_start_time;
             } else if (detect_color_level == DARK) {
@@ -586,14 +568,10 @@ void detect_feature_color() {
             if (curr_light_level != GRAY) {
                 // Don't start new observation when in the borderlands
                 detect_level_start_time = kilo_ticks;
-                // If in borderlands, it will check each tick if it's moved out,
-                // then start observing if it has
             }
         }
-        /*if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > max_explore_dur) {*/
         if (color_light_dur + color_dark_dur >= explore_duration) {
             double confidence;
-            // TODO: Also make confidence related to duration of observation?
             if (color_light_dur > color_dark_dur) {
                 //set_color(RGB(0,1,0));
                 feature_belief = 255;
@@ -607,14 +585,8 @@ void detect_feature_color() {
                 feature_belief = 127;
                 confidence = 0;
             }
-            // Not safe = observation period ended. Return to init state until
-            // robot says it's safe to start observing again
             detect_feature_state = DETECT_FEATURE_INIT;
-            // Update message that's being sent (message_tx should take care of the rest)
-            //out_message.data[2] = feature_belief;
-            // Prevent the current/new feature belief from being overwritten (some sort of flag or another detect_feature_state?)
             is_feature_disseminating = true;  // Tell message_tx to send updated message
-            // Determine dissemination duration (exponentially related to confidence in belief: mean ratio of light vs dark * some constant)
             dissemination_duration = exp_rand(dissemination_duration_constant * confidence);
             dissemination_start_time = kilo_ticks;
         }
@@ -622,7 +594,6 @@ void detect_feature_color() {
 }
 
 void update_pattern_beliefs() {
-    // TODO: Update pattern beliefs based on the contents of the neighbor array
     if (is_updating_belief) {
 
         if (pattern_decision_method == DMMD) {  // Majority-based decisions
@@ -638,8 +609,7 @@ void update_pattern_beliefs() {
                     pattern_belief[f] = new_belief;
                 }
             }
-        } else if (pattern_decision_method == DMVD) {  // Voter-based decisions
-            // TODO: Gives floating point exception. Somewhere. Caused by DMVD
+        } else if (pattern_decision_method == DMVD) {  // Voter-based decisions (lottery)
             std::vector<uint8_t> choices(NEIGHBOR_INFO_ARRAY_SIZE);
             uint8_t num_choices = 0;
             for (uint8_t f = 0; f < NUM_FEATURES; ++f) {
@@ -656,10 +626,10 @@ void update_pattern_beliefs() {
                 }
             }
         }
-        // Use either DMMD or DMVD (probably set a variable somewhere for that)
         // Set belief values in array accordingly
         is_updating_belief = false;
-        //print_neighbor_info_array();
+        print_neighbor_info_array();
+        // TODO: Set colors so it's not just based on 1 feature
         if (pattern_belief[2] < 127) {
             set_color(RGB(1, .5, 0.));
         } else if (pattern_belief[2] > 127) {
@@ -701,9 +671,9 @@ int16_t sample_light() {
                 return 1000;
             }
         }
-        return 0; // if it didn't already return a value, it's not in any of the shapes
+        return 0;
     } else {
-        // out of arena
+        // out of arena = GRAY
         return 500;
     }
 
@@ -857,7 +827,6 @@ void follow_edge() {
 				set_motors(0, kilo_turn_right);
 			}
 			ef_last_changed = kilo_ticks;
-			// TODO: Doesn't have to be left, picked arbitrarily
 		} else {
 			// Keep doing random walk search for an edge
 			random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
@@ -951,12 +920,10 @@ void loop() {
         }
         prune_neighbor_info_array();
         neighbor_info_array_locked = false;
-
         if (kilo_ticks > last_printed + 16) {
             //print_neighbor_info_array();
             last_printed = kilo_ticks;
         }
-
         // Update pattern belief based on neighbor information
         update_pattern_beliefs();
 	}
@@ -967,17 +934,13 @@ void loop() {
 
 void update_tx_message_data() {
 	tx_message_data.type = NORMAL;
-
 	// ID
 	tx_message_data.data[0] = ((uint8_t) ((own_id & 0xff00) >> 8));
 	tx_message_data.data[1] = ((uint8_t) (own_id & 0x00ff));
-
 	// Feature variable measured
 	tx_message_data.data[2] = detect_which_feature;
-    //printf("FEATURE: %d\n", tx_message_data.data[2]);
 	// Belief about feature
 	tx_message_data.data[3] = feature_belief;
-
 	tx_message_data.crc = message_crc(&tx_message_data);
 }
 
@@ -999,14 +962,6 @@ void message_rx(message_t *m, distance_measurement_t *d) {
 		rx_distance_buffer = (*d);
 		new_message = true;
 	}
-    // Extract relevant data
-    //uint8_t feature_ind = message->data[1];
-    //uint8_t new_feature_belief_val = message->data[2];
-    // TODO: implement belief update rule (likely DMMD or DMVD)
-    // Create new average and update pattern belief
-    // uint8_t new_avg = ((uint32_t)pattern_belief[feature_ind] * message_count[feature_ind] + new_feature_belief_val) / (message_count[feature_ind] + 1);
-    // pattern_belief[feature_ind] = new_avg;
-    // TODO: Update neighbor table (will get starting code from Melvin)
 }
 
 // Executed on successful message send
