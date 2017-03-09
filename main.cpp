@@ -34,7 +34,7 @@ rgb RGB(double r, double g, double b)
 double time_sim;  //simulation time
 double zoom, view_x, view_y; //var. for zoom and scroll
 
-int num_robots = 50;  //number of robots running
+int num_robots = 100;  //number of robots running
 
 robot** robots; //creates an array of robots
 int* safe_distance;
