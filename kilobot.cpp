@@ -22,7 +22,7 @@ typedef struct neighbor_info_array_t
 	float measured_distance;
 	uint16_t id;
 	uint8_t detect_which_feature;
-	uint8_t feature_belief;
+	uint8_t feature_estimate;
 	uint32_t time_last_heard_from;
 	uint8_t number_of_times_heard_from;
 } neighbor_info_array_t;
@@ -34,10 +34,10 @@ std::vector<point_t> square = {{250, 1300}, {750, 1300}, {750, 800}, {250, 800}}
 std::vector<point_t> triangle = {{300, 1600}, {1100, 1600}, {700, 2300}};
 std::vector<point_t> stripe_a = {{1600, 2400}, {1800, 2400}, {1800, 0}, {1600, 0}};
 std::vector<point_t> stripe_b = {{2000, 2400}, {2200, 2400}, {2200, 0}, {2000, 0}};
-std::vector<std::vector<point_t> > polygons = {square, triangle, stripe_a, stripe_b};
+//std::vector<std::vector<point_t> > polygons = {square, triangle, stripe_a, stripe_b};
 circle_t circle1 = {1100, 500, 300};
 circle_t circle2 = {400, 450, 150};
-std::vector<circle_t> circles = {circle1, circle2};
+//std::vector<circle_t> circles = {circle1, circle2};
 
 
 std::vector<point_t> sq00 {{0,0}, {240,0}, {240,240}, {0,240}};
@@ -143,21 +143,21 @@ std::vector<point_t> sq99 {{2160,2160}, {2400,2160}, {2400,2400}, {2160,2400}};
 //std::vector<std::vector<point_t> > polygons = {sq97, sq35, sq06, sq04, sq95, sq41, sq69, sq56, sq12, sq72, sq89, sq93, sq26, sq61, sq05, sq81, sq43, sq90, sq18, sq47, sq65, sq87, sq86, sq27, sq73, sq74, sq98, sq21, sq60, sq38, sq45, sq48, sq99, sq91, sq10, sq62, sq68, sq33, sq71, sq44};
 //std::vector<circle_t> circles = {};
 
-std::vector<point_t> stripe0 {{0,2400}, {0,0}, {20,0}, {20,2400}};
-std::vector<point_t> stripe1 {{200,2400}, {200,0}, {220,0}, {220,2400}};
-std::vector<point_t> stripe2 {{400,2400}, {400,0}, {420,0}, {420,2400}};
-std::vector<point_t> stripe3 {{600,2400}, {600,0}, {620,0}, {620,2400}};
-std::vector<point_t> stripe4 {{800,2400}, {800,0}, {820,0}, {820,2400}};
-std::vector<point_t> stripe5 {{1000,2400}, {1000,0}, {1020,0}, {1020,2400}};
-std::vector<point_t> stripe6 {{1200,2400}, {1200,0}, {1220,0}, {1220,2400}};
-std::vector<point_t> stripe7 {{1400,2400}, {1400,0}, {1420,0}, {1420,2400}};
-std::vector<point_t> stripe8 {{1600,2400}, {1600,0}, {1620,0}, {1620,2400}};
-std::vector<point_t> stripe9 {{1800,2400}, {1800,0}, {1820,0}, {1820,2400}};
-std::vector<point_t> stripe10 {{2000,2400}, {2000,0}, {2020,0}, {2020,2400}};
-std::vector<point_t> stripe11 {{2200,2400}, {2200,0}, {2220,0}, {2220,2400}};
+std::vector<point_t> stripe0 {{0,2400}, {0,0}, {40,0}, {40,2400}};
+std::vector<point_t> stripe1 {{200,2400}, {200,0}, {240,0}, {240,2400}};
+std::vector<point_t> stripe2 {{400,2400}, {400,0}, {440,0}, {440,2400}};
+std::vector<point_t> stripe3 {{600,2400}, {600,0}, {640,0}, {640,2400}};
+std::vector<point_t> stripe4 {{800,2400}, {800,0}, {840,0}, {840,2400}};
+std::vector<point_t> stripe5 {{1000,2400}, {1000,0}, {1040,0}, {1040,2400}};
+std::vector<point_t> stripe6 {{1200,2400}, {1200,0}, {1240,0}, {1240,2400}};
+std::vector<point_t> stripe7 {{1400,2400}, {1400,0}, {1440,0}, {1440,2400}};
+std::vector<point_t> stripe8 {{1600,2400}, {1600,0}, {1640,0}, {1640,2400}};
+std::vector<point_t> stripe9 {{1800,2400}, {1800,0}, {1840,0}, {1840,2400}};
+std::vector<point_t> stripe10 {{2000,2400}, {2000,0}, {2040,0}, {2040,2400}};
+std::vector<point_t> stripe11 {{2200,2400}, {2200,0}, {2240,0}, {2240,2400}};
 
-//std::vector<std::vector<point_t> > polygons = {stripe0, stripe1, stripe2, stripe3, stripe4, stripe5, stripe6, stripe7, stripe8, stripe9, stripe10, stripe11};
-//std::vector<circle_t> circles = {};
+std::vector<std::vector<point_t> > polygons = {stripe0, stripe1, stripe2, stripe3, stripe4, stripe5, stripe6, stripe7, stripe8, stripe9, stripe10, stripe11};
+std::vector<circle_t> circles = {};
 
 
 // Rectangle defining boundary of arena (detected by light change)
@@ -204,14 +204,29 @@ const uint8_t SET_LEVELS = 0;
 const uint8_t RUN_LOOP = 1;
 uint8_t state = RUN_LOOP;
 
+
+
+
+
+// Feature that this kilobot is observing (may later be changed, but for now its static)
+const uint8_t FEATURE_TEMPORAL = 0;  // temporal
+const uint8_t FEATURE_CURVATURE = 1;  // curvature
+const uint8_t FEATURE_COLORS = 2;  // color
+#define NUM_FEATURES 3
+//uint8_t detect_which_feature = FEATURE_TEMPORAL;  // Set in setup()
+
 // Different search/exploration types
-const uint8_t AGENT_FOLLOW_EDGE = 0;
-const uint8_t AGENT_SHORT_RW = 1;
+const uint8_t AGENT_REFLECTIVE = 0;
+const uint8_t AGENT_FOLLOW_EDGE = 1;
 const uint8_t AGENT_LONG_RW = 2;
-const uint8_t AGENT_REFLECTIVE = 3;
+const uint8_t AGENT_SHORT_RW = 3;
 const uint8_t AGENT_RW = 4;
 const uint8_t AGENT_TEST = 5;
-uint8_t agent_type = AGENT_REFLECTIVE;
+//uint8_t agent_type = AGENT_REFLECTIVE;
+
+
+
+
 
 // Test agent parameters
 const uint8_t TEST_DEFAULT = 0;
@@ -252,14 +267,8 @@ uint32_t bounce_dur = SECOND * 3;  // kiloticks
 uint8_t bounce_turn;
 
 // Feature detection
-// Feature that this kilobot is observing (may later be changed, but for now its static)
-const uint8_t FEATURE_TEMPORAL = 0;  // temporal
-const uint8_t FEATURE_CURVATURE = 1;  // curvature
-const uint8_t FEATURE_COLORS = 2;  // color
-#define NUM_FEATURES 3
-uint8_t detect_which_feature = FEATURE_TEMPORAL;  // Set in setup()
 
-uint8_t feature_belief = 127;  // Feature belief 0-255
+uint8_t feature_estimate = 127;  // Feature belief 0-255
 uint32_t feature_observe_start_time;
 bool is_feature_disseminating = false;
 uint32_t dissemination_duration_constant = 60 * SECOND;
@@ -271,8 +280,9 @@ uint32_t dissemination_start_time;
 uint8_t detect_curvature_dir;
 uint32_t curvature_right_dur = 0;
 uint32_t curvature_left_dur = 0;
-double curvature_ratio_thresh = 1.08;
+double curvature_ratio_thresh = 1.1;
 bool is_first_turn = true;
+uint32_t num_curv_samples = 0;  // TODO: Temporary for debugging curvature
 
 uint16_t detect_color_level;
 uint32_t color_light_dur = 0;
@@ -289,7 +299,7 @@ bool is_feature_detect_safe = false;  // Feature detection needs to be enabled i
 std::vector<uint32_t> color_light_durs;
 std::vector<uint32_t> color_dark_durs;
 const uint32_t max_explore_dur = 60 * SECOND;
-const double temporal_std_thresh = 20;
+const double temporal_std_thresh = 25;
 
 // Pattern that the bot thinks it sees (confidence based on what is consistent with its feature observations)
 // Ex: curvature is consistent with stripes or rings; temporal is stripes or rings
@@ -411,7 +421,7 @@ void print_neighbor_info_array() {
 					i,
 					neighbor_info_array[i].id,
                     neighbor_info_array[i].detect_which_feature,
-                    neighbor_info_array[i].feature_belief,
+                    neighbor_info_array[i].feature_estimate,
 					((uint8_t) neighbor_info_array[i].measured_distance),
 					neighbor_info_array[i].number_of_times_heard_from,
 					(uint16_t)(kilo_ticks - neighbor_info_array[i].time_last_heard_from));
@@ -524,7 +534,7 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 		}
 		// Update info whether it's new or not
 		neighbor_info_array[index_to_insert].detect_which_feature = m->data[2];
-		neighbor_info_array[index_to_insert].feature_belief = m->data[3];
+		neighbor_info_array[index_to_insert].feature_estimate = m->data[3];
 	}
 }
 
@@ -549,11 +559,13 @@ void detect_feature_curvature() {
             detect_feature_state = DETECT_FEATURE_OBSERVE;
             is_first_turn = true;
             explore_duration = exp_rand(mean_explore_duration);
+            num_curv_samples = 0;
         }
     } else if (detect_feature_state == DETECT_FEATURE_OBSERVE) {
         // Check for turn direction change
         if (detect_curvature_dir != ef_turn_dir && is_feature_detect_safe) {
             // Add to accumulators if turn direction changes
+            num_curv_samples += 1;
             if (is_first_turn) {
                 is_first_turn = false;
             } else {
@@ -584,12 +596,13 @@ void detect_feature_curvature() {
             }
             // TODO: Set confidence different than ratio (otherwise biases toward curvature)
             if (curvature_ratio >= curvature_ratio_thresh) {
-                feature_belief = 255;
+                feature_estimate = 255;
                 //set_color(RGB(1,0,1));
             } else {
-                feature_belief = 0;
+                feature_estimate = 0;
                 //set_color(RGB(0,1,1));
             }
+            printf("%f\t%d\n", curvature_ratio, num_curv_samples);
             detect_feature_state = DETECT_FEATURE_INIT;
             is_feature_disseminating = true;  // Tell message_tx to send updated message
             dissemination_duration = exp_rand(dissemination_duration_constant * confidence);
@@ -661,29 +674,18 @@ void detect_feature_temporal() {
             double color_light_std = stddev(color_light_durs);
             double color_dark_std = stddev(color_dark_durs);
             if (total_dur > 5 * SECOND) {
-                // Only transmit if you have data
-                /*printf("Dark: \t(%d) %d\t%f\t(%f)\n", color_dark_durs.size(), sum(color_dark_durs), color_dark_std,
-                    color_dark_std/sum(color_dark_durs)*100);
-                printf("Light: \t(%d) %d\t%f\t(%f)\n", color_light_durs.size(), sum(color_light_durs), color_light_std,
-                    color_light_std/sum(color_light_durs)*100);*/
-                //printf("VALID: %d\n\n", total_dur);
                 double total_std = nanadd(color_light_std/sum(color_light_durs)*100, color_dark_std/sum(color_dark_durs)*100);
-                //printf("%f\n", total_std);
                 if (total_std == 0) {
-                    //printf("??????\n");
-                    //set_color(RGB(1,1,1));
                     confidence = 0;
-                    feature_belief = 127;
+                    feature_estimate = 127;
                 } else if (total_std < temporal_std_thresh) {
-                    //set_color(RGB(0,0,1));
-                    feature_belief = 255;
+                    feature_estimate = 255;
                     confidence = 1 - total_std/temporal_std_thresh*.5;
-                    printf("PATTERN!\t(%f)\t%f\n", total_std, confidence);
+                    //printf("PATTERN!\t(%f)\t%f\n", total_std, confidence);
                 } else {
-                    //set_color(RGB(1,0,0));
-                    feature_belief = 0;
+                    feature_estimate = 0;
                     confidence =total_std/70*.5+.5;
-                    printf("no pattern\t(%f)\t%f\n", total_std, confidence);
+                    //printf("no pattern\t(%f)\t%f\n", total_std, confidence);
                     // TODO: fix/approximate maximum
                 }
                 // If either is 0 duration, assume patterened (only saw 1 color)
@@ -733,18 +735,18 @@ void detect_feature_color() {
             double confidence;
             if (color_light_dur > color_dark_dur) {
                 //set_color(RGB(0,1,0));
-                feature_belief = 255;
+                feature_estimate = 255;
                 confidence = (double)color_light_dur / (color_light_dur + color_dark_dur);
             } else if (color_light_dur < color_dark_dur) {
                 //set_color(RGB(1,.5,0));
-                feature_belief = 0;
+                feature_estimate = 0;
                 confidence = (double)color_dark_dur / (color_light_dur + color_dark_dur);
             } else {
                 //set_color(RGB(1,1,1));
-                feature_belief = 127;
+                feature_estimate = 127;
                 confidence = 0;
             }
-            printf("%f\n", confidence);
+            //printf("%f\n", confidence);
             detect_feature_state = DETECT_FEATURE_INIT;
             is_feature_disseminating = true;  // Tell message_tx to send updated message
             dissemination_duration = exp_rand(dissemination_duration_constant * confidence);
@@ -761,7 +763,7 @@ void update_pattern_beliefs() {
                 std::vector<uint8_t> histogram(UINT8_MAX+1, 0);
                 for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
                     if (neighbor_info_array[i].id != 0 && neighbor_info_array[i].detect_which_feature == f) {
-                        ++histogram[neighbor_info_array[i].feature_belief];
+                        ++histogram[neighbor_info_array[i].feature_estimate];
                     }
                 }
                 uint8_t new_belief = std::max_element(histogram.begin(), histogram.end()) - histogram.begin();
@@ -775,7 +777,7 @@ void update_pattern_beliefs() {
             for (uint8_t f = 0; f < NUM_FEATURES; ++f) {
                 for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
                     if (neighbor_info_array[i].id != 0 && neighbor_info_array[i].detect_which_feature == f) {
-                        choices[num_choices] = neighbor_info_array[i].feature_belief;
+                        choices[num_choices] = neighbor_info_array[i].feature_estimate;
                         num_choices++;
                     }
                 }
@@ -788,15 +790,16 @@ void update_pattern_beliefs() {
         }
         // Set belief values in array accordingly
         is_updating_belief = false;
-        // print_neighbor_info_array();
-        // TODO: Set colors so it's not just based on 1 feature
-        if (pattern_belief[0] < 127) {
-            set_color(RGB(1,0,0));
-        } else if (pattern_belief[0] > 127) {
-            set_color(RGB(0,1,0));
-        } else {
-            set_color(RGB(1,1,1));
+        uint8_t r, g, b;
+        r = (pattern_belief[0] < 127) ? 0 : 1;
+        g = (pattern_belief[1] < 127) ? 0 : 1;
+        b = (pattern_belief[2] < 127) ? 0 : 1;
+        if (r==0 && g==0 && b==0) {
+            r = 1;
+            g = 1;
+            b = 1;
         }
+        set_color(RGB(r,g,b));
     }
 }
 
@@ -1127,7 +1130,7 @@ void update_tx_message_data() {
 	// Feature variable measured
 	tx_message_data.data[2] = detect_which_feature;
 	// Belief about feature
-	tx_message_data.data[3] = feature_belief;
+	tx_message_data.data[3] = feature_estimate;
 	tx_message_data.crc = message_crc(&tx_message_data);
 }
 
