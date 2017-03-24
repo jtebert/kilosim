@@ -343,14 +343,36 @@ void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius) {
 	GLfloat twicePi = 2.0f * PI;
 
 	glBegin(GL_TRIANGLE_FAN);
-		glVertex2f(x, y); // center of circle
-		for(i = 0; i <= triangleAmount;i++) {
-			glVertex2f(
-                x + (radius * cos(i *  twicePi / triangleAmount)),
-			    y + (radius * sin(i * twicePi / triangleAmount))
-			);
-		}
+	glVertex2f(x, y); // center of circle
+	for(i = 0; i <= triangleAmount;i++) {
+		glVertex2f(
+            x + (radius * cos(i *  twicePi / triangleAmount)),
+		    y + (radius * sin(i * twicePi / triangleAmount))
+		);
+	}
 	glEnd();
+}
+
+void drawFilledTriangle(GLfloat x, GLfloat y, double rad, double theta) {
+    // Draw a filled triangle at the specified location with bearing theta
+    // size = equilateral triangle of size inscribed by circle with given radius
+    // TODO: use bearing to point in right direction
+    glBegin(GL_TRIANGLES);
+    glVertex2f(x+rad*cos(theta), y+rad*sin(theta));
+    glVertex2f(x+rad*cos(theta+2*PI/3), y+rad*sin(theta+2*PI/3));
+    glVertex2f(x+rad*cos(theta+4*PI/3), y+rad*sin(theta+4*PI/3));
+    glEnd();
+}
+
+void drawFilledSquare(GLfloat x, GLfloat y, double rad, double theta) {
+    // Draw a rectange at the specified location with bearing theta
+    // size = square of size inscribed in circle with given radius
+    glBegin(GL_QUADS);
+    glVertex2f(x+rad*cos(theta-PI/4), y+rad*sin(theta-PI/4));
+    glVertex2f(x+rad*cos(theta+PI/4), y+rad*sin(theta+PI/4));
+    glVertex2f(x+rad*cos(theta+3*PI/4), y+rad*sin(theta+3*PI/4));
+    glVertex2f(x+rad*cos(theta+5*PI/4), y+rad*sin(theta+5*PI/4));
+    glEnd();
 }
 
 // Drawing routine.
@@ -366,13 +388,11 @@ void draw_scene(void)
 		glColor4f(0, 0, 0, 0);
 		glRectd(0, 0, arena_width, arena_height);
 
-        // Draw shapes
+        // Draw projected shapes (background)
         glColor3f(.3, .3, .3);
         for (int i = 0; i < polygons.size(); i++) {
             glBegin(GL_POLYGON);
             for (int j = 0; j < polygons[i].size(); j++) {
-                //printf("%d\n", j);
-                //printf("%f\n", polygons[i][j].x);
                 glVertex2f(polygons[i][j].x, polygons[i][j].y);
             }
             glEnd();
@@ -384,8 +404,21 @@ void draw_scene(void)
 		glutSetWindowTitle(rt);
 		glEnable(GL_LINE_SMOOTH);
 		glLineWidth(1.0);
+
+        // Draw robots in different shapes depending on feature to detect
+        for (int j = 0; j < num_robots; j++) {
+            glColor4f((GLfloat)robots[j]->color[0], (GLfloat)robots[j]->color[1], (GLfloat)robots[j]->color[2], 1.0);
+            if (robots[j]->detect_which_feature == 0) {
+                drawFilledCircle((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1], radius);
+            } else if (robots[j]->detect_which_feature == 1) {
+                drawFilledTriangle((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1], radius*1.3, robots[j]->pos[2]);
+            } else  if (robots[j]->detect_which_feature == 2) {
+                drawFilledSquare((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1], radius*1.3, robots[j]->pos[2]);
+            }
+        }
+
 		glBegin(GL_LINES);
-		for (int i = 0; i <= radius; i++) {
+		/*for (int i = 0; i <= radius; i++) {
 			for (int j = 0; j < num_robots; j++) {
 				glColor4f((GLfloat)robots[j]->color[0], (GLfloat)robots[j]->color[1], (GLfloat)robots[j]->color[2], 1.0);
 				glVertex2f((GLfloat)(robots[j]->pos[0]-i), (GLfloat)(robots[j]->pos[1]-ch[i]));
@@ -393,7 +426,7 @@ void draw_scene(void)
 				glVertex2f((GLfloat)(robots[j]->pos[0] + i), (GLfloat)(robots[j]->pos[1] - ch[i]));
 				glVertex2f((GLfloat)(robots[j]->pos[0] + i), (GLfloat)(robots[j]->pos[1] + ch[i]));
 			}
-		}
+		}*/
 		for (int j = 0; j < num_robots; j++) {
 			glBegin(GL_LINES);
 			glColor4f(0, 0, 0, 1.0);

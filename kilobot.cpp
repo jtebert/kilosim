@@ -210,19 +210,19 @@ uint8_t state = RUN_LOOP;
 
 // Feature that this kilobot is observing (may later be changed, but for now its static)
 const uint8_t FEATURE_TEMPORAL = 0;  // temporal
-const uint8_t FEATURE_CURVATURE = 1;  // curvature
-const uint8_t FEATURE_COLORS = 2;  // color
+const uint8_t FEATURE_COLORS = 1;  // color
+const uint8_t FEATURE_CURVATURE = 2;  // curvature
 #define NUM_FEATURES 3
-//uint8_t detect_which_feature = FEATURE_TEMPORAL;  // Set in setup()
+//uint8_t detect_which_feature = FEATURE_CURVATURE;  // Set in setup()
 
 // Different search/exploration types
 const uint8_t AGENT_REFLECTIVE = 0;
-const uint8_t AGENT_FOLLOW_EDGE = 1;
-const uint8_t AGENT_LONG_RW = 2;
+const uint8_t AGENT_LONG_RW = 1;
+const uint8_t AGENT_FOLLOW_EDGE = 2;
 const uint8_t AGENT_SHORT_RW = 3;
 const uint8_t AGENT_RW = 4;
 const uint8_t AGENT_TEST = 5;
-//uint8_t agent_type = AGENT_REFLECTIVE;
+//uint8_t agent_type = AGENT_FOLLOW_EDGE;
 
 
 
@@ -280,7 +280,7 @@ uint32_t dissemination_start_time;
 uint8_t detect_curvature_dir;
 uint32_t curvature_right_dur = 0;
 uint32_t curvature_left_dur = 0;
-double curvature_ratio_thresh = 1.1;
+double curvature_ratio_thresh = 1.15;
 bool is_first_turn = true;
 uint32_t num_curv_samples = 0;  // TODO: Temporary for debugging curvature
 
@@ -602,7 +602,6 @@ void detect_feature_curvature() {
                 feature_estimate = 0;
                 //set_color(RGB(0,1,1));
             }
-            printf("%f\t%d\n", curvature_ratio, num_curv_samples);
             detect_feature_state = DETECT_FEATURE_INIT;
             is_feature_disseminating = true;  // Tell message_tx to send updated message
             dissemination_duration = exp_rand(dissemination_duration_constant * confidence);
@@ -788,18 +787,6 @@ void update_pattern_beliefs() {
                 }
             }
         }
-        // Set belief values in array accordingly
-        is_updating_belief = false;
-        uint8_t r, g, b;
-        r = (pattern_belief[0] < 127) ? 0 : 1;
-        g = (pattern_belief[1] < 127) ? 0 : 1;
-        b = (pattern_belief[2] < 127) ? 0 : 1;
-        if (r==0 && g==0 && b==0) {
-            r = 1;
-            g = 1;
-            b = 1;
-        }
-        set_color(RGB(r,g,b));
     }
 }
 
@@ -1064,6 +1051,7 @@ void test_movement() {
 // REQUIRED KILOBOT FUNCTIONS
 
 void setup() {
+
 	// put your setup code here, to be run only once
 	// Set initial light value
     curr_light_level = detect_light_level();
@@ -1116,6 +1104,21 @@ void loop() {
         }
         // Update pattern belief based on neighbor information
         update_pattern_beliefs();
+
+        // Update LED color based on OWN ESTIMATE
+        uint8_t est = feature_estimate/255;
+        //uint8_t est = pattern_belief[detect_which_feature]/255;
+        if (detect_which_feature == 0) {
+    		//set_color(RGB(1, 0, 1-est));
+            //set_color(RGB(1, 1-est, 1-est));
+            set_color(RGB(1, est, est));
+    	} else if (detect_which_feature == 1) {
+    		//set_color(RGB(1-est, 1, 0));
+            set_color(RGB(1-est, 1, 1-est));
+    	} else if (detect_which_feature == 2) {
+    		//set_color(RGB(0, 1-est, 1));
+            set_color(RGB(1-est, 1-est, 1));
+    	}
 	}
 }
 
