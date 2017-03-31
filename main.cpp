@@ -385,11 +385,12 @@ void draw_scene(void)
 	takesnapshot = run_simulation_step();
 
 	if(takesnapshot) {
-		glColor4f(0, 0, 0, 0);
+        //Background
+		glColor3f(.15, .15, .15);
 		glRectd(0, 0, arena_width, arena_height);
 
         // Draw projected shapes (background)
-        glColor3f(.3, .3, .3);
+        glColor3f(.6, .6, .6);
         for (int i = 0; i < polygons.size(); i++) {
             glBegin(GL_POLYGON);
             for (int j = 0; j < polygons[i].size(); j++) {
@@ -400,6 +401,13 @@ void draw_scene(void)
         for (int i = 0; i < circles.size(); i++) {
             drawFilledCircle(circles[i].x, circles[i].y, circles[i].rad);
         }
+
+        // Borderlands/edge
+        glColor3f(.3, .3, .3);
+        glRectd(0, 0, edge_width, arena_height);  // left
+        glRectd(0, 0, arena_width, edge_width);  // Bottom
+        glRectd(arena_width-edge_width, 0, arena_width, arena_height);  // right
+        glRectd(0, arena_height, arena_width, arena_height-edge_width);  // Top
 
 		glutSetWindowTitle(rt);
 		glEnable(GL_LINE_SMOOTH);

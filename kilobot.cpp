@@ -156,12 +156,32 @@ std::vector<point_t> stripe9 {{1800,2400}, {1800,0}, {1840,0}, {1840,2400}};
 std::vector<point_t> stripe10 {{2000,2400}, {2000,0}, {2040,0}, {2040,2400}};
 std::vector<point_t> stripe11 {{2200,2400}, {2200,0}, {2240,0}, {2240,2400}};
 
-std::vector<std::vector<point_t> > polygons = {stripe0, stripe1, stripe2, stripe3, stripe4, stripe5, stripe6, stripe7, stripe8, stripe9, stripe10, stripe11};
-std::vector<circle_t> circles = {};
+//std::vector<std::vector<point_t> > polygons = {stripe0, stripe1, stripe2, stripe3, stripe4, stripe5, stripe6, stripe7, stripe8, stripe9, stripe10, stripe11};
+//std::vector<circle_t> circles = {};
+
+circle_t circ_0 = {1822, 904, 119};
+circle_t circ_1 = {527, 1428, 288};
+circle_t circ_2 = {2174, 692, 137};
+circle_t circ_3 = {109, 326, 101};
+circle_t circ_4 = {1516, 1604, 265};
+circle_t circ_5 = {180, 609, 130};
+circle_t circ_6 = {910, 1152, 105};
+circle_t circ_7 = {788, 2184, 170};
+circle_t circ_8 = {397, 2169, 103};
+circle_t circ_9 = {552, 278, 275};
+circle_t circ_10 = {1824, 1965, 139};
+circle_t circ_11 = {1084, 302, 193};
+circle_t circ_12 = {1588, 294, 254};
+circle_t circ_13 = {1230, 2159, 174};
+circle_t circ_14 = {684, 1845, 113};
+circle_t circ_15 = {1661, 1208, 105};
+circle_t circ_16 = {1169, 695, 168};
+circle_t circ_17 = {2149, 1209, 239};
+std::vector<circle_t> circles = {circ_0, circ_1, circ_2, circ_3, circ_4, circ_5, circ_6, circ_7, circ_8, circ_9, circ_10, circ_11, circ_12, circ_13, circ_14, circ_15, circ_16, circ_17};
+std::vector<std::vector<point_t> > polygons = {};
 
 
 // Rectangle defining boundary of arena (detected by light change)
-double edge_width = 48;
 double a_w = arena_width - edge_width; double a_h = arena_height - edge_width;
 std::vector<point_t> arena_bounds = {{edge_width, edge_width}, {edge_width, a_h}, {a_w, a_h}, {a_w, edge_width}};
 
@@ -236,7 +256,9 @@ uint8_t test_state = TEST_DEFAULT;
 const uint8_t EF_INIT = 0;
 const uint8_t EF_SEARCH = 1;
 const uint8_t EF_FOLLOW = 2;
+const uint8_t EF_DISSEMINATE = 3;
 uint8_t ef_state = EF_INIT;
+bool ef_disseminating_flag = false;
 uint32_t ef_last_changed = 0;
 const uint8_t TURN_LEFT = 0;
 const uint8_t TURN_RIGHT = 1;
@@ -280,7 +302,7 @@ uint32_t dissemination_start_time;
 uint8_t detect_curvature_dir;
 uint32_t curvature_right_dur = 0;
 uint32_t curvature_left_dur = 0;
-double curvature_ratio_thresh = 1.15;
+double curvature_ratio_thresh = 1.10;
 bool is_first_turn = true;
 uint32_t num_curv_samples = 0;  // TODO: Temporary for debugging curvature
 
@@ -299,7 +321,7 @@ bool is_feature_detect_safe = false;  // Feature detection needs to be enabled i
 std::vector<uint32_t> color_light_durs;
 std::vector<uint32_t> color_dark_durs;
 const uint32_t max_explore_dur = 60 * SECOND;
-const double temporal_std_thresh = 25;
+const double temporal_std_thresh = 40;
 
 // Pattern that the bot thinks it sees (confidence based on what is consistent with its feature observations)
 // Ex: curvature is consistent with stripes or rings; temporal is stripes or rings
@@ -317,7 +339,7 @@ uint8_t pattern_decision_method = DMMD;
 // Messages/communication
 #define NEIGHBOR_INFO_ARRAY_SIZE 20
 //uint32_t NEIGHBOR_INFO_ARRAY_TIMEOUT = UINT16_MAX;
-uint32_t NEIGHBOR_INFO_ARRAY_TIMEOUT = 60 * SECOND;
+uint32_t NEIGHBOR_INFO_ARRAY_TIMEOUT = 120 * SECOND;
 message_t rx_message_buffer;
 distance_measurement_t rx_distance_buffer;
 bool new_message = false;
@@ -595,12 +617,11 @@ void detect_feature_curvature() {
                 confidence = (double)curvature_right_dur / (curvature_left_dur + curvature_right_dur);
             }
             // TODO: Set confidence different than ratio (otherwise biases toward curvature)
+            printf("%f\n", curvature_ratio);
             if (curvature_ratio >= curvature_ratio_thresh) {
                 feature_estimate = 255;
-                //set_color(RGB(1,0,1));
             } else {
                 feature_estimate = 0;
-                //set_color(RGB(0,1,1));
             }
             detect_feature_state = DETECT_FEATURE_INIT;
             is_feature_disseminating = true;  // Tell message_tx to send updated message
@@ -611,11 +632,8 @@ void detect_feature_curvature() {
 }
 
 void detect_feature_temporal() {
-    // TODO: Detect pattern of block vs white observed
-    // What am I actually calculating? STD/variability of time spent in each? (consistency?)
-    // We'll save this one until later...
-    // Need to store:
-    // - Array/vector of different times spent in black/white? (??)
+    // Determine if there is a temporal pattern using standard deviation of
+    // color observation duration
 
     curr_light_level = detect_light_level();
     if (detect_feature_state == DETECT_FEATURE_INIT) {
@@ -673,7 +691,9 @@ void detect_feature_temporal() {
             double color_light_std = stddev(color_light_durs);
             double color_dark_std = stddev(color_dark_durs);
             if (total_dur > 5 * SECOND) {
+                // Consider: sum of normalized standard deviations
                 double total_std = nanadd(color_light_std/sum(color_light_durs)*100, color_dark_std/sum(color_dark_durs)*100);
+                printf("%f\n", total_std);
                 if (total_std == 0) {
                     confidence = 0;
                     feature_estimate = 127;
@@ -756,7 +776,6 @@ void detect_feature_color() {
 
 void update_pattern_beliefs() {
     if (is_updating_belief) {
-
         if (pattern_decision_method == DMMD) {  // Majority-based decisions
             for (uint8_t f = 0; f < NUM_FEATURES; ++f) {
                 std::vector<uint8_t> histogram(UINT8_MAX+1, 0);
@@ -807,7 +826,10 @@ int16_t sample_light() {
 	//p.x = pos[0];
     //p.y = pos[1];
     // Check if in arena boundaries. If not, return grey
-    if (point_in_polygon(p, arena_bounds)) {
+    if (!point_in_polygon(p, arena_bounds)) {
+        // out of arena = GRAY
+        return 500;
+    } else {
         // Check if in any polygon or circle
         int16_t is_in_shape;
         for (int i = 0; i < polygons.size(); i++) {
@@ -822,9 +844,6 @@ int16_t sample_light() {
             }
         }
         return 0;
-    } else {
-        // out of arena = GRAY
-        return 500;
     }
 
 	// FOR ACTUAL ROBOTS:
@@ -941,6 +960,11 @@ void follow_edge() {
 
 	// Get current light level
     curr_light_level = detect_light_level();
+    if (is_feature_disseminating && !ef_disseminating_flag && ef_state != BOUNCE) {
+        ef_state = EF_DISSEMINATE;
+    } else if (ef_state != EF_DISSEMINATE && ef_state != BOUNCE) {
+        ef_disseminating_flag = false;
+    }
 
 	// Move accordingly
 	uint8_t wall_hit = find_wall_collision();
@@ -998,7 +1022,17 @@ void follow_edge() {
 			ef_state = EF_INIT;
             is_feature_detect_safe = false;
 		}
-	}
+	} else if (ef_state == EF_DISSEMINATE) {
+        // Do random walk while disseminating estimate
+        if (!is_feature_disseminating) {
+            ef_state = EF_INIT;
+            ef_disseminating_flag = false;
+        } else if (!ef_disseminating_flag) {
+            rw_state = RW_INIT;
+            random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
+            ef_disseminating_flag = true;
+        }
+    }
 }
 
 void reflective_walk() {
@@ -1106,19 +1140,21 @@ void loop() {
         update_pattern_beliefs();
 
         // Update LED color based on OWN ESTIMATE
-        uint8_t est = feature_estimate/255;
-        //uint8_t est = pattern_belief[detect_which_feature]/255;
+        //uint8_t est = feature_estimate/255;
+        uint8_t est = pattern_belief[detect_which_feature]/255;
         if (detect_which_feature == 0) {
-    		//set_color(RGB(1, 0, 1-est));
+    		set_color(RGB(1, 0, 1-est));
             //set_color(RGB(1, 1-est, 1-est));
-            set_color(RGB(1, est, est));
+            //set_color(RGB(1, est, est));
     	} else if (detect_which_feature == 1) {
-    		//set_color(RGB(1-est, 1, 0));
-            set_color(RGB(1-est, 1, 1-est));
+    		set_color(RGB(1-est, 1, 0));
+            //set_color(RGB(1-est, 1, 1-est));
     	} else if (detect_which_feature == 2) {
-    		//set_color(RGB(0, 1-est, 1));
-            set_color(RGB(1-est, 1-est, 1));
+    		set_color(RGB(0, 1-est, 1));
+            //set_color(RGB(1-est, 1-est, 1));
     	}
+        // Color full estimates
+        //set_color(RGB(pattern_belief[0]/255, pattern_belief[1]/255, pattern_belief[2]/255));
 	}
 }
 
