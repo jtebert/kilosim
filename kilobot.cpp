@@ -66,20 +66,15 @@ uint8_t state = RUN_LOOP;
 
 
 // Feature that this kilobot is observing (may later be changed, but for now its static)
-const uint8_t FEATURE_TEMPORAL = 0;  // temporal
-const uint8_t FEATURE_COLORS = 1;  // color
-const uint8_t FEATURE_CURVATURE = 2;  // curvature
+const uint8_t RED = 0;
+const uint8_t GREEN = 1;
+const uint8_t BLUE = 2;
 #define NUM_FEATURES 3
-//uint8_t detect_which_feature = FEATURE_CURVATURE;  // Set in setup()
 
 // Different search/exploration types
-const uint8_t AGENT_REFLECTIVE = 0;
 const uint8_t AGENT_LONG_RW = 1;
-const uint8_t AGENT_FOLLOW_EDGE = 2;
 const uint8_t AGENT_SHORT_RW = 3;
 const uint8_t AGENT_RW = 4;
-const uint8_t AGENT_TEST = 5;
-//uint8_t agent_type = AGENT_FOLLOW_EDGE;
 
 
 
@@ -89,18 +84,8 @@ const uint8_t AGENT_TEST = 5;
 const uint8_t TEST_DEFAULT = 0;
 uint8_t test_state = TEST_DEFAULT;
 
-// Edge detection state
-const uint8_t EF_INIT = 0;
-const uint8_t EF_SEARCH = 1;
-const uint8_t EF_FOLLOW = 2;
-const uint8_t EF_DISSEMINATE = 3;
-uint8_t ef_state = EF_INIT;
-bool ef_disseminating_flag = false;
-uint32_t ef_last_changed = 0;
 const uint8_t TURN_LEFT = 0;
 const uint8_t TURN_RIGHT = 1;
-const uint8_t TURN_NONE = 2;
-uint8_t ef_turn_dir = TURN_LEFT;
 
 // Random walk turn/straight state
 const uint8_t RW_INIT = 0;
@@ -114,11 +99,6 @@ uint32_t rw_max_turn_dur = 12 * SECOND;  // kiloticks
 // Turn/straight durations are set at the beginning of each transition to that RW state
 uint32_t rw_straight_dur;
 uint32_t rw_turn_dur;
-
-// Reflective walking (staight + bouncing)
-const uint8_t REFLECT_INIT = 0;
-const uint8_t REFLECT_STRAIGHT = 1;
-uint8_t reflect_state = REFLECT_INIT;
 
 // Bounce off of walls when it hits them (like a screensaver)
 const uint8_t BOUNCE = 100;
@@ -395,171 +375,6 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 
 // FEATURE DETECTION FUNCTIONS
 
-void detect_feature_curvature() {
-    // Detect duration of time spent turning left vs right
-
-    if (detect_feature_state == DETECT_FEATURE_INIT) {
-        if (is_feature_disseminating && kilo_ticks > dissemination_start_time + dissemination_duration) {
-            // Check if dissemination time is finished
-            is_feature_disseminating = false;
-            is_updating_belief = true;  // In loop, update pattern belief using neighbor array info
-        } else if (!is_feature_disseminating && curr_light_level != GRAY && is_feature_detect_safe) {
-            // Check if in correct movement state for starting observations
-            curvature_left_dur = 0;
-            curvature_right_dur = 0;
-            detect_feature_start_time = kilo_ticks;
-            detect_level_start_time = kilo_ticks;
-            detect_curvature_dir = ef_turn_dir;
-            detect_feature_state = DETECT_FEATURE_OBSERVE;
-            is_first_turn = true;
-            // TODO: TEMPORARY FOR TESTING! Change back to distribution after
-            explore_duration = 3500;
-            //explore_duration = exp_rand(mean_explore_duration);
-            num_curv_samples = 0;
-        }
-    } else if (detect_feature_state == DETECT_FEATURE_OBSERVE) {
-        // Check for turn direction change
-        if (detect_curvature_dir != ef_turn_dir && is_feature_detect_safe) {
-            // Add to accumulators if turn direction changes
-            num_curv_samples += 1;
-            if (is_first_turn) {
-                is_first_turn = false;
-            } else {
-                if (detect_curvature_dir == TURN_LEFT) {
-                    curvature_left_dur += kilo_ticks - detect_level_start_time;
-                } else if (detect_curvature_dir == TURN_RIGHT) {
-                    curvature_right_dur += kilo_ticks - detect_level_start_time;
-                }
-            }
-        }
-        if (detect_curvature_dir != ef_turn_dir || !is_feature_detect_safe) {
-            // Don't start new observation when in the borderlands
-            detect_level_start_time = kilo_ticks;
-            detect_curvature_dir = ef_turn_dir;
-        } else if (detect_light_level() == GRAY) {
-            // Placeholder (won't be saved) until moved out of borderlands
-            detect_curvature_dir = TURN_NONE;
-        }
-        if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > explore_duration) {
-            double curvature_ratio;
-            if (curvature_left_dur > curvature_right_dur) {
-                curvature_ratio = (double)curvature_left_dur / curvature_right_dur;
-            } else {
-                curvature_ratio = (double)curvature_right_dur / curvature_left_dur;
-            }
-            // Set confidence and estimates
-            double confidence;
-            double radius_est = pow(1000/(curvature_ratio-1.01), 1.0/1.7);
-            if (radius_est >= .5 * curv_straight_max_thresh) {
-                confidence = std::min(radius_est / curv_straight_max_thresh, 1.0);
-                feature_estimate = 0;
-                if (confidence > 0) printf("STRAIGHT (%f, %f)\n", radius_est, confidence);
-            } else {
-                confidence = 1 - radius_est / curv_straight_max_thresh;
-                feature_estimate = 255;
-                if (confidence > 0) printf("CURVED   (%f, %f)\n", radius_est, confidence);
-            }
-            //printf("%f\t%d\t%f\n", curvature_ratio, curvature_right_dur + curvature_left_dur, confidence);
-
-            std::ofstream myfile;
-            myfile.open("circle.txt", std::ios::out|std::ios::app);
-            myfile << curvature_ratio << "\t" << curvature_left_dur + curvature_right_dur << std::endl;
-
-            detect_feature_state = DETECT_FEATURE_INIT;
-            is_feature_disseminating = true;  // Tell message_tx to send updated message
-            dissemination_duration = exp_rand(dissemination_duration_constant * confidence);
-            dissemination_start_time = kilo_ticks;
-        }
-    }
-}
-
-void detect_feature_temporal() {
-    // Determine if there is a temporal pattern using standard deviation of
-    // color observation duration
-
-    curr_light_level = detect_light_level();
-    if (detect_feature_state == DETECT_FEATURE_INIT) {
-        if (is_feature_disseminating && kilo_ticks > dissemination_start_time + dissemination_duration) {
-            // Check if dissemination time is finished
-            is_feature_disseminating = false;
-            is_updating_belief = true;  // In loop, update pattern belief using neighbor array info
-        } else if (!is_feature_disseminating && curr_light_level != GRAY && is_feature_detect_safe) {
-            // Correct movement state for starting observations
-            color_light_durs.clear();
-            color_dark_durs.clear();
-            color_light_dur = 0;
-            color_dark_dur = 0;
-            detect_feature_start_time = kilo_ticks;
-            detect_level_start_time = kilo_ticks;
-            detect_color_level = curr_light_level;
-            detect_feature_state = DETECT_FEATURE_OBSERVE;
-        }
-    } else if (detect_feature_state == DETECT_FEATURE_OBSERVE) {
-        // Check for color change
-        if (detect_color_level != curr_light_level) {
-            // Add to accumulators if light level changes (including to gray)
-            if (detect_color_level == LIGHT) {
-                color_light_dur += kilo_ticks - detect_level_start_time;
-                color_light_durs.push_back(kilo_ticks - detect_level_start_time);
-            } else if (detect_color_level == DARK) {
-                color_dark_dur += kilo_ticks - detect_level_start_time;
-                color_dark_durs.push_back(kilo_ticks - detect_level_start_time);
-            }
-            detect_color_level = curr_light_level;
-            if (curr_light_level != GRAY) {
-                // Don't start new observation when in the borderlands
-                detect_level_start_time = kilo_ticks;
-            }
-        }
-        if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > max_explore_dur) {
-            // Feature detection over
-            double confidence;
-            // Get std for each measurement
-            uint32_t total_dur = sum(color_dark_durs) + sum(color_light_durs);
-            // Remove first and last elements
-            /*if (color_dark_durs.size() > 2) {
-                color_dark_durs.pop_back();
-                color_dark_durs.erase(color_dark_durs.begin());
-            } else {
-                color_dark_durs.clear();
-            }
-            if (color_light_durs.size() > 2) {
-                color_light_durs.pop_back();
-                color_light_durs.erase(color_light_durs.begin());
-            } else {
-                color_light_durs.clear();
-            }*/
-
-            double color_light_std = stddev(color_light_durs);
-            double color_dark_std = stddev(color_dark_durs);
-            if (total_dur > 5 * SECOND) {
-                // Consider: sum of normalized standard deviations
-                double total_std = nanadd(color_light_std/sum(color_light_durs)*100, color_dark_std/sum(color_dark_durs)*100);
-                if (total_std == 0) {
-                    confidence = 0;
-                    feature_estimate = 127;
-                } else if (total_std < temporal_std_thresh) {
-                    feature_estimate = 255;
-                    confidence = 1 - total_std/temporal_std_thresh*.5;
-                    printf("%f\n", total_std);
-                    //printf("PATTERN!\t(%f)\t%f\n", total_std, confidence);
-                } else {
-                    feature_estimate = 0;
-                    confidence =total_std/70*.5+.5;
-                    printf("%f\n", total_std);
-                    //printf("no pattern\t(%f)\t%f\n", total_std, confidence);
-                    // TODO: fix/approximate maximum
-                }
-                // If either is 0 duration, assume patterened (only saw 1 color)
-            }
-            detect_feature_state = DETECT_FEATURE_INIT;
-            is_feature_disseminating = true;  // Tell message_tx to send updated message
-            dissemination_duration = exp_rand(dissemination_duration_constant * confidence);
-            dissemination_start_time = kilo_ticks;
-        }
-    }
-}
-
 void detect_feature_color() {
     // Detect how much time is spent in white vs black
     curr_light_level = detect_light_level();
@@ -798,133 +613,6 @@ void random_walk(uint32_t mean_straight_dur, uint32_t max_turn_dur) {
 	}
 }
 
-void follow_edge() {
-	// Non-blocking agent movement design to follow a detected color edge
-    // TODO: Remove repeated code (likely by sending the state back to init, which handles everything)
-
-	// Get current light level
-    curr_light_level = detect_light_level();
-    if (is_feature_disseminating && !ef_disseminating_flag && ef_state != BOUNCE) {
-        ef_state = EF_DISSEMINATE;
-    } else if (ef_state != EF_DISSEMINATE && ef_state != BOUNCE) {
-        ef_disseminating_flag = false;
-    }
-
-	// Move accordingly
-	uint8_t wall_hit = find_wall_collision();
-	if (wall_hit != 0 && ef_state != BOUNCE) {
-		// Check for wall collision before anything else
-		ef_state = BOUNCE;
-        is_feature_detect_safe = false;
-		bounce_init(wall_hit);
-	} else if (ef_state == BOUNCE) {
-        uint16_t light_levels = sample_light();
-        if (light_levels < 250 || light_levels > 750) {
-			// end bounce phase
-			ef_state = EF_INIT;
-		}
-	} else if (ef_state == EF_INIT) {
-		// Store initial light level and start search for edge
-		ef_level = curr_light_level;
-		ef_state = EF_SEARCH;
-        is_feature_detect_safe = false;
-		rw_state = RW_INIT;
-		random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
-	} else if (ef_state == EF_SEARCH) {
-		// Move until edge is detected (light change to opposite state)
-		if (curr_light_level != ef_level && curr_light_level != GRAY) {
-			// Edge detected! Switch to edge following state and change expected color
-			ef_state = EF_FOLLOW;
-            is_feature_detect_safe = true;
-			ef_level = curr_light_level;
-			ef_turn_dir = ef_turn_dir^1;
-			spinup_motors();
-			if (ef_turn_dir == TURN_LEFT) {
-				set_motors(kilo_turn_left, 0);
-			} else if (ef_turn_dir == TURN_RIGHT) {
-				set_motors(0, kilo_turn_right);
-			}
-			ef_last_changed = kilo_ticks;
-		} else {
-			// Keep doing random walk search for an edge
-			random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
-		}
-	} else if (ef_state == EF_FOLLOW) {
-		// EDGE FOLLOWING: When color change is detected, rotate+forward until change is detected, then go the other way.
-		if (curr_light_level != ef_level) {
-			ef_level = curr_light_level;
-			ef_last_changed = kilo_ticks;
-			ef_turn_dir = ef_turn_dir^1;
-			spinup_motors();
-			if (ef_turn_dir == TURN_LEFT) {
-				set_motors(kilo_turn_left, 0);
-			} else if (ef_turn_dir == TURN_RIGHT) {
-				set_motors(0, kilo_turn_right);
-			}
-		} else if (kilo_ticks > (ef_last_changed + 10*SECOND)) {
-			// Edge lost! Search for a new one
-			ef_state = EF_INIT;
-            is_feature_detect_safe = false;
-		}
-	} else if (ef_state == EF_DISSEMINATE) {
-        // Do random walk while disseminating estimate
-        if (!is_feature_disseminating) {
-            ef_state = EF_INIT;
-            ef_disseminating_flag = false;
-        } else if (!ef_disseminating_flag) {
-            rw_state = RW_INIT;
-            random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
-            ef_disseminating_flag = true;
-        }
-    }
-}
-
-void reflective_walk() {
-	// Non-blocking movement. Kilobot walks straight until it hits a wall,
-    // then turns and goes straight again until it hits another wall
-
-	uint8_t wall_hit = find_wall_collision();
-	if (wall_hit != 0 && reflect_state != BOUNCE) {
-		// Check for wall collision before anything else
-		reflect_state = BOUNCE;
-        is_feature_detect_safe = false;
-		bounce_init(wall_hit);
-	} else if (reflect_state == BOUNCE) {
-        uint16_t light_levels = sample_light();
-        if (light_levels < 250 || light_levels > 750) {
-			// end bounce phase
-			reflect_state = REFLECT_INIT;
-		}
-	} else if (reflect_state == REFLECT_INIT) {
-		// Set up variables
-		reflect_state = REFLECT_STRAIGHT;
-        is_feature_detect_safe = true;
-		spinup_motors();
-		set_motors(kilo_straight_left, kilo_straight_right);
-	}
-}
-
-void test_movement() {
-	// Movement/loop contents for test agent
-	uint8_t wall_hit = find_wall_collision();
-	if (wall_hit != 0 && test_state != BOUNCE) {
-		// Check for wall collision before anything else
-        test_state = BOUNCE;
-		bounce_init(wall_hit);
-	} else if (test_state == BOUNCE) {
-        uint16_t light_levels = sample_light();
-		if (light_levels < 250 || light_levels > 750) {
-			// end bounce phase
-			test_state = TEST_DEFAULT;
-		}
-	} else {
-		spinup_motors();
-        set_motors(kilo_straight_left, kilo_straight_right);
-        //set_motors(kilo_turn_left, 0);
-        //set_motors(0, kilo_turn_right);
-	}
-}
-
 
 // REQUIRED KILOBOT FUNCTIONS
 
@@ -948,25 +636,11 @@ void setup() {
 void loop() {
 	if (state == RUN_LOOP) {
         // Movement
-		if (agent_type == AGENT_FOLLOW_EDGE) {
-			follow_edge();
-		} else if (agent_type == AGENT_SHORT_RW) {
-			random_walk(short_rw_mean_straight_dur, rw_max_turn_dur);
-		} else if (agent_type == AGENT_LONG_RW) {
-			random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
-		} else if (agent_type == AGENT_REFLECTIVE) {
-            reflective_walk();
-        } else if (agent_type == AGENT_TEST) {
-			test_movement();
-		}
+        random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
+
         // Feature observation
-        if (detect_which_feature == FEATURE_CURVATURE) {
-            detect_feature_curvature();
-        } else if (detect_which_feature == FEATURE_COLORS) {
-            detect_feature_color();
-        } else if (detect_which_feature == FEATURE_TEMPORAL) {
-            detect_feature_temporal();
-        }
+        detect_feature_color();
+
         // Neighbor updates
         static uint32_t last_printed;
         neighbor_info_array_locked = true;
