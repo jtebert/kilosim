@@ -68,9 +68,8 @@ void robot::robot_init(double x, double y, double t) {
     // Set detection and movement type
     //uint8_t temp = (uint8_t)rand() % 3;
     uint8_t temp = (uint8_t)rand() % 2;
-    if (temp == 1) {
-        temp = 2;
-    }
+    temp += 1;
+    //uint8_t temp = 2;
     detect_which_feature = temp;
     agent_type = temp;
 }

@@ -25,9 +25,9 @@ public:
 	int kilo_straight_left = 50;
 	int kilo_straight_right = 50;
 	int kilo_turn_left = 50;
-	int turn_right=0;
-	int turn_left=0;
-	int kilo_ticks = 0;
+	int turn_right = 0;
+	int turn_left = 0;
+	uint32_t kilo_ticks = 0;
 
 	double distance_measurement;
 	bool message_sent = false;

@@ -1,22 +1,11 @@
 #pragma once
 #include "kilolib.h"
 #include "vars.cpp"
+#include "shapes.cpp"
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <algorithm>
-
-typedef struct point_t {
-		double x;
-		double y;
-} point_t;
-
-typedef struct circle_t {
-		// x, y define center of circle
-		double x;
-		double y;
-		double rad;
-} circle_t;
 
 typedef struct neighbor_info_array_t
 {
@@ -28,186 +17,6 @@ typedef struct neighbor_info_array_t
 	uint8_t number_of_times_heard_from;
 } neighbor_info_array_t;
 
-
-// Shapes for edge following
-
-std::vector<point_t> square = {{250, 1300}, {750, 1300}, {750, 800}, {250, 800}};
-std::vector<point_t> triangle = {{300, 1600}, {1100, 1600}, {700, 2300}};
-std::vector<point_t> stripe_a = {{1600, 2400}, {1800, 2400}, {1800, 0}, {1600, 0}};
-std::vector<point_t> stripe_b = {{2000, 2400}, {2200, 2400}, {2200, 0}, {2000, 0}};
-//std::vector<std::vector<point_t> > polygons = {square, triangle, stripe_a, stripe_b};
-circle_t circle1 = {1100, 500, 300};
-circle_t circle2 = {400, 450, 150};
-//std::vector<circle_t> circles = {circle1, circle2};
-
-
-std::vector<point_t> sq00 {{0,0}, {240,0}, {240,240}, {0,240}};
-std::vector<point_t> sq01 {{0,240}, {240,240}, {240,480}, {0,480}};
-std::vector<point_t> sq02 {{0,480}, {240,480}, {240,720}, {0,720}};
-std::vector<point_t> sq03 {{0,720}, {240,720}, {240,960}, {0,960}};
-std::vector<point_t> sq04 {{0,960}, {240,960}, {240,1200}, {0,1200}};
-std::vector<point_t> sq05 {{0,1200}, {240,1200}, {240,1440}, {0,1440}};
-std::vector<point_t> sq06 {{0,1440}, {240,1440}, {240,1680}, {0,1680}};
-std::vector<point_t> sq07 {{0,1680}, {240,1680}, {240,1920}, {0,1920}};
-std::vector<point_t> sq08 {{0,1920}, {240,1920}, {240,2160}, {0,2160}};
-std::vector<point_t> sq09 {{0,2160}, {240,2160}, {240,2400}, {0,2400}};
-std::vector<point_t> sq10 {{240,0}, {480,0}, {480,240}, {240,240}};
-std::vector<point_t> sq11 {{240,240}, {480,240}, {480,480}, {240,480}};
-std::vector<point_t> sq12 {{240,480}, {480,480}, {480,720}, {240,720}};
-std::vector<point_t> sq13 {{240,720}, {480,720}, {480,960}, {240,960}};
-std::vector<point_t> sq14 {{240,960}, {480,960}, {480,1200}, {240,1200}};
-std::vector<point_t> sq15 {{240,1200}, {480,1200}, {480,1440}, {240,1440}};
-std::vector<point_t> sq16 {{240,1440}, {480,1440}, {480,1680}, {240,1680}};
-std::vector<point_t> sq17 {{240,1680}, {480,1680}, {480,1920}, {240,1920}};
-std::vector<point_t> sq18 {{240,1920}, {480,1920}, {480,2160}, {240,2160}};
-std::vector<point_t> sq19 {{240,2160}, {480,2160}, {480,2400}, {240,2400}};
-std::vector<point_t> sq20 {{480,0}, {720,0}, {720,240}, {480,240}};
-std::vector<point_t> sq21 {{480,240}, {720,240}, {720,480}, {480,480}};
-std::vector<point_t> sq22 {{480,480}, {720,480}, {720,720}, {480,720}};
-std::vector<point_t> sq23 {{480,720}, {720,720}, {720,960}, {480,960}};
-std::vector<point_t> sq24 {{480,960}, {720,960}, {720,1200}, {480,1200}};
-std::vector<point_t> sq25 {{480,1200}, {720,1200}, {720,1440}, {480,1440}};
-std::vector<point_t> sq26 {{480,1440}, {720,1440}, {720,1680}, {480,1680}};
-std::vector<point_t> sq27 {{480,1680}, {720,1680}, {720,1920}, {480,1920}};
-std::vector<point_t> sq28 {{480,1920}, {720,1920}, {720,2160}, {480,2160}};
-std::vector<point_t> sq29 {{480,2160}, {720,2160}, {720,2400}, {480,2400}};
-std::vector<point_t> sq30 {{720,0}, {960,0}, {960,240}, {720,240}};
-std::vector<point_t> sq31 {{720,240}, {960,240}, {960,480}, {720,480}};
-std::vector<point_t> sq32 {{720,480}, {960,480}, {960,720}, {720,720}};
-std::vector<point_t> sq33 {{720,720}, {960,720}, {960,960}, {720,960}};
-std::vector<point_t> sq34 {{720,960}, {960,960}, {960,1200}, {720,1200}};
-std::vector<point_t> sq35 {{720,1200}, {960,1200}, {960,1440}, {720,1440}};
-std::vector<point_t> sq36 {{720,1440}, {960,1440}, {960,1680}, {720,1680}};
-std::vector<point_t> sq37 {{720,1680}, {960,1680}, {960,1920}, {720,1920}};
-std::vector<point_t> sq38 {{720,1920}, {960,1920}, {960,2160}, {720,2160}};
-std::vector<point_t> sq39 {{720,2160}, {960,2160}, {960,2400}, {720,2400}};
-std::vector<point_t> sq40 {{960,0}, {1200,0}, {1200,240}, {960,240}};
-std::vector<point_t> sq41 {{960,240}, {1200,240}, {1200,480}, {960,480}};
-std::vector<point_t> sq42 {{960,480}, {1200,480}, {1200,720}, {960,720}};
-std::vector<point_t> sq43 {{960,720}, {1200,720}, {1200,960}, {960,960}};
-std::vector<point_t> sq44 {{960,960}, {1200,960}, {1200,1200}, {960,1200}};
-std::vector<point_t> sq45 {{960,1200}, {1200,1200}, {1200,1440}, {960,1440}};
-std::vector<point_t> sq46 {{960,1440}, {1200,1440}, {1200,1680}, {960,1680}};
-std::vector<point_t> sq47 {{960,1680}, {1200,1680}, {1200,1920}, {960,1920}};
-std::vector<point_t> sq48 {{960,1920}, {1200,1920}, {1200,2160}, {960,2160}};
-std::vector<point_t> sq49 {{960,2160}, {1200,2160}, {1200,2400}, {960,2400}};
-std::vector<point_t> sq50 {{1200,0}, {1440,0}, {1440,240}, {1200,240}};
-std::vector<point_t> sq51 {{1200,240}, {1440,240}, {1440,480}, {1200,480}};
-std::vector<point_t> sq52 {{1200,480}, {1440,480}, {1440,720}, {1200,720}};
-std::vector<point_t> sq53 {{1200,720}, {1440,720}, {1440,960}, {1200,960}};
-std::vector<point_t> sq54 {{1200,960}, {1440,960}, {1440,1200}, {1200,1200}};
-std::vector<point_t> sq55 {{1200,1200}, {1440,1200}, {1440,1440}, {1200,1440}};
-std::vector<point_t> sq56 {{1200,1440}, {1440,1440}, {1440,1680}, {1200,1680}};
-std::vector<point_t> sq57 {{1200,1680}, {1440,1680}, {1440,1920}, {1200,1920}};
-std::vector<point_t> sq58 {{1200,1920}, {1440,1920}, {1440,2160}, {1200,2160}};
-std::vector<point_t> sq59 {{1200,2160}, {1440,2160}, {1440,2400}, {1200,2400}};
-std::vector<point_t> sq60 {{1440,0}, {1680,0}, {1680,240}, {1440,240}};
-std::vector<point_t> sq61 {{1440,240}, {1680,240}, {1680,480}, {1440,480}};
-std::vector<point_t> sq62 {{1440,480}, {1680,480}, {1680,720}, {1440,720}};
-std::vector<point_t> sq63 {{1440,720}, {1680,720}, {1680,960}, {1440,960}};
-std::vector<point_t> sq64 {{1440,960}, {1680,960}, {1680,1200}, {1440,1200}};
-std::vector<point_t> sq65 {{1440,1200}, {1680,1200}, {1680,1440}, {1440,1440}};
-std::vector<point_t> sq66 {{1440,1440}, {1680,1440}, {1680,1680}, {1440,1680}};
-std::vector<point_t> sq67 {{1440,1680}, {1680,1680}, {1680,1920}, {1440,1920}};
-std::vector<point_t> sq68 {{1440,1920}, {1680,1920}, {1680,2160}, {1440,2160}};
-std::vector<point_t> sq69 {{1440,2160}, {1680,2160}, {1680,2400}, {1440,2400}};
-std::vector<point_t> sq70 {{1680,0}, {1920,0}, {1920,240}, {1680,240}};
-std::vector<point_t> sq71 {{1680,240}, {1920,240}, {1920,480}, {1680,480}};
-std::vector<point_t> sq72 {{1680,480}, {1920,480}, {1920,720}, {1680,720}};
-std::vector<point_t> sq73 {{1680,720}, {1920,720}, {1920,960}, {1680,960}};
-std::vector<point_t> sq74 {{1680,960}, {1920,960}, {1920,1200}, {1680,1200}};
-std::vector<point_t> sq75 {{1680,1200}, {1920,1200}, {1920,1440}, {1680,1440}};
-std::vector<point_t> sq76 {{1680,1440}, {1920,1440}, {1920,1680}, {1680,1680}};
-std::vector<point_t> sq77 {{1680,1680}, {1920,1680}, {1920,1920}, {1680,1920}};
-std::vector<point_t> sq78 {{1680,1920}, {1920,1920}, {1920,2160}, {1680,2160}};
-std::vector<point_t> sq79 {{1680,2160}, {1920,2160}, {1920,2400}, {1680,2400}};
-std::vector<point_t> sq80 {{1920,0}, {2160,0}, {2160,240}, {1920,240}};
-std::vector<point_t> sq81 {{1920,240}, {2160,240}, {2160,480}, {1920,480}};
-std::vector<point_t> sq82 {{1920,480}, {2160,480}, {2160,720}, {1920,720}};
-std::vector<point_t> sq83 {{1920,720}, {2160,720}, {2160,960}, {1920,960}};
-std::vector<point_t> sq84 {{1920,960}, {2160,960}, {2160,1200}, {1920,1200}};
-std::vector<point_t> sq85 {{1920,1200}, {2160,1200}, {2160,1440}, {1920,1440}};
-std::vector<point_t> sq86 {{1920,1440}, {2160,1440}, {2160,1680}, {1920,1680}};
-std::vector<point_t> sq87 {{1920,1680}, {2160,1680}, {2160,1920}, {1920,1920}};
-std::vector<point_t> sq88 {{1920,1920}, {2160,1920}, {2160,2160}, {1920,2160}};
-std::vector<point_t> sq89 {{1920,2160}, {2160,2160}, {2160,2400}, {1920,2400}};
-std::vector<point_t> sq90 {{2160,0}, {2400,0}, {2400,240}, {2160,240}};
-std::vector<point_t> sq91 {{2160,240}, {2400,240}, {2400,480}, {2160,480}};
-std::vector<point_t> sq92 {{2160,480}, {2400,480}, {2400,720}, {2160,720}};
-std::vector<point_t> sq93 {{2160,720}, {2400,720}, {2400,960}, {2160,960}};
-std::vector<point_t> sq94 {{2160,960}, {2400,960}, {2400,1200}, {2160,1200}};
-std::vector<point_t> sq95 {{2160,1200}, {2400,1200}, {2400,1440}, {2160,1440}};
-std::vector<point_t> sq96 {{2160,1440}, {2400,1440}, {2400,1680}, {2160,1680}};
-std::vector<point_t> sq97 {{2160,1680}, {2400,1680}, {2400,1920}, {2160,1920}};
-std::vector<point_t> sq98 {{2160,1920}, {2400,1920}, {2400,2160}, {2160,2160}};
-std::vector<point_t> sq99 {{2160,2160}, {2400,2160}, {2400,2400}, {2160,2400}};
-//std::vector<std::vector<point_t> > polygons = {sq97, sq35, sq06, sq04, sq95, sq41, sq69, sq56, sq12, sq72, sq89, sq93, sq26, sq61, sq05, sq81, sq43, sq90, sq18, sq47, sq65, sq87, sq86, sq27, sq73, sq74, sq98, sq21, sq60, sq38, sq45, sq48, sq99, sq91, sq10, sq62, sq68, sq33, sq71, sq44};
-//std::vector<circle_t> circles = {};
-
-std::vector<point_t> stripe0 {{0,2400}, {0,0}, {40,0}, {40,2400}};
-std::vector<point_t> stripe1 {{200,2400}, {200,0}, {240,0}, {240,2400}};
-std::vector<point_t> stripe2 {{400,2400}, {400,0}, {440,0}, {440,2400}};
-std::vector<point_t> stripe3 {{600,2400}, {600,0}, {640,0}, {640,2400}};
-std::vector<point_t> stripe4 {{800,2400}, {800,0}, {840,0}, {840,2400}};
-std::vector<point_t> stripe5 {{1000,2400}, {1000,0}, {1040,0}, {1040,2400}};
-std::vector<point_t> stripe6 {{1200,2400}, {1200,0}, {1240,0}, {1240,2400}};
-std::vector<point_t> stripe7 {{1400,2400}, {1400,0}, {1440,0}, {1440,2400}};
-std::vector<point_t> stripe8 {{1600,2400}, {1600,0}, {1640,0}, {1640,2400}};
-std::vector<point_t> stripe9 {{1800,2400}, {1800,0}, {1840,0}, {1840,2400}};
-std::vector<point_t> stripe10 {{2000,2400}, {2000,0}, {2040,0}, {2040,2400}};
-std::vector<point_t> stripe11 {{2200,2400}, {2200,0}, {2240,0}, {2240,2400}};
-
-//std::vector<std::vector<point_t> > polygons = {stripe0, stripe1, stripe2, stripe3, stripe4, stripe5, stripe6, stripe7, stripe8, stripe9, stripe10, stripe11};
-//std::vector<circle_t> circles = {};
-
-/*circle_t circ_0 = {1822, 904, 119};
-circle_t circ_1 = {527, 1428, 288};
-circle_t circ_2 = {2174, 692, 137};
-circle_t circ_3 = {109, 326, 101};
-circle_t circ_4 = {1516, 1604, 265};
-circle_t circ_5 = {180, 609, 130};
-circle_t circ_6 = {910, 1152, 105};
-circle_t circ_7 = {788, 2184, 170};
-circle_t circ_8 = {397, 2169, 103};
-circle_t circ_9 = {552, 278, 275};
-circle_t circ_10 = {1824, 1965, 139};
-circle_t circ_11 = {1084, 302, 193};
-circle_t circ_12 = {1588, 294, 254};
-circle_t circ_13 = {1230, 2159, 174};
-circle_t circ_14 = {684, 1845, 113};
-circle_t circ_15 = {1661, 1208, 105};
-circle_t circ_16 = {1169, 695, 168};
-circle_t circ_17 = {2149, 1209, 239};
-std::vector<circle_t> circles = {circ_0, circ_1, circ_2, circ_3, circ_4, circ_5, circ_6, circ_7, circ_8, circ_9, circ_10, circ_11, circ_12, circ_13, circ_14, circ_15, circ_16, circ_17};
-*/
-std::vector<std::vector<point_t> > polygons = {};
-
-circle_t circ_0 = {714, 897, 200};
-circle_t circ_1 = {913, 1821, 200};
-circle_t circ_2 = {1329, 2002, 200};
-circle_t circ_3 = {2059, 1437, 200};
-circle_t circ_4 = {1254, 1479, 200};
-circle_t circ_5 = {1966, 2168, 200};
-circle_t circ_6 = {2115, 292, 200};
-circle_t circ_7 = {208, 1256, 200};
-circle_t circ_8 = {277, 1798, 200};
-circle_t circ_9 = {604, 458, 200};
-circle_t circ_10 = {1401, 593, 200};
-circle_t circ_11 = {2038, 859, 200};
-circle_t circ_12 = {1497, 1039, 200};
-circle_t circ_13 = {697, 1414, 200};
-//std::vector<circle_t> circles = {circ_0, circ_1, circ_2, circ_3, circ_4, circ_5, circ_6, circ_7, circ_8, circ_9, circ_10, circ_11, circ_12, circ_13};
-
-
-double r = 400;
-//circle_t c1 = {1200, 1200, r};
-//circle_t c2 = {500, 500, r};
-//circle_t c3 = {900, 1800, r};
-circle_t c4 = {1500, 1500, r};
-circle_t c5 = {1200, 500, r};
-circle_t c6 = {500, 1500, r};
-//circle_t c7 = {1500, 700, r};
-std::vector<circle_t> circles = {c4, c5, c6};
 
 // Rectangle defining boundary of arena (detected by light change)
 double a_w = arena_width - edge_width; double a_h = arena_height - edge_width;
@@ -330,9 +139,9 @@ uint32_t dissemination_start_time;
 uint8_t detect_curvature_dir;
 uint32_t curvature_right_dur = 0;
 uint32_t curvature_left_dur = 0;
-double curvature_ratio_thresh = 1.3;
 bool is_first_turn = true;
 uint32_t num_curv_samples = 0;  // TODO: Temporary for debugging curvature
+uint32_t curv_straight_max_thresh = radius * 2 * 10;  // Always straight past 10 body lengths
 
 uint16_t detect_color_level;
 uint32_t color_light_dur = 0;
@@ -351,11 +160,6 @@ std::vector<uint32_t> color_dark_durs;
 const uint32_t max_explore_dur = 60 * SECOND;
 const double temporal_std_thresh = 40;
 
-// Pattern that the bot thinks it sees (confidence based on what is consistent with its feature observations)
-// Ex: curvature is consistent with stripes or rings; temporal is stripes or rings
-const uint8_t PATTERN_STRIPES = 0;
-const uint8_t PATTERN_DOTS = 1;
-const uint8_t PATTERN_RINGS = 2;
 // Beliefs about pattern features start as middle/uncertain (each 127)
 // But should be replaced by first message, so starting value likely won't matter much
 uint8_t pattern_belief[NUM_FEATURES] = {127, 127, 127};
@@ -385,12 +189,12 @@ uint32_t uniform_rand(uint32_t max_val) {
 	return rand_val;
 }
 
-uint32_t exp_rand(uint32_t mean_val) {
+uint32_t exp_rand(double mean_val) {
 	// Generate random value from exponential distribution with mean mean_val
 	// According to: http://stackoverflow.com/a/11491526/2552873
 	// Generate random float (0,1)
 	double unif_val = (double)rand_hard() / 255.0;
-	uint32_t exp_val = -log(unif_val) * mean_val;
+	uint32_t exp_val = uint32_t(-log(unif_val) * mean_val);
 	return exp_val;
 }
 
@@ -534,7 +338,7 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 		}
 	}
 
-	if (can_insert == false) {
+	if (!can_insert) {
 		// Data message
 		for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
 			if (neighbor_info_array[i].id == 0) {
@@ -546,7 +350,7 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 		}
 	}
 
-	if (can_insert == false) {
+	if (!can_insert) {
 		// Data message
 		uint8_t largest_measured_distance = 0;
 		uint8_t largest_measured_distance_index;
@@ -564,14 +368,14 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 		}
 	}
 
-	if (can_insert == true) {
+	if (can_insert) {
 		neighbor_info_array[index_to_insert].time_last_heard_from = kilo_ticks;
-		if (new_entry == true) {
+		if (new_entry) {
 			neighbor_info_array[index_to_insert].id = rx_id;
 			neighbor_info_array[index_to_insert].measured_distance = measured_distance_instantaneous;
 			neighbor_info_array[index_to_insert].number_of_times_heard_from = 0;
 		} else {
-			if (distance_averaging == true) {
+			if (distance_averaging) {
 				neighbor_info_array[index_to_insert].measured_distance *= 0.9;
 				neighbor_info_array[index_to_insert].measured_distance += 0.1 * ((float) measured_distance_instantaneous);
 			} else {
@@ -638,21 +442,24 @@ void detect_feature_curvature() {
         }
         if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > explore_duration) {
             double curvature_ratio;
-            double confidence;
             if (curvature_left_dur > curvature_right_dur) {
                 curvature_ratio = (double)curvature_left_dur / curvature_right_dur;
-                confidence = (double)curvature_left_dur / (curvature_left_dur + curvature_right_dur);
             } else {
                 curvature_ratio = (double)curvature_right_dur / curvature_left_dur;
-                confidence = (double)curvature_right_dur / (curvature_left_dur + curvature_right_dur);
             }
-            // TODO: Set confidence different than ratio (otherwise biases toward curvature)
-            printf("%f\t%d\n", curvature_ratio, curvature_left_dur + curvature_right_dur);
-            if (curvature_ratio >= curvature_ratio_thresh) {
-                feature_estimate = 255;
-            } else {
+            // Set confidence and estimates
+            double confidence;
+            double radius_est = pow(1000/(curvature_ratio-1.01), 1.0/1.7);
+            if (radius_est >= .5 * curv_straight_max_thresh) {
+                confidence = std::min(radius_est / curv_straight_max_thresh, 1.0);
                 feature_estimate = 0;
+                if (confidence > 0) printf("STRAIGHT (%f, %f)\n", radius_est, confidence);
+            } else {
+                confidence = 1 - radius_est / curv_straight_max_thresh;
+                feature_estimate = 255;
+                if (confidence > 0) printf("CURVED   (%f, %f)\n", radius_est, confidence);
             }
+            //printf("%f\t%d\t%f\n", curvature_ratio, curvature_right_dur + curvature_left_dur, confidence);
 
             std::ofstream myfile;
             myfile.open("circle.txt", std::ios::out|std::ios::app);
@@ -792,10 +599,12 @@ void detect_feature_color() {
                 //set_color(RGB(0,1,0));
                 feature_estimate = 255;
                 confidence = (double)color_light_dur / (color_light_dur + color_dark_dur);
+                if (confidence > 0) printf("LIGHT    (%f, %f)\n", confidence, confidence);
             } else if (color_light_dur < color_dark_dur) {
                 //set_color(RGB(1,.5,0));
                 feature_estimate = 0;
                 confidence = (double)color_dark_dur / (color_light_dur + color_dark_dur);
+                if (confidence > 0) printf("DARK     (%f, %f)\n", 1-confidence, confidence);
             } else {
                 //set_color(RGB(1,1,1));
                 feature_estimate = 127;
@@ -848,7 +657,7 @@ void update_pattern_beliefs() {
 
 // AUXILIARY FUNCTIONS FOR LOOP (DETECTION AND MOVEMENT)
 
-int16_t sample_light() {
+uint16_t sample_light() {
     // Light sampling function
 	uint16_t num_samples = 0;
 	int32_t sum = 0;
@@ -867,7 +676,6 @@ int16_t sample_light() {
         return 500;
     } else {
         // Check if in any polygon or circle
-        int16_t is_in_shape;
         for (int i = 0; i < polygons.size(); i++) {
             std::vector<point_t> poly = polygons[i];
             if (point_in_polygon(p, poly)) {
@@ -1177,7 +985,7 @@ void loop() {
 
         // Update LED color based on OWN ESTIMATE
         //uint8_t est = feature_estimate/255;
-        uint8_t est = pattern_belief[detect_which_feature]/255;
+        /*uint8_t est = pattern_belief[detect_which_feature]/255;
         if (detect_which_feature == 0) {
     		set_color(RGB(1, 0, 1-est));
             //set_color(RGB(1, 1-est, 1-est));
@@ -1188,9 +996,13 @@ void loop() {
     	} else if (detect_which_feature == 2) {
     		set_color(RGB(0, 1-est, 1));
             //set_color(RGB(1-est, 1-est, 1));
-    	}
+    	}*/
         // Color full estimates
-        set_color(RGB(pattern_belief[0]/255, pattern_belief[1]/255, pattern_belief[2]/255));
+        if (pattern_belief[1] == 127 || pattern_belief[2] == 127) {
+            set_color(RGB(1,1,1));
+        } else {
+            set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
+        }
 	}
 }
 
