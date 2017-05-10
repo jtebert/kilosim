@@ -2,6 +2,7 @@
 #include "kilolib.h"
 #include "vars.cpp"
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <algorithm>
 
@@ -159,7 +160,7 @@ std::vector<point_t> stripe11 {{2200,2400}, {2200,0}, {2240,0}, {2240,2400}};
 //std::vector<std::vector<point_t> > polygons = {stripe0, stripe1, stripe2, stripe3, stripe4, stripe5, stripe6, stripe7, stripe8, stripe9, stripe10, stripe11};
 //std::vector<circle_t> circles = {};
 
-circle_t circ_0 = {1822, 904, 119};
+/*circle_t circ_0 = {1822, 904, 119};
 circle_t circ_1 = {527, 1428, 288};
 circle_t circ_2 = {2174, 692, 137};
 circle_t circ_3 = {109, 326, 101};
@@ -178,8 +179,35 @@ circle_t circ_15 = {1661, 1208, 105};
 circle_t circ_16 = {1169, 695, 168};
 circle_t circ_17 = {2149, 1209, 239};
 std::vector<circle_t> circles = {circ_0, circ_1, circ_2, circ_3, circ_4, circ_5, circ_6, circ_7, circ_8, circ_9, circ_10, circ_11, circ_12, circ_13, circ_14, circ_15, circ_16, circ_17};
+*/
 std::vector<std::vector<point_t> > polygons = {};
 
+circle_t circ_0 = {714, 897, 200};
+circle_t circ_1 = {913, 1821, 200};
+circle_t circ_2 = {1329, 2002, 200};
+circle_t circ_3 = {2059, 1437, 200};
+circle_t circ_4 = {1254, 1479, 200};
+circle_t circ_5 = {1966, 2168, 200};
+circle_t circ_6 = {2115, 292, 200};
+circle_t circ_7 = {208, 1256, 200};
+circle_t circ_8 = {277, 1798, 200};
+circle_t circ_9 = {604, 458, 200};
+circle_t circ_10 = {1401, 593, 200};
+circle_t circ_11 = {2038, 859, 200};
+circle_t circ_12 = {1497, 1039, 200};
+circle_t circ_13 = {697, 1414, 200};
+//std::vector<circle_t> circles = {circ_0, circ_1, circ_2, circ_3, circ_4, circ_5, circ_6, circ_7, circ_8, circ_9, circ_10, circ_11, circ_12, circ_13};
+
+
+double r = 400;
+//circle_t c1 = {1200, 1200, r};
+//circle_t c2 = {500, 500, r};
+//circle_t c3 = {900, 1800, r};
+circle_t c4 = {1500, 1500, r};
+circle_t c5 = {1200, 500, r};
+circle_t c6 = {500, 1500, r};
+//circle_t c7 = {1500, 700, r};
+std::vector<circle_t> circles = {c4, c5, c6};
 
 // Rectangle defining boundary of arena (detected by light change)
 double a_w = arena_width - edge_width; double a_h = arena_height - edge_width;
@@ -302,7 +330,7 @@ uint32_t dissemination_start_time;
 uint8_t detect_curvature_dir;
 uint32_t curvature_right_dur = 0;
 uint32_t curvature_left_dur = 0;
-double curvature_ratio_thresh = 1.10;
+double curvature_ratio_thresh = 1.3;
 bool is_first_turn = true;
 uint32_t num_curv_samples = 0;  // TODO: Temporary for debugging curvature
 
@@ -580,7 +608,9 @@ void detect_feature_curvature() {
             detect_curvature_dir = ef_turn_dir;
             detect_feature_state = DETECT_FEATURE_OBSERVE;
             is_first_turn = true;
-            explore_duration = exp_rand(mean_explore_duration);
+            // TODO: TEMPORARY FOR TESTING! Change back to distribution after
+            explore_duration = 3500;
+            //explore_duration = exp_rand(mean_explore_duration);
             num_curv_samples = 0;
         }
     } else if (detect_feature_state == DETECT_FEATURE_OBSERVE) {
@@ -611,18 +641,23 @@ void detect_feature_curvature() {
             double confidence;
             if (curvature_left_dur > curvature_right_dur) {
                 curvature_ratio = (double)curvature_left_dur / curvature_right_dur;
-                confidence = (double)curvature_left_dur / (color_light_dur + curvature_right_dur);
+                confidence = (double)curvature_left_dur / (curvature_left_dur + curvature_right_dur);
             } else {
                 curvature_ratio = (double)curvature_right_dur / curvature_left_dur;
                 confidence = (double)curvature_right_dur / (curvature_left_dur + curvature_right_dur);
             }
             // TODO: Set confidence different than ratio (otherwise biases toward curvature)
-            printf("%f\n", curvature_ratio);
+            printf("%f\t%d\n", curvature_ratio, curvature_left_dur + curvature_right_dur);
             if (curvature_ratio >= curvature_ratio_thresh) {
                 feature_estimate = 255;
             } else {
                 feature_estimate = 0;
             }
+
+            std::ofstream myfile;
+            myfile.open("circle.txt", std::ios::out|std::ios::app);
+            myfile << curvature_ratio << "\t" << curvature_left_dur + curvature_right_dur << std::endl;
+
             detect_feature_state = DETECT_FEATURE_INIT;
             is_feature_disseminating = true;  // Tell message_tx to send updated message
             dissemination_duration = exp_rand(dissemination_duration_constant * confidence);
@@ -693,17 +728,18 @@ void detect_feature_temporal() {
             if (total_dur > 5 * SECOND) {
                 // Consider: sum of normalized standard deviations
                 double total_std = nanadd(color_light_std/sum(color_light_durs)*100, color_dark_std/sum(color_dark_durs)*100);
-                printf("%f\n", total_std);
                 if (total_std == 0) {
                     confidence = 0;
                     feature_estimate = 127;
                 } else if (total_std < temporal_std_thresh) {
                     feature_estimate = 255;
                     confidence = 1 - total_std/temporal_std_thresh*.5;
+                    printf("%f\n", total_std);
                     //printf("PATTERN!\t(%f)\t%f\n", total_std, confidence);
                 } else {
                     feature_estimate = 0;
                     confidence =total_std/70*.5+.5;
+                    printf("%f\n", total_std);
                     //printf("no pattern\t(%f)\t%f\n", total_std, confidence);
                     // TODO: fix/approximate maximum
                 }
@@ -1154,7 +1190,7 @@ void loop() {
             //set_color(RGB(1-est, 1-est, 1));
     	}
         // Color full estimates
-        //set_color(RGB(pattern_belief[0]/255, pattern_belief[1]/255, pattern_belief[2]/255));
+        set_color(RGB(pattern_belief[0]/255, pattern_belief[1]/255, pattern_belief[2]/255));
 	}
 }
 
