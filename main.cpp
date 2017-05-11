@@ -34,7 +34,7 @@ rgb RGB(double r, double g, double b)
 double time_sim;  //simulation time
 double zoom, view_x, view_y; //var. for zoom and scroll
 
-int num_robots = 33;  //number of robots running
+int num_robots = 100;  //number of robots running
 
 robot** robots; //creates an array of robots
 int* safe_distance;
@@ -390,14 +390,17 @@ void draw_scene(void)
 		glRectd(0, 0, arena_width, arena_height);
 
         // Draw projected shapes (background)
-        glColor3f(.6, .6, .6);
+
         for (int i = 0; i < polygons.size(); i++) {
+            std::vector<float> c = polygons[i].color;
+            glColor3f(c[0], c[1], c[2]);
             glBegin(GL_POLYGON);
-            for (int j = 0; j < polygons[i].size(); j++) {
-                glVertex2f(polygons[i][j].x, polygons[i][j].y);
+            for (int j = 0; j < polygons[i].points.size(); j++) {
+                glVertex2f(polygons[i].points[j].x, polygons[i].points[j].y);
             }
             glEnd();
         }
+        glColor3f(.6, .6, .6);
         for (int i = 0; i < circles.size(); i++) {
             drawFilledCircle(circles[i].x, circles[i].y, circles[i].rad);
         }

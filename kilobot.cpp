@@ -20,18 +20,20 @@ typedef struct neighbor_info_array_t
 
 // Rectangle defining boundary of arena (detected by light change)
 double a_w = arena_width - edge_width; double a_h = arena_height - edge_width;
-std::vector<point_t> arena_bounds = {{edge_width, edge_width}, {edge_width, a_h}, {a_w, a_h}, {a_w, edge_width}};
+polygon_t arena_bounds = {
+        {{edge_width, edge_width}, {edge_width, a_h}, {a_w, a_h}, {a_w, edge_width}},
+        {0,0,0}};
 
-static bool point_in_polygon(point_t point, std::vector<point_t> polygon) {
+static bool point_in_polygon(point_t point, polygon_t polygon) {
 	bool in = false;
 	double px = point.x;
 	double py = point.y;
 
-	for (uint8_t i = 0, j = polygon.size() - 1; i < polygon.size(); j = i++) {
-		double ix = polygon[i].x;
-		double iy = polygon[i].y;
-		double jx = polygon[j].x;
-		double jy = polygon[j].y;
+	for (uint8_t i = 0, j = polygon.points.size() - 1; i < polygon.points.size(); j = i++) {
+		double ix = polygon.points[i].x;
+		double iy = polygon.points[i].y;
+		double jx = polygon.points[j].x;
+		double jy = polygon.points[j].y;
 
 		if( ((iy > py) != (jy > py)) &&
 		    (px < ((jx - ix) * (py - iy) / (jy - iy)) + ix)) {
@@ -52,7 +54,7 @@ class mykilobot : public kilobot {
 const uint8_t DARK = 0;
 const uint8_t GRAY = 1;
 const uint8_t LIGHT = 2;
-uint16_t curr_light_level;  // DARK, GRAY, or LIGHT. Initialized/detected in setup()
+uint8_t curr_light_level;  // DARK, GRAY, or LIGHT. Initialized/detected in setup()
 uint16_t edge_thresh = 300;  // Level to differentiate light vs. dark
 uint8_t ef_level;  // DARK or LIGHT level stored
 
@@ -219,29 +221,26 @@ double nanadd(double a, double b) {
     }
 }
 
-void agent_set_color(rgb color, uint8_t this_agent_type) {
-	// Set the color only if the agent type matches what's given
-	// Useful for debugging where one agent refers to the movement type of another
-	if (this_agent_type == AGENT_RW) {
-		agent_set_color(color, AGENT_LONG_RW);
-		agent_set_color(color, AGENT_SHORT_RW);
-	} else if (this_agent_type == agent_type) {
-		set_color(color);
+const char* feature_to_color() {
+	char const* ch = new char;
+	if (detect_which_feature == 0) {
+		ch = "R";
+	} else if (detect_which_feature == 1) {
+		ch = "G";
+	} else {
+		ch = "B";
 	}
+	return ch;
 }
 
 uint8_t find_wall_collision() {
     // Use light sensor to detect if outside the black/white area (into gray)
-    uint16_t light_level = sample_light();
-    if (light_level < 750 && light_level > 250) {
+    uint8_t light_level = detect_light_level(detect_which_feature);
+    if (light_level == GRAY) {
         return 1;
     } else {
         return 0;
     }
-}
-
-bool is_random_walk(uint8_t agent_type) {
-    return agent_type == AGENT_LONG_RW || agent_type == AGENT_SHORT_RW || agent_type == AGENT_RW;
 }
 
 void print_neighbor_info_array() {
@@ -377,7 +376,8 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 
 void detect_feature_color() {
     // Detect how much time is spent in white vs black
-    curr_light_level = detect_light_level();
+	//printf("%d\n", is_feature_detect_safe);
+    curr_light_level = detect_light_level(detect_which_feature);
     if (detect_feature_state == DETECT_FEATURE_INIT) {
         if (is_feature_disseminating && kilo_ticks > dissemination_start_time + dissemination_duration) {
             // Check if dissemination time is finished
@@ -394,7 +394,7 @@ void detect_feature_color() {
             explore_duration = exp_rand(mean_explore_duration);
         }
     } else if (detect_feature_state == DETECT_FEATURE_OBSERVE) {
-        // Check for color change
+		// Check for color change
         if (detect_color_level != curr_light_level || !is_feature_detect_safe || color_light_dur + color_dark_dur + kilo_ticks - detect_level_start_time >= explore_duration) {
             // Add to accumulators if light level changes (including to gray)
             if (detect_color_level == LIGHT) {
@@ -409,23 +409,30 @@ void detect_feature_color() {
             }
         }
         if (color_light_dur + color_dark_dur >= explore_duration) {
-            double confidence;
+			double confidence;
             if (color_light_dur > color_dark_dur) {
                 //set_color(RGB(0,1,0));
                 feature_estimate = 255;
                 confidence = (double)color_light_dur / (color_light_dur + color_dark_dur);
-                if (confidence > 0) printf("LIGHT    (%f, %f)\n", confidence, confidence);
+                if (confidence > 0) printf("%s LIGHT    (%f, %f)\n", feature_to_color(), confidence, confidence);
             } else if (color_light_dur < color_dark_dur) {
                 //set_color(RGB(1,.5,0));
                 feature_estimate = 0;
                 confidence = (double)color_dark_dur / (color_light_dur + color_dark_dur);
-                if (confidence > 0) printf("DARK     (%f, %f)\n", 1-confidence, confidence);
+                if (confidence > 0) printf("%s DARK     (%f, %f)\n", feature_to_color(), 1-confidence, confidence);
             } else {
                 //set_color(RGB(1,1,1));
                 feature_estimate = 127;
                 confidence = 0;
             }
-            //printf("%f\n", confidence);
+			/*
+			if (detect_which_feature == 0) {
+				set_color(RGB(feature_estimate, 0, 0));
+			} else if (detect_which_feature == 1) {
+				set_color(RGB(0, feature_estimate, 0));
+			} else {
+				set_color(RGB(0, 0, feature_estimate));
+			}*/
             detect_feature_state = DETECT_FEATURE_INIT;
             is_feature_disseminating = true;  // Tell message_tx to send updated message
             dissemination_duration = exp_rand(dissemination_duration_constant * confidence);
@@ -472,7 +479,7 @@ void update_pattern_beliefs() {
 
 // AUXILIARY FUNCTIONS FOR LOOP (DETECTION AND MOVEMENT)
 
-uint16_t sample_light() {
+std::vector<uint16_t> sample_light() {
     // Light sampling function
 	uint16_t num_samples = 0;
 	int32_t sum = 0;
@@ -488,21 +495,23 @@ uint16_t sample_light() {
     // Check if in arena boundaries. If not, return grey
     if (!point_in_polygon(p, arena_bounds)) {
         // out of arena = GRAY
-        return 500;
+        return {500, 500, 500};
     } else {
         // Check if in any polygon or circle
         for (int i = 0; i < polygons.size(); i++) {
-            std::vector<point_t> poly = polygons[i];
+            polygon_t poly = polygons[i];
             if (point_in_polygon(p, poly)) {
-                return 1000;
+                return {uint16_t(poly.color[0]*1024),
+						uint16_t(poly.color[1]*1024),
+						uint16_t(poly.color[2]*1024)};
             }
         }
         for (int i = 0; i < circles.size(); i++) {
             if (point_in_circle(p, circles[i])) {
-                return 1000;
+                return {1000, 1000, 1000};
             }
         }
-        return 0;
+        return {0, 0, 0};
     }
 
 	// FOR ACTUAL ROBOTS:
@@ -516,15 +525,15 @@ uint16_t sample_light() {
    return (sum / num_samples);*/
 }
 
-uint8_t detect_light_level() {
+uint8_t detect_light_level(uint8_t feature_ind) {
     // Detect/return light level (DARK = [0,250), GRAY = [250-750), LIGHT = [750-1024])
     // TODO: Refine these levels/thresholds and turn into constants
     // Get current light level
-    uint16_t light = sample_light();
-	if (light < 250) {
+    std::vector<uint16_t> light = sample_light();
+	if (light[feature_ind] < 250) {
 		return DARK;
 	}
-	else if (light < 750){
+	else if (light[feature_ind] < 750){
 		return GRAY;
 	} else {
         return LIGHT;
@@ -562,22 +571,18 @@ void random_walk(uint32_t mean_straight_dur, uint32_t max_turn_dur) {
 	if (wall_hit != 0 && rw_state != BOUNCE) {
 		// Check for wall collision before anything else
 		rw_state = BOUNCE;
-        if (is_random_walk(agent_type)) {
-            is_feature_detect_safe = false;
-        }
+		is_feature_detect_safe = false;
 		bounce_init(wall_hit);
 	} else if (rw_state == BOUNCE) {
-        uint16_t light_levels = sample_light();
-        if (light_levels < 250 || light_levels > 750) {
+        std::vector<uint16_t> light_levels = sample_light();
+        if (light_levels[0] < 250 || light_levels[0] > 750) {
 			// end bounce phase
 			rw_state = RW_INIT;
 		}
 	} else if (rw_state == RW_INIT) {
 		// Set up variables
 		rw_state = RW_STRAIGHT;
-        if (is_random_walk(agent_type)) {
-            is_feature_detect_safe = true;
-        }
+		is_feature_detect_safe = true;
 		rw_last_changed = kilo_ticks; rw_straight_dur = exp_rand(mean_straight_dur);
 		spinup_motors();
 		set_motors(kilo_straight_left, kilo_straight_right);
@@ -585,9 +590,7 @@ void random_walk(uint32_t mean_straight_dur, uint32_t max_turn_dur) {
 		// Change to turn state
 		rw_last_changed = kilo_ticks;
 		rw_state = RW_TURN;
-        if (is_random_walk(agent_type)) {
-            is_feature_detect_safe = false;
-        }
+		is_feature_detect_safe = false;
 		// Select turning duration in kilo_ticks
 		rw_turn_dur = uniform_rand(max_turn_dur);
 		// Set turning direction
@@ -602,9 +605,7 @@ void random_walk(uint32_t mean_straight_dur, uint32_t max_turn_dur) {
 		// Change to straight state
 		rw_last_changed = kilo_ticks;
 		rw_state = RW_STRAIGHT;
-        if (is_random_walk(agent_type)) {
-            is_feature_detect_safe = true;
-        }
+		is_feature_detect_safe = true;
 		// Select staight movement duration
 		rw_straight_dur = exp_rand(mean_straight_dur);
 		// Set turning direction
@@ -620,7 +621,7 @@ void setup() {
 
 	// put your setup code here, to be run only once
 	// Set initial light value
-    curr_light_level = detect_light_level();
+    curr_light_level = detect_light_level(detect_which_feature);
 	rw_last_changed = kilo_ticks;
     // Give them some color so they're visible
     set_color(RGB(1,1,1));
@@ -672,6 +673,7 @@ void loop() {
             //set_color(RGB(1-est, 1-est, 1));
     	}*/
         // Color full estimates
+
         if (pattern_belief[1] == 127 || pattern_belief[2] == 127) {
             set_color(RGB(1,1,1));
         } else {
