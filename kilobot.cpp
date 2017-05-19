@@ -455,6 +455,7 @@ void update_pattern_beliefs() {
                 if (histogram[new_belief] != 0) {
                     pattern_belief[f] = new_belief;
                 }
+                // Else: heard from no one; keep current belief for feature
             }
         } else if (pattern_decision_method == DMVD) {  // Voter-based decisions (lottery)
             std::vector<uint8_t> choices(NEIGHBOR_INFO_ARRAY_SIZE);
