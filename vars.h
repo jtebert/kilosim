@@ -1,3 +1,7 @@
+#ifndef VARS_CPP
+#define VARS_CPP
+#include "shapes.h"
+
 int trial_num = 0;
 
 const uint32_t buffer_size = 1000000;
@@ -17,3 +21,13 @@ double edge_width = 48;
 
 int arena_width = 2400;  // mm
 int arena_height = 2400;  // mm
+
+// Arena parameters for shapes
+int arena_rows = 10;
+float color_fill_ratio[3] = {0.3, 0.2, 0.8};
+std::string shapes_filename_base = "shapes-";
+std::string shapes_dir = "shapes";
+std::vector<polygon_t> polygons;
+std::vector<circle_t> circles = {};
+
+#endif

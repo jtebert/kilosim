@@ -1,7 +1,7 @@
 #pragma once
 #include "kilolib.h"
-#include "vars.cpp"
-#include "shapes.cpp"
+#include "vars.h"
+#include "shapes.h"
 #include <iostream>
 #include <fstream>
 #include <vector>

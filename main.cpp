@@ -1,3 +1,4 @@
+#include "shapes.h"
 #pragma warning(disable:4996)
 
 #include <GL/glew.h>
@@ -17,13 +18,17 @@
 #include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
-//#include "vars.cpp"  // Already included in kilobot.cpp, so including it here breaks
+#include "vars.h"
+//#include "shapes.h"
 
 #define SIMPLEBMP_OPENGL
 #include "simplebmp.h"
 using namespace std;
 
+#ifndef STAT_INFO
+#define STAT_INFO
 struct stat info;
+#endif
 
 uint track_id;
 
@@ -598,7 +603,27 @@ int main(int argc, char **argv) {
 		if (strcmp(argv[i], "--trial") == 0) {
 			trial_num = stoi(argv[i + 1]);
 		}
+        if (strcmp(argv[i], "--rows") == 0) {
+            arena_rows = stoi(argv[i + 1]);
+        }
+        if (strcmp(argv[i], "-r") == 0) {
+            color_fill_ratio[0] = stof(argv[i + 1]);
+        }
+        if (strcmp(argv[i], "-g") == 0) {
+            color_fill_ratio[1] = stof(argv[i + 1]);
+        }
+        if (strcmp(argv[i], "-b") == 0) {
+            color_fill_ratio[2] = stof(argv[i + 1]);
+        }
 	}
+
+    // Get shapes from file
+    std::string shapes_filename = shapes_dir + "/" + shapes_filename_base +
+                                  std::to_string(arena_rows) + "x" + std::to_string(arena_rows) +
+                                  "-[" + float_to_string(color_fill_ratio[0]) + "," + float_to_string(color_fill_ratio[1]) + "," + float_to_string(color_fill_ratio[2]) + "]-" +
+                                  std::to_string(trial_num) + ".txt";
+    //polygons = gen_color_squares("shapes/shapes-13x13-[0.3,0.2,0.8]-10.txt");
+    polygons = gen_color_squares(shapes_filename);
 
 	// Create directory for logging if it doesn't already exist
 	if (stat(log_file_dir.c_str(), &info) != 0) {
@@ -611,9 +636,8 @@ int main(int argc, char **argv) {
 	log_file_name = log_file_dir + "/" + log_file_name_base + std::to_string(trial_num) + ".log";
 	// Check if file exists and warn before overwrite
 	if (stat(log_file_name.c_str(), &info) == 0) {
-		printf("File exists?\n");
 		std::string is_overwrite;
-		std::cout << "This file already exists. Do you want to overwrite it? (y/N) ";
+		std::cout << "This log file already exists. Do you want to overwrite it? (y/N) ";
 		std::cin >> is_overwrite;
 		if (strcmp(is_overwrite.c_str(), "y") == 0) {
 			remove(log_file_name.c_str());
