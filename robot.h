@@ -19,6 +19,8 @@ struct rgb { double red, green, blue; };
 
 class robot {
 public:
+    #define NUM_FEATURES 3
+    uint8_t pattern_belief[NUM_FEATURES] = {127, 127, 127};
 	int id;
 	double pos[3];  //x,y,theta position in real world, dont use these in controller, thats cheating!!
 	double motor_error;  //value of how motors differ from ideal, dont use these, thats cheating!!

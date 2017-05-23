@@ -71,7 +71,6 @@ uint8_t state = RUN_LOOP;
 const uint8_t RED = 0;
 const uint8_t GREEN = 1;
 const uint8_t BLUE = 2;
-#define NUM_FEATURES 3
 
 // Different search/exploration types
 const uint8_t AGENT_LONG_RW = 1;
@@ -79,12 +78,6 @@ const uint8_t AGENT_SHORT_RW = 3;
 const uint8_t AGENT_RW = 4;
 
 
-
-
-
-// Test agent parameters
-const uint8_t TEST_DEFAULT = 0;
-uint8_t test_state = TEST_DEFAULT;
 
 const uint8_t TURN_LEFT = 0;
 const uint8_t TURN_RIGHT = 1;
@@ -144,7 +137,6 @@ const double temporal_std_thresh = 40;
 
 // Beliefs about pattern features start as middle/uncertain (each 127)
 // But should be replaced by first message, so starting value likely won't matter much
-uint8_t pattern_belief[NUM_FEATURES] = {127, 127, 127};
 bool is_updating_belief = false;
 const uint8_t DMMD = 0;
 const uint8_t DMVD = 1;
@@ -414,25 +406,17 @@ void detect_feature_color() {
                 //set_color(RGB(0,1,0));
                 feature_estimate = 255;
                 confidence = (double)color_light_dur / (color_light_dur + color_dark_dur);
-                if (confidence > 0) printf("%s LIGHT    (%f, %f)\n", feature_to_color(), confidence, confidence);
+                //if (confidence > 0) printf("%s LIGHT    (%f, %f)\n", feature_to_color(), confidence, confidence);
             } else if (color_light_dur < color_dark_dur) {
                 //set_color(RGB(1,.5,0));
                 feature_estimate = 0;
                 confidence = (double)color_dark_dur / (color_light_dur + color_dark_dur);
-                if (confidence > 0) printf("%s DARK     (%f, %f)\n", feature_to_color(), 1-confidence, confidence);
+                //if (confidence > 0) printf("%s DARK     (%f, %f)\n", feature_to_color(), 1-confidence, confidence);
             } else {
                 //set_color(RGB(1,1,1));
                 feature_estimate = 127;
                 confidence = 0;
             }
-			/*
-			if (detect_which_feature == 0) {
-				set_color(RGB(feature_estimate, 0, 0));
-			} else if (detect_which_feature == 1) {
-				set_color(RGB(0, feature_estimate, 0));
-			} else {
-				set_color(RGB(0, 0, feature_estimate));
-			}*/
             detect_feature_state = DETECT_FEATURE_INIT;
             is_feature_disseminating = true;  // Tell message_tx to send updated message
             dissemination_duration = exp_rand(dissemination_duration_constant * confidence);

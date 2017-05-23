@@ -8,16 +8,22 @@
 #include <math.h>
 #include <stdio.h>
 #include <string>
+#include <sstream>
 #include "robot.h"
 #include "kilobot.cpp"
 #include <chrono>
 #include <thread>
 #include <vector>
+#include <string>
+#include <sys/types.h>
+#include <sys/stat.h>
 //#include "vars.cpp"  // Already included in kilobot.cpp, so including it here breaks
 
 #define SIMPLEBMP_OPENGL
 #include "simplebmp.h"
 using namespace std;
+
+struct stat info;
 
 uint track_id;
 
@@ -43,12 +49,15 @@ int* order;
 int delay = delay_init;
 int draw_delay = 1;
 FILE *results;
+FILE *log_file;
 
-char log_buffer[255];
+std::string log_buffer;
 char log_file_buffer[buffer_size];
 
 bool log_debug_info = true;
-char log_file_name[255] = "simulation.log";
+std::string log_file_name_base = "simulation-";
+std::string log_file_dir = "logs";
+std::string log_file_name;
 bool showscene = true;
 
 char shape_file_name[255] = "";
@@ -86,22 +95,27 @@ void strcpy_safe(char *m, int l, char *s)
 		*m = *s;
 }
 
-void log_info(char *s)
-{
-	static char *m = log_file_buffer;
-	if (s)
-	{
-		int l = strlen(s) + 1;
-		strcpy(m, s);
-		m += l - 1;
-	}
-	if (m - log_file_buffer >= buffer_size-255 || !s)
-	{
-		results = fopen(log_file_name, "a");
-		fprintf(results, "%s", log_file_buffer);
-		fclose(results);
-		m = log_file_buffer;
-	}
+void log_str(std::string str) {
+	// I don't get what the other log function is doing.
+	// This will just save the input string to log_file_name
+	log_file = fopen(log_file_name.c_str(), "a");
+	fprintf(log_file, "%s", str.c_str());
+	fclose(log_file);
+}
+
+double convergence_ratio(uint8_t feature) {
+	// Find the percentage of kilobots in convergence about belief for given feature
+	int count_converge_up = 0;
+    int count_converge_down = 1;
+	for (int i = 0; i < num_robots; i++) {
+        if (robots[i]->pattern_belief[feature] > 127) {
+            count_converge_up++;
+        } else if (robots[i]->pattern_belief[feature] < 127) {
+            count_converge_down++;
+        }
+    }
+	double convergence = double(max(count_converge_up, count_converge_down)) / num_robots;
+	return convergence;
 }
 
 //check to see if motion causes robots to collide
@@ -295,44 +309,14 @@ bool run_simulation_step()
 	static int lastsec =-1;
 	bool result = false;
 
-    // TODO: log convergance info
-    //sprintf(log_buffer, "random seed: %d\n", t);
-    //log_info(log_buffer);
+	// Log info at each time step
+	std::ostringstream os;
+	os << float(lastrun)/SECOND << "\t" << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2) << "\n";
+	log_buffer = os.str();
 
-/*
-    if ((lastsec!=secs && lastrun>1 && snapshot )|| last)
-    {
-        if (last)
-            cout << "ended\n";
-        else
-            cout << rt << endl;
-
-        lastsec = secs;
-        if (!snapshotcounter || last)
-        {
-            result = true;
-            if (log_debug_info || last)
-            {
-                char finalMSG[] = "final";
-                char buffer[255];
-                if (last)
-                {
-                    for (int i = 0;i < num_robots;i++)
-                        log_info(robots[i]->get_debug_info(buffer, finalMSG));
-                }else
-                {
-                    for (int i = 0;i < num_robots;i++)
-                        log_info(robots[i]->get_debug_info(buffer, rt));
-                }
-            }
-            snapshotcounter = snapshot;
-        }
-        snapshotcounter--;
-    }*/
+	log_str(log_buffer);
 
     return lastrun % draw_delay == 0;
-
-    //return lastrun % draw_delay == 0;
 }
 
 void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius) {
@@ -393,7 +377,7 @@ void draw_scene(void)
 
         for (int i = 0; i < polygons.size(); i++) {
             std::vector<float> c = polygons[i].color;
-            glColor3f(c[0], c[1], c[2]);
+            glColor3f(c[0]*.6, c[1]*.6, c[2]*.6);
             glBegin(GL_POLYGON);
             for (int j = 0; j < polygons[i].points.size(); j++) {
                 glVertex2f(polygons[i].points[j].x, polygons[i].points[j].y);
@@ -453,28 +437,13 @@ void draw_scene(void)
 		glEnd();
 		glFlush();
 
-		/*if (takesnapshot)
-		   {
-		    snapshottaken++;
-		    char file[100];
-		    if (last)
-		    {
-		        sprintf(file, "%s.final.bmp", log_file_name);
-		    }
-		    else
-		    {
-		        sprintf(file, "%s.%04d.bmp", log_file_name, snapshottaken);
-		    }
-		    save_bmp(file);
-		   }*/
-
 		glutSwapBuffers();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	}
 
 	if (last) {
-		log_info(NULL);
+		//log_info(NULL);
 		exit(0);
 	}
 	if (total_secs >= timelimit) {
@@ -593,37 +562,67 @@ void setup_positions()
 // Main routine.
 int main(int argc, char **argv) {
 	for (int i = 0; i < argc-1; i++) {
-		if (strcmp(argv[i],"/r")==0) {
+		if (strcmp(argv[i],"--robots")==0) {
 			num_robots = stoi(argv[i + 1]);
 		}
-		if (strcmp(argv[i], "/l") == 0) {
+		if (strcmp(argv[i], "--log") == 0) {
 			log_debug_info = argv[i + 1][0]=='y';
 		}
-		if (strcmp(argv[i], "/d") == 0) {
+		if (strcmp(argv[i], "--draw") == 0) {
 			showscene = argv[i + 1][0] == 'y';
 		}
-		if (strcmp(argv[i], "/aw") == 0) {
+		if (strcmp(argv[i], "--width") == 0) {
 			arena_width = stoi(argv[i + 1]);
 		}
-		if (strcmp(argv[i], "/ah") == 0) {
+		if (strcmp(argv[i], "--height") == 0) {
 			arena_height = stoi(argv[i + 1]);
 		}
-		if (strcmp(argv[i], "/t") == 0) {
+		if (strcmp(argv[i], "--time") == 0) {
 			timelimit = stoi(argv[i + 1]);
 		}
-		if (strcmp(argv[i], "/f") == 0) {
-			strcpy_safe(log_file_name,255, argv[i + 1]);
+		if (strcmp(argv[i], "--logname") == 0) {
+			log_file_name_base = argv[i + 1];
 		}
-		if (strcmp(argv[i], "/ss") == 0) {
+		if (strcmp(argv[i], "--logdir") == 0) {
+			log_file_dir = argv[i + 1];
+		}
+		if (strcmp(argv[i], "--snapshot") == 0) {
 			snapshot = stoi(argv[i + 1]);
 		}
-		if (strcmp(argv[i], "/seed") == 0) {
+		if (strcmp(argv[i], "--seed") == 0) {
 			seed = stoi(argv[i + 1]);
 		}
-		if (strcmp(argv[i], "/shape") == 0) {
+		if (strcmp(argv[i], "--shape") == 0) {
 			strcpy_safe(shape_file_name, 255, argv[i + 1]);
 		}
+		if (strcmp(argv[i], "--trial") == 0) {
+			trial_num = stoi(argv[i + 1]);
+		}
 	}
+
+	// Create directory for logging if it doesn't already exist
+	if (stat(log_file_dir.c_str(), &info) != 0) {
+		const int dir_err = mkdir(log_file_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+		if (-1 == dir_err) {
+			printf("Error creating directory!n");
+			exit(1);
+		}
+	}
+	log_file_name = log_file_dir + "/" + log_file_name_base + std::to_string(trial_num) + ".log";
+	// Check if file exists and warn before overwrite
+	if (stat(log_file_name.c_str(), &info) == 0) {
+		printf("File exists?\n");
+		std::string is_overwrite;
+		std::cout << "This file already exists. Do you want to overwrite it? (y/N) ";
+		std::cin >> is_overwrite;
+		if (strcmp(is_overwrite.c_str(), "y") == 0) {
+			remove(log_file_name.c_str());
+		} else {
+			std::cout << "File not overwritten. Exiting" << std::endl;
+			exit(1);
+		}
+	}
+	std::cout << log_file_name << std::endl;
 
 	robots = (robot **)malloc(num_robots * sizeof(robot *)); //creates an array of robots
 	safe_distance = (int *) malloc(num_robots * num_robots * sizeof(int));
@@ -637,9 +636,10 @@ int main(int argc, char **argv) {
 		t= (unsigned int) time(NULL);
 	}
 
-	sprintf(log_buffer, "random seed: %d\n", t);
+	// Log once at start of simulation
+	//sprintf(log_buffer, "random seed: %d\n", t);
+	//log_str(log_buffer);
 
-	log_info(log_buffer);
 	srand(t);
 
 	//set the simulation time to 0

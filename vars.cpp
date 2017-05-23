@@ -1,4 +1,4 @@
-
+int trial_num = 0;
 
 const uint32_t buffer_size = 1000000;
 const uint8_t channels = 2;
