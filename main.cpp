@@ -45,8 +45,6 @@ rgb RGB(double r, double g, double b)
 double time_sim;  //simulation time
 double zoom, view_x, view_y; //var. for zoom and scroll
 
-int num_robots = 120;  //number of robots running
-
 robot** robots; //creates an array of robots
 int* safe_distance;
 int* order;
@@ -59,9 +57,6 @@ FILE *log_file;
 std::string log_buffer;
 char log_file_buffer[buffer_size];
 
-bool log_debug_info = true;
-std::string log_file_name_base = "simulation-";
-std::string log_file_dir = "logs";
 std::string log_file_name;
 bool showscene = true;
 
@@ -103,9 +98,11 @@ void strcpy_safe(char *m, int l, char *s)
 void log_str(std::string str) {
 	// I don't get what the other log function is doing.
 	// This will just save the input string to log_file_name
-	log_file = fopen(log_file_name.c_str(), "a");
-	fprintf(log_file, "%s", str.c_str());
-	fclose(log_file);
+    if (log_debug_info) {
+        log_file = fopen(log_file_name.c_str(), "a");
+        fprintf(log_file, "%s", str.c_str());
+        fclose(log_file);
+    }
 }
 
 double convergence_ratio(uint8_t feature) {

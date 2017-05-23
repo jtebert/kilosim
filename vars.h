@@ -4,6 +4,8 @@
 
 int trial_num = 0;
 
+int num_robots = 120;  //number of robots running
+
 const uint32_t buffer_size = 1000000;
 const uint8_t channels = 2;
 const int delay_init = 0; //delay between time steps, use if program is too fast
@@ -21,6 +23,11 @@ double edge_width = 48;
 
 int arena_width = 2400;  // mm
 int arena_height = 2400;  // mm
+
+// Logging results
+bool log_debug_info = true;
+std::string log_file_name_base = "simulation-";
+std::string log_file_dir = "logs";
 
 // Arena parameters for shapes
 int arena_rows = 10;
