@@ -1,41 +1,42 @@
-#ifndef VARS_CPP
-#define VARS_CPP
+#ifndef VARS_H
+#define VARS_H
 
+#include <vector>
 #include "shapes.h"
 
-int trial_num = 0;
+extern int trial_num;
+extern int num_robots;
+extern std::vector<uint8_t> use_features;
 
-int num_robots = 120;  //number of robots running
+// Logging results
+extern bool log_debug_info;
+extern std::string log_file_name_base;
+extern std::string log_file_dir;
 
+// Arena dimensions
+extern double edge_width;  // mm
+extern int arena_width;  // mm
+extern int arena_height;  // mm
+
+// Arena parameters for shapes
+extern int arena_rows;
+extern float color_fill_ratio[3];
+extern std::string shapes_filename_base;
+extern std::string shapes_dir;
+extern std::vector<polygon_t> polygons;
+extern std::vector<circle_t> circles;
+
+// Constants
 const uint32_t buffer_size = 1000000;
 const uint8_t channels = 2;
 const int delay_init = 0; //delay between time steps, use if program is too fast
 const uint32_t windowWidth = 1000;  //display window
 const uint32_t windowHeight = 1000;  //display window
 const uint32_t comm_noise_std = 5; //standard dev. of sensor noise
-//#define PI 3.14159265358979324
 const double TWO_PI = 6.28318530717958648;
 const double p_control_execute = .99;  // probability of a controller executing its time step
 const uint8_t SKIPFRAMES = 0;
 const int shuffles = 20;
 const int circledef = 30;
-
-double edge_width = 48;
-
-int arena_width = 2400;  // mm
-int arena_height = 2400;  // mm
-
-// Logging results
-bool log_debug_info = true;
-std::string log_file_name_base = "simulation-";
-std::string log_file_dir = "logs";
-
-// Arena parameters for shapes
-int arena_rows = 10;
-float color_fill_ratio[3] = {0.3, 0.2, 0.8};
-std::string shapes_filename_base = "shapes-";
-std::string shapes_dir = "shapes";
-std::vector<polygon_t> polygons;
-std::vector<circle_t> circles = {};
 
 #endif

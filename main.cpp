@@ -14,9 +14,6 @@
 #include "kilobot.cpp"
 #include <chrono>
 #include <thread>
-#include <vector>
-#include <string>
-#include <sys/types.h>
 #include <sys/stat.h>
 //#include "vars.h"
 //#include "shapes.h"

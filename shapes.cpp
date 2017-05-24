@@ -3,6 +3,9 @@
 //
 
 #include "shapes.h"
+#include <sys/stat.h>
+#include <fstream>
+#include <sstream>
 
 std::vector<polygon_t> gen_color_squares(std::string filename) {
     // Generate the list of polygons (colored squares) included in the given file

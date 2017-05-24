@@ -1,10 +1,11 @@
 #pragma once
 #include "kilolib.h"
+
 #include "vars.h"
-#include "shapes.h"
-#include <iostream>
-#include <fstream>
-#include <vector>
+//#include "shapes.h"
+//#include <iostream>
+//#include <fstream>
+//#include <vector>
 #include <algorithm>
 
 typedef struct neighbor_info_array_t

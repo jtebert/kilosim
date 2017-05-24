@@ -1,9 +1,8 @@
 #pragma once
-#include <iostream>
 #ifndef ROBOT_H
 #define ROBOT_H
 
-//#include "vars.h"
+#include <iostream>
 
 const double motion_error_std = .02;
 const double PI = 3.14159265358979324;

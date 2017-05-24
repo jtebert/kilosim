@@ -1,11 +1,8 @@
 #ifndef SHAPES_H
 #define SHAPES_H
 
-#include <sys/stat.h>
 #include <vector>
 #include <string>
-#include <fstream>
-#include <sstream>
 
 typedef struct point_t {
     double x;
