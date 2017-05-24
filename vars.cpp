@@ -2,11 +2,12 @@
 // Created by jtebert on 5/24/17.
 //
 
-#include "shapes.h"
+#include "vars.h"
 
 int trial_num = 0;
 int num_robots = 120;
-std::vector<uint8_t> use_features = {0,1};
+uint8_t num_features = 3;
+std::vector<uint8_t> use_features = {0, 1, 2};
 
 // Logging results
 bool log_debug_info = true;

@@ -15,11 +15,7 @@
 #include <chrono>
 #include <thread>
 #include <sys/stat.h>
-//#include "vars.h"
-//#include "shapes.h"
 
-#define SIMPLEBMP_OPENGL
-#include "simplebmp.h"
 using namespace std;
 
 uint track_id;
@@ -43,11 +39,9 @@ int* order;
 
 int delay = delay_init;
 int draw_delay = 1;
-FILE *results;
 FILE *log_file;
 
 std::string log_buffer;
-char log_file_buffer[buffer_size];
 
 std::string log_file_name;
 bool showscene = true;
@@ -61,11 +55,7 @@ char rt[100];
 
 double ch[radius];
 
-int snapshot = 60;
-int snapshotcounter = 0;
-
 bool last = false;
-bool write_final = false;
 
 unsigned int seed = 0;
 
@@ -85,6 +75,33 @@ void strcpy_safe(char *m, int l, char *s)
 {
 	for (int i = 0; i <= l && s; i++)
 		*m = *s;
+}
+
+void parse_use_features(std::string str) {
+    // Parse the input string into new values for use_features
+    use_features = {};
+    std::string delimiter = "-";
+    size_t pos = 0;
+    std::string token;
+    while((pos = str.find(delimiter)) != std::string::npos) {
+        token = str.substr(0, pos);
+        use_features.push_back((uint8_t)stoi(token.c_str()));
+        str.erase(0, pos + delimiter.length());
+    }
+    use_features.push_back((uint8_t)stoi(str.c_str()));
+}
+
+bool use_features_valid() {
+    // Check that all the features are valid
+    if (use_features.size() == 0) {
+        return false;
+    }
+    for (int i; i < use_features.size(); i++) {
+        if (use_features[i] >= num_features) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void log_str(std::string str) {
@@ -159,33 +176,6 @@ int find_collisions(int id, double x, double y, double dt)
 		}
 	}
 	return 0;
-}
-
-void save_bmp(const char *fileName)
-{
-	// The width and the height, would be the width
-	// and height of your current scene.
-
-	SimpleBMP bmp(windowWidth, windowHeight);
-
-	bmp.glReadPixels();
-	bmp.save(fileName);
-}
-
-std::vector<double> wall_collision_adjust(double x, double y) {
-    // Adjust x, y positions so that it goes to wall if it should be touching
-    // Occurs when temporary position is outside of boundaries (put on bound)
-    std::vector<double> p = {x, y};
-    if (y >= arena_height - radius) {
-		p[1] = arena_height - radius;  // Top wall
-	} else if (x >= arena_width - radius) {
-		p[0] = arena_width - radius;  // Right wall
-	} else if ( y <= radius) {
-		p[1] = radius;  // Bottom wall
-	} else if (x <= radius) {
-		p[0] = radius;  // Left wall
-	}
-    return p;
 }
 
 bool run_simulation_step()
@@ -334,7 +324,6 @@ void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius) {
 void drawFilledTriangle(GLfloat x, GLfloat y, double rad, double theta) {
     // Draw a filled triangle at the specified location with bearing theta
     // size = equilateral triangle of size inscribed by circle with given radius
-    // TODO: use bearing to point in right direction
     glBegin(GL_TRIANGLES);
     glVertex2f(x+rad*cos(theta), y+rad*sin(theta));
     glVertex2f(x+rad*cos(theta+2*PI/3), y+rad*sin(theta+2*PI/3));
@@ -407,15 +396,6 @@ void draw_scene(void)
         }
 
 		glBegin(GL_LINES);
-		/*for (int i = 0; i <= radius; i++) {
-			for (int j = 0; j < num_robots; j++) {
-				glColor4f((GLfloat)robots[j]->color[0], (GLfloat)robots[j]->color[1], (GLfloat)robots[j]->color[2], 1.0);
-				glVertex2f((GLfloat)(robots[j]->pos[0]-i), (GLfloat)(robots[j]->pos[1]-ch[i]));
-				glVertex2f((GLfloat)(robots[j]->pos[0] -i), (GLfloat)(robots[j]->pos[1] + ch[i]));
-				glVertex2f((GLfloat)(robots[j]->pos[0] + i), (GLfloat)(robots[j]->pos[1] - ch[i]));
-				glVertex2f((GLfloat)(robots[j]->pos[0] + i), (GLfloat)(robots[j]->pos[1] + ch[i]));
-			}
-		}*/
 		for (int j = 0; j < num_robots; j++) {
 			glBegin(GL_LINES);
 			glColor4f(0, 0, 0, 1.0);
@@ -580,9 +560,6 @@ int main(int argc, char **argv) {
 		if (strcmp(argv[i], "--logdir") == 0) {
 			log_file_dir = argv[i + 1];
 		}
-		if (strcmp(argv[i], "--snapshot") == 0) {
-			snapshot = stoi(argv[i + 1]);
-		}
 		if (strcmp(argv[i], "--seed") == 0) {
 			seed = stoi(argv[i + 1]);
 		}
@@ -592,6 +569,9 @@ int main(int argc, char **argv) {
 		if (strcmp(argv[i], "--trial") == 0) {
 			trial_num = stoi(argv[i + 1]);
 		}
+        if (strcmp(argv[i], "--features") == 0) {
+            parse_use_features(argv[i + 1]);
+        }
         if (strcmp(argv[i], "--rows") == 0) {
             arena_rows = stoi(argv[i + 1]);
         }
@@ -605,6 +585,12 @@ int main(int argc, char **argv) {
             color_fill_ratio[2] = stof(argv[i + 1]);
         }
 	}
+
+    // Check feature values
+    if (!use_features_valid()) {
+        printf("All features IDs used must be 0-%d", num_features);
+        exit(1);
+    }
 
     // Get shapes from file
     std::string shapes_filename = shapes_dir + "/" + shapes_filename_base +

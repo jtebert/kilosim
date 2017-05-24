@@ -6,6 +6,7 @@
 
 extern int trial_num;
 extern int num_robots;
+extern uint8_t num_features;
 extern std::vector<uint8_t> use_features;
 
 // Logging results
