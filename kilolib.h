@@ -1,8 +1,9 @@
 #pragma once
-#include "robot.h"
 #ifndef KILOLIB_H
 #define KILOLIB_H
 #undef RGB
+
+#include "robot.h"
 
 const uint8_t ir = 1;
 const uint8_t NORMAL = 1;

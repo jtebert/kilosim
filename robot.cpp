@@ -1,6 +1,7 @@
 #include <math.h>
 #include <iostream>
 #include "robot.h"
+//#include "vars.h"
 
 void robot::robot_controller() {
 	if (battery > 0) {

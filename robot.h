@@ -3,6 +3,8 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
+//#include "vars.h"
+
 const double motion_error_std = .02;
 const double PI = 3.14159265358979324;
 const uint32_t GAUSS = 10000;

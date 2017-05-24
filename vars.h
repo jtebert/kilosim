@@ -1,5 +1,6 @@
 #ifndef VARS_CPP
 #define VARS_CPP
+
 #include "shapes.h"
 
 int trial_num = 0;

@@ -18,17 +18,12 @@
 #include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "vars.h"
+//#include "vars.h"
 //#include "shapes.h"
 
 #define SIMPLEBMP_OPENGL
 #include "simplebmp.h"
 using namespace std;
-
-#ifndef STAT_INFO
-#define STAT_INFO
-struct stat info;
-#endif
 
 uint track_id;
 
@@ -623,6 +618,7 @@ int main(int argc, char **argv) {
     polygons = gen_color_squares(shapes_filename);
 
 	// Create directory for logging if it doesn't already exist
+	struct stat info;
 	if (stat(log_file_dir.c_str(), &info) != 0) {
 		const int dir_err = mkdir(log_file_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 		if (-1 == dir_err) {
