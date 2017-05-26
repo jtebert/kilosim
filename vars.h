@@ -24,8 +24,9 @@ extern int arena_rows;
 extern float color_fill_ratio[3];
 extern std::string shapes_filename_base;
 extern std::string shapes_dir;
-extern std::vector<polygon_t> polygons;
+extern std::vector<polygon_c_t> polygons;
 extern std::vector<circle_t> circles;
+extern std::vector<rect_c_t> rects;
 
 // Constants
 const uint32_t buffer_size = 1000000;

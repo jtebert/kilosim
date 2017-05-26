@@ -20,29 +20,7 @@ typedef struct neighbor_info_array_t
 
 
 // Rectangle defining boundary of arena (detected by light change)
-double a_w = arena_width - edge_width; double a_h = arena_height - edge_width;
-polygon_t arena_bounds = {
-        {{edge_width, edge_width}, {edge_width, a_h}, {a_w, a_h}, {a_w, edge_width}},
-        {0,0,0}};
-
-static bool point_in_polygon(point_t point, polygon_t polygon) {
-	bool in = false;
-	double px = point.x;
-	double py = point.y;
-
-	for (uint8_t i = 0, j = polygon.points.size() - 1; i < polygon.points.size(); j = i++) {
-		double ix = polygon.points[i].x;
-		double iy = polygon.points[i].y;
-		double jx = polygon.points[j].x;
-		double jy = polygon.points[j].y;
-
-		if( ((iy > py) != (jy > py)) &&
-		    (px < ((jx - ix) * (py - iy) / (jy - iy)) + ix)) {
-				in = !in;
-		}
-	}
-	return in;
-}
+rect_c_t arena_bounds = {{edge_width, edge_width}, (float)(arena_width - 2*edge_width), (float)(arena_height - 2*edge_width), {0,0,0}};
 
 static bool point_in_circle(point_t point, circle_t circ) {
 	double dist = sqrt(pow(point.x - circ.x, 2) + pow(point.y - circ.y, 2));
@@ -371,6 +349,7 @@ void detect_feature_color() {
     // Detect how much time is spent in white vs black
 	//printf("%d\n", is_feature_detect_safe);
     curr_light_level = detect_light_level(detect_which_feature);
+	set_color(RGB(curr_light_level, 0, 0));
     if (detect_feature_state == DETECT_FEATURE_INIT) {
         if (is_feature_disseminating && kilo_ticks > dissemination_start_time + dissemination_duration) {
             // Check if dissemination time is finished
@@ -479,17 +458,18 @@ std::vector<uint16_t> sample_light() {
 	//p.x = pos[0];
     //p.y = pos[1];
     // Check if in arena boundaries. If not, return grey
-    if (!point_in_polygon(p, arena_bounds)) {
+    //if (!point_in_polygon(p, arena_bounds)) {
+	if (!point_in_rect(p, arena_bounds)) {
         // out of arena = GRAY
         return {500, 500, 500};
     } else {
         // Check if in any polygon or circle
-        for (int i = 0; i < polygons.size(); i++) {
-            polygon_t poly = polygons[i];
-            if (point_in_polygon(p, poly)) {
-                return {uint16_t(poly.color[0]*1024),
-						uint16_t(poly.color[1]*1024),
-						uint16_t(poly.color[2]*1024)};
+        for (int i = 0; i < rects.size(); i++) {
+            rect_c_t rect = rects[i];
+            if (point_in_rect(p, rect)) {
+                return {uint16_t(rect.color[0]*1024),
+						uint16_t(rect.color[1]*1024),
+						uint16_t(rect.color[2]*1024)};
             }
         }
         for (int i = 0; i < circles.size(); i++) {
@@ -660,11 +640,12 @@ void loop() {
     	}*/
         // Color full estimates
 
-        if (pattern_belief[1] == 127 || pattern_belief[2] == 127) {
+        /*if (pattern_belief[1] == 127 || pattern_belief[2] == 127) {
             set_color(RGB(1,1,1));
         } else {
             set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
-        }
+        }*/
+		//set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
 	}
 }
 

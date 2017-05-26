@@ -358,7 +358,7 @@ void draw_scene(void)
 
         // Draw projected shapes (background)
 
-        for (int i = 0; i < polygons.size(); i++) {
+        /*for (int i = 0; i < polygons.size(); i++) {
             std::vector<float> c = polygons[i].color;
             glColor3f(c[0]*.6, c[1]*.6, c[2]*.6);
             glBegin(GL_POLYGON);
@@ -366,6 +366,11 @@ void draw_scene(void)
                 glVertex2f(polygons[i].points[j].x, polygons[i].points[j].y);
             }
             glEnd();
+        }*/
+        for (int i = 0; i < rects.size(); i++) {
+            std::vector<float> c = rects[i].color;
+            glColor3f(c[0]*.6, c[1]*.6, c[2]*.6);
+			glRectd(rects[i].pos.x, rects[i].pos.y, rects[i].pos.x + rects[i].width, rects[i].pos.y + rects[i].height);
         }
         glColor3f(.6, .6, .6);
         for (int i = 0; i < circles.size(); i++) {
@@ -378,6 +383,8 @@ void draw_scene(void)
         glRectd(0, 0, arena_width, edge_width);  // Bottom
         glRectd(arena_width-edge_width, 0, arena_width, arena_height);  // right
         glRectd(0, arena_height, arena_width, arena_height-edge_width);  // Top
+
+
 
 		glutSetWindowTitle(rt);
 		glEnable(GL_LINE_SMOOTH);
@@ -597,8 +604,12 @@ int main(int argc, char **argv) {
                                   std::to_string(arena_rows) + "x" + std::to_string(arena_rows) +
                                   "-[" + float_to_string(color_fill_ratio[0]) + "," + float_to_string(color_fill_ratio[1]) + "," + float_to_string(color_fill_ratio[2]) + "]-" +
                                   std::to_string(trial_num) + ".txt";
-    //polygons = gen_color_squares("shapes/shapes-13x13-[0.3,0.2,0.8]-10.txt");
-    polygons = gen_color_squares(shapes_filename);
+    //polygons = gen_color_polys(shapes_filename);
+    rects = gen_color_rects(shapes_filename);
+
+
+	// DEBUGGING
+	std::cout << arena_bounds.width << " " << arena_bounds.height << std::endl;
 
 	// Create directory for logging if it doesn't already exist
 	struct stat info;
