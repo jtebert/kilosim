@@ -27,3 +27,8 @@ std::string shapes_dir = "shapes";
 std::vector<polygon_c_t> polygons = {};
 std::vector<rect_c_t> rects = {};
 std::vector<circle_t> circles = {};
+
+// Time constants for detection
+uint32_t dissemination_duration_constant = 120 * SECOND;
+uint32_t mean_explore_duration = 60 * SECOND;
+uint32_t neighbor_info_array_timeout = 120 * SECOND;

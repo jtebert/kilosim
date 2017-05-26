@@ -358,7 +358,7 @@ void draw_scene(void)
 
         // Draw projected shapes (background)
 
-        /*for (int i = 0; i < polygons.size(); i++) {
+        for (int i = 0; i < polygons.size(); i++) {
             std::vector<float> c = polygons[i].color;
             glColor3f(c[0]*.6, c[1]*.6, c[2]*.6);
             glBegin(GL_POLYGON);
@@ -366,7 +366,7 @@ void draw_scene(void)
                 glVertex2f(polygons[i].points[j].x, polygons[i].points[j].y);
             }
             glEnd();
-        }*/
+        }
         for (int i = 0; i < rects.size(); i++) {
             std::vector<float> c = rects[i].color;
             glColor3f(c[0]*.6, c[1]*.6, c[2]*.6);
@@ -567,6 +567,9 @@ int main(int argc, char **argv) {
 		if (strcmp(argv[i], "--logdir") == 0) {
 			log_file_dir = argv[i + 1];
 		}
+        if (strcmp(argv[i], "--dissemination_dur") == 0) {
+            dissemination_duration_constant = (uint32_t)(stoi(argv[i + 1]) * SECOND);
+        }
 		if (strcmp(argv[i], "--seed") == 0) {
 			seed = stoi(argv[i + 1]);
 		}
@@ -607,10 +610,6 @@ int main(int argc, char **argv) {
     //polygons = gen_color_polys(shapes_filename);
     rects = gen_color_rects(shapes_filename);
 
-
-	// DEBUGGING
-	std::cout << arena_bounds.width << " " << arena_bounds.height << std::endl;
-
 	// Create directory for logging if it doesn't already exist
 	struct stat info;
 	if (stat(log_file_dir.c_str(), &info) != 0) {
@@ -634,6 +633,9 @@ int main(int argc, char **argv) {
 		}
 	}
 	std::cout << log_file_name << std::endl;
+
+    // DEBUGGING
+    // Print stuff here to test parameters/variables
 
 	robots = (robot **)malloc(num_robots * sizeof(robot *)); //creates an array of robots
 	safe_distance = (int *) malloc(num_robots * num_robots * sizeof(int));

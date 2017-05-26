@@ -14,7 +14,6 @@ const uint8_t radius = 16;
 const uint8_t X = 0;
 const uint8_t Y = 1;
 const uint8_t T = 2;
-const uint8_t SECOND = 32;
 
 struct rgb { double red, green, blue; };
 

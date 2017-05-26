@@ -84,8 +84,8 @@ uint8_t bounce_turn;
 uint8_t feature_estimate = 127;  // Feature belief 0-255
 uint32_t feature_observe_start_time;
 bool is_feature_disseminating = false;
-uint32_t dissemination_duration_constant = 60 * SECOND;
-uint32_t mean_explore_duration = 60 * SECOND;
+//uint32_t dissemination_duration_constant = 60 * SECOND;
+//uint32_t mean_explore_duration = 60 * SECOND;
 uint32_t explore_duration;
 uint32_t dissemination_duration;
 uint32_t dissemination_start_time;
@@ -123,8 +123,8 @@ uint8_t pattern_decision_method = DMMD;
 
 // Messages/communication
 #define NEIGHBOR_INFO_ARRAY_SIZE 20
-//uint32_t NEIGHBOR_INFO_ARRAY_TIMEOUT = UINT16_MAX;
-uint32_t NEIGHBOR_INFO_ARRAY_TIMEOUT = 120 * SECOND;
+//uint32_t neighbor_info_array_timeout = UINT16_MAX;
+//uint32_t neighbor_info_array_timeout = 120 * SECOND;
 message_t rx_message_buffer;
 distance_measurement_t rx_distance_buffer;
 bool new_message = false;
@@ -266,7 +266,7 @@ void initialize_neighbor_info_array() {
 
 void prune_neighbor_info_array() {
 	for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
-		if (kilo_ticks > (neighbor_info_array[i].time_last_heard_from + NEIGHBOR_INFO_ARRAY_TIMEOUT)) {
+		if (kilo_ticks > (neighbor_info_array[i].time_last_heard_from + neighbor_info_array_timeout)) {
 			neighbor_info_array[i].id = 0;
 		}
 	}
@@ -349,7 +349,7 @@ void detect_feature_color() {
     // Detect how much time is spent in white vs black
 	//printf("%d\n", is_feature_detect_safe);
     curr_light_level = detect_light_level(detect_which_feature);
-	set_color(RGB(curr_light_level, 0, 0));
+	set_color(RGB(is_feature_disseminating, 0, 0));
     if (detect_feature_state == DETECT_FEATURE_INIT) {
         if (is_feature_disseminating && kilo_ticks > dissemination_start_time + dissemination_duration) {
             // Check if dissemination time is finished
@@ -383,23 +383,21 @@ void detect_feature_color() {
         if (color_light_dur + color_dark_dur >= explore_duration) {
 			double confidence;
             if (color_light_dur > color_dark_dur) {
-                //set_color(RGB(0,1,0));
                 feature_estimate = 255;
                 confidence = (double)color_light_dur / (color_light_dur + color_dark_dur);
                 //if (confidence > 0) printf("%s LIGHT    (%f, %f)\n", feature_to_color(), confidence, confidence);
             } else if (color_light_dur < color_dark_dur) {
-                //set_color(RGB(1,.5,0));
                 feature_estimate = 0;
                 confidence = (double)color_dark_dur / (color_light_dur + color_dark_dur);
                 //if (confidence > 0) printf("%s DARK     (%f, %f)\n", feature_to_color(), 1-confidence, confidence);
             } else {
-                //set_color(RGB(1,1,1));
                 feature_estimate = 127;
                 confidence = 0;
             }
             detect_feature_state = DETECT_FEATURE_INIT;
             is_feature_disseminating = true;  // Tell message_tx to send updated message
             dissemination_duration = exp_rand(dissemination_duration_constant * confidence);
+            //std::cout << dissemination_duration << std::endl;
             dissemination_start_time = kilo_ticks;
         }
     }
@@ -463,7 +461,15 @@ std::vector<uint16_t> sample_light() {
         // out of arena = GRAY
         return {500, 500, 500};
     } else {
-        // Check if in any polygon or circle
+        // Check if in any polygon, rectangle or circle
+        for (int i = 0; i < polygons.size(); i++) {
+            polygon_c_t poly= polygons[i];
+            if (point_in_polygon(p, poly)) {
+                return {uint16_t(poly.color[0] * 1024),
+                        uint16_t(poly.color[1] * 1024),
+                        uint16_t(poly.color[2] * 1024)};
+            }
+        }
         for (int i = 0; i < rects.size(); i++) {
             rect_c_t rect = rects[i];
             if (point_in_rect(p, rect)) {

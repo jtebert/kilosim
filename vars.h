@@ -40,5 +40,11 @@ const double p_control_execute = .99;  // probability of a controller executing 
 const uint8_t SKIPFRAMES = 0;
 const int shuffles = 20;
 const int circledef = 30;
+const uint8_t SECOND = 32;
+
+// Time constants for detection
+extern uint32_t dissemination_duration_constant;
+extern uint32_t mean_explore_duration;
+extern uint32_t neighbor_info_array_timeout;
 
 #endif
