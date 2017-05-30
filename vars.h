@@ -6,8 +6,10 @@
 
 extern int trial_num;
 extern int num_robots;
+extern int timelimit;
 extern uint8_t num_features;
 extern std::vector<uint8_t> use_features;
+extern bool showscene;
 
 // Logging results
 extern bool log_debug_info;

@@ -44,13 +44,11 @@ FILE *log_file;
 std::string log_buffer;
 
 std::string log_file_name;
-bool showscene = true;
 
 char shape_file_name[255] = "";
 
 
 int total_secs;
-int timelimit = 180 * 60;
 char rt[100];
 
 double ch[radius];
@@ -574,7 +572,7 @@ int main(int argc, char **argv) {
 			seed = stoi(argv[i + 1]);
 		}
 		if (strcmp(argv[i], "--shape") == 0) {
-			strcpy_safe(shape_file_name, 255, argv[i + 1]);
+			shapes_filename_base = argv[i + 1];
 		}
 		if (strcmp(argv[i], "--trial") == 0) {
 			trial_num = stoi(argv[i + 1]);

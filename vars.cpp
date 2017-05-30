@@ -6,8 +6,10 @@
 
 int trial_num = 0;
 int num_robots = 120;
+int timelimit = 180 * 60;
 uint8_t num_features = 3;
 std::vector<uint8_t> use_features = {0, 1, 2};
+bool showscene = true;
 
 // Logging results
 bool log_debug_info = true;
@@ -29,6 +31,6 @@ std::vector<rect_c_t> rects = {};
 std::vector<circle_t> circles = {};
 
 // Time constants for detection
-uint32_t dissemination_duration_constant = 120 * SECOND;
+uint32_t dissemination_duration_constant = 60 * SECOND;
 uint32_t mean_explore_duration = 60 * SECOND;
 uint32_t neighbor_info_array_timeout = 120 * SECOND;
