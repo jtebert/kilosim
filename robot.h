@@ -3,6 +3,7 @@
 #define ROBOT_H
 
 #include <iostream>
+#include "vars.h"
 
 const double motion_error_std = .02;
 const double PI = 3.14159265358979324;
@@ -24,7 +25,7 @@ public:
 	int id;
 	double pos[3];  //x,y,theta position in real world, dont use these in controller, thats cheating!!
 	double motor_error;  //value of how motors differ from ideal, dont use these, thats cheating!!
-	double comm_range = 60;  //communication range between robots
+	double comm_range = comm_dist;  //communication range between robots
 	double color[3];  //robot color output, values 0-1
     uint8_t detect_which_feature;  // Index of which pattern feature to detect
     uint8_t agent_type;  // Index of robot movement type

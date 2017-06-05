@@ -137,10 +137,10 @@ public:
 	void delay(int i) { }
 
 	double comm_out_criteria(double x, double y, int sd) {
-        //stardard circular transmission area
-		if (sd>(12*radius)) return 0; // it's more than 10 cm away
+        //standard circular transmission area
+		if (sd>comm_range) return 0; // it's more than 10 cm away
 		double d = distance(x,y,pos[0],pos[1]);
-		if (d < 12 * radius)
+		if (d < comm_range)
 			return d;
 		return 0;
 	}

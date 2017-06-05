@@ -1,11 +1,10 @@
 #pragma once
-#include "kilolib.h"
 
+#include "kilolib.h"
 #include "vars.h"
 //#include "shapes.h"
-//#include <iostream>
-//#include <fstream>
-//#include <vector>
+#include <iostream>
+#include <fstream>
 #include <algorithm>
 
 typedef struct neighbor_info_array_t
@@ -122,7 +121,7 @@ const uint8_t DMVD = 1;
 uint8_t pattern_decision_method = DMMD;
 
 // Messages/communication
-#define NEIGHBOR_INFO_ARRAY_SIZE 20
+#define NEIGHBOR_INFO_ARRAY_SIZE 100
 //uint32_t neighbor_info_array_timeout = UINT16_MAX;
 //uint32_t neighbor_info_array_timeout = 120 * SECOND;
 message_t rx_message_buffer;
@@ -349,7 +348,6 @@ void detect_feature_color() {
     // Detect how much time is spent in white vs black
 	//printf("%d\n", is_feature_detect_safe);
     curr_light_level = detect_light_level(detect_which_feature);
-	set_color(RGB(is_feature_disseminating, 0, 0));
     if (detect_feature_state == DETECT_FEATURE_INIT) {
         if (is_feature_disseminating && kilo_ticks > dissemination_start_time + dissemination_duration) {
             // Check if dissemination time is finished
@@ -396,8 +394,16 @@ void detect_feature_color() {
             }
             detect_feature_state = DETECT_FEATURE_INIT;
             is_feature_disseminating = true;  // Tell message_tx to send updated message
-            dissemination_duration = exp_rand(dissemination_duration_constant * confidence);
-            //std::cout << dissemination_duration << std::endl;
+            uint32_t dissemination_duration_mean = dissemination_duration_constant;
+            if (use_confidence) {
+                dissemination_duration_mean = dissemination_duration_constant * confidence;
+            }
+            if (exp_dissemination) {
+                dissemination_duration = exp_rand(dissemination_duration_mean);
+            } else {
+                dissemination_duration = dissemination_duration_mean;
+            }
+            //dissemination_duration = exp_rand(dissemination_duration_constant * confidence);
             dissemination_start_time = kilo_ticks;
         }
     }
@@ -405,7 +411,22 @@ void detect_feature_color() {
 
 void update_pattern_beliefs() {
     if (is_updating_belief) {
-        if (pattern_decision_method == DMMD) {  // Majority-based decisions
+        is_updating_belief = false;
+        //print_neighbor_info_array();
+        if (log_debug_info) {
+            // Log how many neighbors they used to make decision
+            uint16_t num_neighbors = 0;
+            for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; i++) {
+                if (neighbor_info_array[i].id != 0 && neighbor_info_array[i].detect_which_feature == detect_which_feature) {
+                    num_neighbors++;
+                }
+            }
+            FILE * comm_log = fopen(comm_log_filename.c_str(), "a");
+            fprintf(comm_log, "%f\t%d\t%d\t%d\n", float(kilo_ticks)/SECOND, id, detect_which_feature, num_neighbors);
+            fclose(comm_log);
+        }
+        if (pattern_decision_method == DMMD) {
+            // Majority-based decisions
             for (uint8_t f = 0; f < NUM_FEATURES; ++f) {
                 std::vector<uint8_t> histogram(UINT8_MAX+1, 0);
                 for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
@@ -419,7 +440,8 @@ void update_pattern_beliefs() {
                 }
                 // Else: heard from no one; keep current belief for feature
             }
-        } else if (pattern_decision_method == DMVD) {  // Voter-based decisions (lottery)
+        } else if (pattern_decision_method == DMVD) {
+            // Voter-based decisions (lottery)
             std::vector<uint8_t> choices(NEIGHBOR_INFO_ARRAY_SIZE);
             uint8_t num_choices = 0;
             for (uint8_t f = 0; f < NUM_FEATURES; ++f) {
@@ -651,7 +673,8 @@ void loop() {
         } else {
             set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
         }*/
-		//set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
+		set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
+        //set_color(RGB(is_feature_disseminating, 0, 0));
 	}
 }
 

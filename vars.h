@@ -4,6 +4,7 @@
 #include <vector>
 #include "shapes.h"
 
+// General parameters
 extern int trial_num;
 extern int num_robots;
 extern int timelimit;
@@ -11,10 +12,20 @@ extern uint8_t num_features;
 extern std::vector<uint8_t> use_features;
 extern bool showscene;
 
+// Communication & dissemination
+extern float comm_dist;  // (mm) Maximum distance kilobots can communicate
+extern bool exp_dissemination;  // Use exponential distribution for dissemination duration (true) or constant (false)
+extern bool use_confidence;  // Use confidence to determine dissemination duration or not
+
 // Logging results
 extern bool log_debug_info;
-extern std::string log_file_name_base;
+extern std::string log_filename_base;
 extern std::string log_file_dir;
+extern std::string comm_filename_base;
+extern std::string log_filename;
+extern std::string comm_log_filename;
+extern std::string params_filename_base;
+extern std::string params_filename;
 
 // Arena dimensions
 extern double edge_width;  // mm

@@ -15,6 +15,7 @@
 #include <chrono>
 #include <thread>
 #include <sys/stat.h>
+#include "vars.h"
 
 using namespace std;
 
@@ -40,10 +41,11 @@ int* order;
 int delay = delay_init;
 int draw_delay = 1;
 FILE *log_file;
+std::string log_filename;
+std::string comm_log_filename;
+std::string params_filename;
 
 std::string log_buffer;
-
-std::string log_file_name;
 
 char shape_file_name[255] = "";
 
@@ -104,9 +106,9 @@ bool use_features_valid() {
 
 void log_str(std::string str) {
 	// I don't get what the other log function is doing.
-	// This will just save the input string to log_file_name
+	// This will just save the input string to log_filename
     if (log_debug_info) {
-        log_file = fopen(log_file_name.c_str(), "a");
+        log_file = fopen(log_filename.c_str(), "a");
         fprintf(log_file, "%s", str.c_str());
         fclose(log_file);
     }
@@ -148,7 +150,7 @@ int find_collisions(int id, double x, double y, double dt)
 				double dist_y = y - robots[i]->pos[1];
 				if (x_ulim > robots[i]->pos[0] && x_llim<robots[i]->pos[0] &&
 					y_ulim>robots[i]->pos[1] && y_llim < robots[i]->pos[1]) {
-                        //if not in the sqare limits, i dont even check the circular ones
+                    // if not in the square limits, I don't even check the circular ones
 					double distance = sqrt(dist_x*dist_x + dist_y * dist_y);
 					if (distance < two_r) {
 						return 1;
@@ -204,7 +206,7 @@ bool run_simulation_step()
 
 	int seed;
 	seed = (rand() % shuffles) * num_robots;
-	//let robots communicate
+	// Let robots communicate
 	for (i = 0; i < num_robots; i++) {
 		int index = order[seed + i];
 		robot *rs = robots[index];
@@ -538,45 +540,46 @@ void setup_positions()
 	}
 }
 
-// Main routine.
-int main(int argc, char **argv) {
-	for (int i = 0; i < argc-1; i++) {
-		if (strcmp(argv[i],"--robots")==0) {
-			num_robots = stoi(argv[i + 1]);
-		}
-		if (strcmp(argv[i], "--log") == 0) {
-			log_debug_info = argv[i + 1][0]=='y';
-		}
-		if (strcmp(argv[i], "--draw") == 0) {
-			showscene = argv[i + 1][0] == 'y';
-		}
-		if (strcmp(argv[i], "--width") == 0) {
-			arena_width = stoi(argv[i + 1]);
-		}
-		if (strcmp(argv[i], "--height") == 0) {
-			arena_height = stoi(argv[i + 1]);
-		}
-		if (strcmp(argv[i], "--time") == 0) {
-			timelimit = stoi(argv[i + 1]);
-		}
-		if (strcmp(argv[i], "--logname") == 0) {
-			log_file_name_base = argv[i + 1];
-		}
-		if (strcmp(argv[i], "--logdir") == 0) {
-			log_file_dir = argv[i + 1];
-		}
+
+void parse_params(int argc, char **argv) {
+    // Parse input parameters and mutate appropriate global variables
+    for (int i = 0; i < argc-1; i++) {
+        if (strcmp(argv[i],"--robots")==0) {
+            num_robots = stoi(argv[i + 1]);
+        }
+        if (strcmp(argv[i], "--log") == 0) {
+            log_debug_info = argv[i + 1][0]=='y';
+        }
+        if (strcmp(argv[i], "--draw") == 0) {
+            showscene = argv[i + 1][0] == 'y';
+        }
+        if (strcmp(argv[i], "--width") == 0) {
+            arena_width = stoi(argv[i + 1]);
+        }
+        if (strcmp(argv[i], "--height") == 0) {
+            arena_height = stoi(argv[i + 1]);
+        }
+        if (strcmp(argv[i], "--time") == 0) {
+            timelimit = stoi(argv[i + 1]);
+        }
+        if (strcmp(argv[i], "--logname") == 0) {
+            log_filename_base = argv[i + 1];
+        }
+        if (strcmp(argv[i], "--logdir") == 0) {
+            log_file_dir = argv[i + 1];
+        }
         if (strcmp(argv[i], "--dissemination_dur") == 0) {
             dissemination_duration_constant = (uint32_t)(stoi(argv[i + 1]) * SECOND);
         }
-		if (strcmp(argv[i], "--seed") == 0) {
-			seed = stoi(argv[i + 1]);
-		}
-		if (strcmp(argv[i], "--shape") == 0) {
-			shapes_filename_base = argv[i + 1];
-		}
-		if (strcmp(argv[i], "--trial") == 0) {
-			trial_num = stoi(argv[i + 1]);
-		}
+        if (strcmp(argv[i], "--seed") == 0) {
+            seed = stoi(argv[i + 1]);
+        }
+        if (strcmp(argv[i], "--shape") == 0) {
+            shapes_filename_base = argv[i + 1];
+        }
+        if (strcmp(argv[i], "--trial") == 0) {
+            trial_num = stoi(argv[i + 1]);
+        }
         if (strcmp(argv[i], "--features") == 0) {
             parse_use_features(argv[i + 1]);
         }
@@ -592,7 +595,24 @@ int main(int argc, char **argv) {
         if (strcmp(argv[i], "-b") == 0) {
             color_fill_ratio[2] = stof(argv[i + 1]);
         }
-	}
+        if (strcmp(argv[i], "--use_confidence") == 0) {
+            use_confidence = argv[i + 1][0]=='y';
+        }
+        if (strcmp(argv[i], "--exp_dissemination") == 0) {
+            exp_dissemination = argv[i + 1][0]=='y';
+        }
+        if (strcmp(argv[i], "--comm_dist") == 0) {
+            comm_dist = stof(argv[i + 1]);
+        }
+        if (strcmp(argv[i], "--neighbor_dur") == 0) {
+            neighbor_info_array_timeout = (uint32_t)stoi(argv[i + 1]) * SECOND;
+        }
+    }
+}
+
+// Main routine.
+int main(int argc, char **argv) {
+	parse_params(argc, argv);
 
     // Check feature values
     if (!use_features_valid()) {
@@ -613,24 +633,28 @@ int main(int argc, char **argv) {
 	if (stat(log_file_dir.c_str(), &info) != 0) {
 		const int dir_err = mkdir(log_file_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 		if (-1 == dir_err) {
-			printf("Error creating directory!n");
+			printf("Error creating directory!\n");
 			exit(1);
 		}
 	}
-	log_file_name = log_file_dir + "/" + log_file_name_base + std::to_string(trial_num) + ".log";
+    log_filename = log_file_dir + "/" + log_filename_base + std::to_string(trial_num) + ".log";
+    comm_log_filename = log_file_dir + "/" + comm_filename_base + std::to_string(trial_num) + ".log";
+    params_filename = log_file_dir + "/" + params_filename_base + std::to_string(trial_num) + ".log";
 	// Check if file exists and warn before overwrite
-	if (stat(log_file_name.c_str(), &info) == 0) {
+	if (stat(log_filename.c_str(), &info) == 0) {
 		std::string is_overwrite;
 		std::cout << "This log file already exists. Do you want to overwrite it? (y/N) ";
 		std::cin >> is_overwrite;
 		if (strcmp(is_overwrite.c_str(), "y") == 0) {
-			remove(log_file_name.c_str());
+			remove(log_filename.c_str());
+            remove(comm_log_filename.c_str());
+            remove(params_filename.c_str());
 		} else {
 			std::cout << "File not overwritten. Exiting" << std::endl;
 			exit(1);
 		}
 	}
-	std::cout << log_file_name << std::endl;
+	std::cout << log_filename << std::endl;
 
     // DEBUGGING
     // Print stuff here to test parameters/variables
@@ -646,6 +670,22 @@ int main(int argc, char **argv) {
 	} else {
 		t= (unsigned int) time(NULL);
 	}
+
+	// Save parameters to file
+	std::string params_header, params_vals;
+	params_header += "num_robots\t"; params_vals += std::to_string(num_robots) + "\t";
+	params_header += "dissemination_dur\t"; params_vals += std::to_string(dissemination_duration_constant/SECOND) + "\t";
+	params_header += "num_rows\t"; params_vals += std::to_string(arena_rows) + "\t";
+	params_header += "fill_0\t"; params_vals += std::to_string(color_fill_ratio[0]) + "\t";
+	params_header += "fill_1\t"; params_vals += std::to_string(color_fill_ratio[1]) + "\t";
+	params_header += "fill_2\t"; params_vals += std::to_string(color_fill_ratio[2]) + "\t";
+	params_header += "comm_range\t"; params_vals += std::to_string(comm_dist) + "\t";
+	params_header += "exp_dissemination\t"; params_vals += std::to_string(exp_dissemination) + "\t";
+    params_header += "use_confidence\t"; params_vals += std::to_string(use_confidence) + "\t";
+    FILE * params_log = fopen(params_filename.c_str(), "a");
+    fprintf(params_log, "%s\n", params_header.c_str());
+    fprintf(params_log, "%s\n", params_vals.c_str());
+    fclose(params_log);
 
 	// Log once at start of simulation
 	//sprintf(log_buffer, "random seed: %d\n", t);
