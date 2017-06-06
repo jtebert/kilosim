@@ -719,6 +719,7 @@ int main(int argc, char **argv) {
 	}
 
 	if (showscene) {
+        printf("SHOW SCENE\n");
 		glutInit(&argc, argv);
 		glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 		glutInitWindowSize(windowWidth, windowHeight);
@@ -736,13 +737,15 @@ int main(int argc, char **argv) {
 		glutKeyboardFunc(key_input);
 		glutMainLoop();
 	} else {
-		while (total_secs<timelimit) {
-            char a;
-            std::cin >> a;
+        printf("NO SHOW SCENE\n");
+		while (total_secs < timelimit) {
+            //printf("IN TIME\n");
+            //char a;
+            //std::cin >> a;
 			run_simulation_step();
 		}
 
-		glutInit(&argc, argv);
+		/*glutInit(&argc, argv);
 		glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 		glutInitWindowSize(windowWidth, windowHeight);
 		glutInitWindowPosition(0, 0);
@@ -757,7 +760,7 @@ int main(int argc, char **argv) {
 		glutReshapeFunc(resize_window);
 		glutIdleFunc(on_idle);
 		glutKeyboardFunc(key_input);
-		glutMainLoop();
+		glutMainLoop();*/
 	}
 	return 0;
 }
