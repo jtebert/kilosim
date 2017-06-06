@@ -610,6 +610,24 @@ void parse_params(int argc, char **argv) {
     }
 }
 
+void save_params() {
+    std::string params_header, params_vals;
+    params_header += "num_robots\t"; params_vals += std::to_string(num_robots) + "\t";
+    params_header += "dissemination_dur\t"; params_vals += std::to_string(dissemination_duration_constant/SECOND) + "\t";
+    params_header += "num_rows\t"; params_vals += std::to_string(arena_rows) + "\t";
+    params_header += "fill_0\t"; params_vals += std::to_string(color_fill_ratio[0]) + "\t";
+    params_header += "fill_1\t"; params_vals += std::to_string(color_fill_ratio[1]) + "\t";
+    params_header += "fill_2\t"; params_vals += std::to_string(color_fill_ratio[2]) + "\t";
+    params_header += "comm_range\t"; params_vals += std::to_string(comm_dist) + "\t";
+    params_header += "exp_dissemination\t"; params_vals += std::to_string(exp_dissemination) + "\t";
+    params_header += "use_confidence\t"; params_vals += std::to_string(use_confidence) + "\t";
+    params_header += "neighbor_dur\t"; params_vals += std::to_string(neighbor_info_array_timeout) + "\t";
+    FILE * params_log = fopen(params_filename.c_str(), "a");
+    fprintf(params_log, "%s\n", params_header.c_str());
+    fprintf(params_log, "%s\n", params_vals.c_str());
+    fclose(params_log);
+}
+
 // Main routine.
 int main(int argc, char **argv) {
 	parse_params(argc, argv);
@@ -672,20 +690,7 @@ int main(int argc, char **argv) {
 	}
 
 	// Save parameters to file
-	std::string params_header, params_vals;
-	params_header += "num_robots\t"; params_vals += std::to_string(num_robots) + "\t";
-	params_header += "dissemination_dur\t"; params_vals += std::to_string(dissemination_duration_constant/SECOND) + "\t";
-	params_header += "num_rows\t"; params_vals += std::to_string(arena_rows) + "\t";
-	params_header += "fill_0\t"; params_vals += std::to_string(color_fill_ratio[0]) + "\t";
-	params_header += "fill_1\t"; params_vals += std::to_string(color_fill_ratio[1]) + "\t";
-	params_header += "fill_2\t"; params_vals += std::to_string(color_fill_ratio[2]) + "\t";
-	params_header += "comm_range\t"; params_vals += std::to_string(comm_dist) + "\t";
-	params_header += "exp_dissemination\t"; params_vals += std::to_string(exp_dissemination) + "\t";
-    params_header += "use_confidence\t"; params_vals += std::to_string(use_confidence) + "\t";
-    FILE * params_log = fopen(params_filename.c_str(), "a");
-    fprintf(params_log, "%s\n", params_header.c_str());
-    fprintf(params_log, "%s\n", params_vals.c_str());
-    fclose(params_log);
+	save_params();
 
 	// Log once at start of simulation
 	//sprintf(log_buffer, "random seed: %d\n", t);
