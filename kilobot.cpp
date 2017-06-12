@@ -361,7 +361,11 @@ void detect_feature_color() {
             detect_level_start_time = kilo_ticks;
             detect_color_level = curr_light_level;
             detect_feature_state = DETECT_FEATURE_OBSERVE;
-            explore_duration = exp_rand(mean_explore_duration);
+            if (exp_observation) {
+                explore_duration = exp_rand(mean_explore_duration);
+            } else {
+                explore_duration = mean_explore_duration;
+            }
         }
     } else if (detect_feature_state == DETECT_FEATURE_OBSERVE) {
 		// Check for color change

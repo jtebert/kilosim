@@ -14,6 +14,7 @@ extern bool showscene;
 
 // Communication & dissemination
 extern float comm_dist;  // (mm) Maximum distance kilobots can communicate
+extern bool exp_observation;  // Use exponential distribution for observation duration (true) or constant (false)
 extern bool exp_dissemination;  // Use exponential distribution for dissemination duration (true) or constant (false)
 extern bool use_confidence;  // Use confidence to determine dissemination duration or not
 

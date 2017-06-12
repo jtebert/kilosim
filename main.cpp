@@ -71,12 +71,6 @@ double wrap_angle(double angle) {
     return angle;
 }
 
-void strcpy_safe(char *m, int l, char *s)
-{
-	for (int i = 0; i <= l && s; i++)
-		*m = *s;
-}
-
 void parse_use_features(std::string str) {
     // Parse the input string into new values for use_features
     use_features = {};
@@ -129,9 +123,8 @@ double convergence_ratio(uint8_t feature) {
 	return convergence;
 }
 
-//check to see if motion causes robots to collide
-int find_collisions(int id, double x, double y, double dt)
-{
+int find_collisions(int id, double x, double y, double dt) {
+    // Check to see if motion causes robots to collide
     // Check for collission with wall
 	if (x <= radius || x >= arena_width - radius || y <= radius || y >= arena_height - radius) return 2;
 
@@ -178,8 +171,7 @@ int find_collisions(int id, double x, double y, double dt)
 	return 0;
 }
 
-bool run_simulation_step()
-{
+bool run_simulation_step() {
 	static int lastrun = 0;
 	lastrun++;
 
@@ -342,9 +334,8 @@ void drawFilledSquare(GLfloat x, GLfloat y, double rad, double theta) {
     glEnd();
 }
 
-// Drawing routine.
-void draw_scene(void)
-{
+void draw_scene(void) {
+    // Drawing routine
 	static int snapshottaken = 0;
 	static bool takesnapshot = false;
 	//draws the arena
@@ -384,8 +375,6 @@ void draw_scene(void)
         glRectd(arena_width-edge_width, 0, arena_width, arena_height);  // right
         glRectd(0, arena_height, arena_width, arena_height-edge_width);  // Top
 
-
-
 		glutSetWindowTitle(rt);
 		glEnable(GL_LINE_SMOOTH);
 		glLineWidth(1.0);
@@ -420,7 +409,6 @@ void draw_scene(void)
 
 		glutSwapBuffers();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 	}
 
 	if (last) {
@@ -432,8 +420,8 @@ void draw_scene(void)
 	}
 }
 
-// Initialization routine.
 void setup(void) {
+    // Initialization routine.
 	for (int i = 0; i < num_robots; i++)
 		for (int j = 0; j < shuffles; j++)
 				order[i + num_robots*j] = i;
@@ -451,9 +439,8 @@ void setup(void) {
 				safe_distance[i * num_robots + j] = 0;
 }
 
-// OpenGL window reshape routine.
-void resize_window(int w, int h)
-{
+void resize_window(int w, int h) {
+    // OpenGL window reshape routine.
 	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -462,8 +449,8 @@ void resize_window(int w, int h)
 	glLoadIdentity();
 }
 
-// Keyboard input processing routine.
 void key_input(unsigned char key, int x, int y) {
+    // Keyboard input processing routine.
 	switch (key) {
 	case 27:
 		exit(0);
@@ -517,8 +504,7 @@ void on_idle(void) {
 	glutPostRedisplay();
 }
 
-void setup_positions()
-{
+void setup_positions() {
 	int k = 0;
 	int columns = (int)sqrt((num_robots * arena_width / arena_height));
 	int rows = (int)(num_robots / columns);
@@ -539,7 +525,6 @@ void setup_positions()
 		k++;
 	}
 }
-
 
 void parse_params(int argc, char **argv) {
     // Parse input parameters and mutate appropriate global variables
@@ -598,6 +583,9 @@ void parse_params(int argc, char **argv) {
         if (strcmp(argv[i], "--use_confidence") == 0) {
             use_confidence = argv[i + 1][0]=='y';
         }
+        if (strcmp(argv[i], "--exp_observation") == 0) {
+            exp_observation = argv[i + 1][0]=='y';
+        }
         if (strcmp(argv[i], "--exp_dissemination") == 0) {
             exp_dissemination = argv[i + 1][0]=='y';
         }
@@ -619,17 +607,18 @@ void save_params() {
     params_header += "fill_1\t"; params_vals += std::to_string(color_fill_ratio[1]) + "\t";
     params_header += "fill_2\t"; params_vals += std::to_string(color_fill_ratio[2]) + "\t";
     params_header += "comm_range\t"; params_vals += std::to_string(comm_dist) + "\t";
+    params_header += "exp_observation\t"; params_vals += std::to_string(exp_observation) + "\t";
     params_header += "exp_dissemination\t"; params_vals += std::to_string(exp_dissemination) + "\t";
     params_header += "use_confidence\t"; params_vals += std::to_string(use_confidence) + "\t";
-    params_header += "neighbor_dur\t"; params_vals += std::to_string(neighbor_info_array_timeout) + "\t";
+    params_header += "neighbor_dur\t"; params_vals += std::to_string(neighbor_info_array_timeout/SECOND) + "\t";
     FILE * params_log = fopen(params_filename.c_str(), "a");
     fprintf(params_log, "%s\n", params_header.c_str());
     fprintf(params_log, "%s\n", params_vals.c_str());
     fclose(params_log);
 }
 
-// Main routine.
 int main(int argc, char **argv) {
+    // Main routine.
 	parse_params(argc, argv);
 
     // Check feature values
@@ -719,7 +708,6 @@ int main(int argc, char **argv) {
 	}
 
 	if (showscene) {
-        printf("SHOW SCENE\n");
 		glutInit(&argc, argv);
 		glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 		glutInitWindowSize(windowWidth, windowHeight);
@@ -737,7 +725,6 @@ int main(int argc, char **argv) {
 		glutKeyboardFunc(key_input);
 		glutMainLoop();
 	} else {
-        printf("NO SHOW SCENE\n");
 		while (total_secs < timelimit) {
             //printf("IN TIME\n");
             //char a;
