@@ -17,6 +17,7 @@ float comm_dist = 6 * 16;  // 3 body-lengths
 bool exp_observation = true;  // Use exponential distribution for observation duration (true) or constant (false)
 bool exp_dissemination = true;
 bool use_confidence = true;
+bool allow_retransmit = false; // Allow re-transmission of messages in neighbor array
 
 // Logging results
 bool log_debug_info = true;

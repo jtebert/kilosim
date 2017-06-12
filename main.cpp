@@ -581,13 +581,16 @@ void parse_params(int argc, char **argv) {
             color_fill_ratio[2] = stof(argv[i + 1]);
         }
         if (strcmp(argv[i], "--use_confidence") == 0) {
-            use_confidence = argv[i + 1][0]=='y';
+            use_confidence = argv[i + 1][0] == 'y';
+        }
+        if (strcmp(argv[i], "--allow_retransmit") == 0) {
+            allow_retransmit = argv[i + 1][0] == 'y';
         }
         if (strcmp(argv[i], "--exp_observation") == 0) {
-            exp_observation = argv[i + 1][0]=='y';
+            exp_observation = argv[i + 1][0] == 'y';
         }
         if (strcmp(argv[i], "--exp_dissemination") == 0) {
-            exp_dissemination = argv[i + 1][0]=='y';
+            exp_dissemination = argv[i + 1][0] == 'y';
         }
         if (strcmp(argv[i], "--comm_dist") == 0) {
             comm_dist = stof(argv[i + 1]);
@@ -610,6 +613,7 @@ void save_params() {
     params_header += "exp_observation\t"; params_vals += std::to_string(exp_observation) + "\t";
     params_header += "exp_dissemination\t"; params_vals += std::to_string(exp_dissemination) + "\t";
     params_header += "use_confidence\t"; params_vals += std::to_string(use_confidence) + "\t";
+    params_header += "allow_retransmit\t"; params_vals += std::to_string(allow_retransmit) + "\t";
     params_header += "neighbor_dur\t"; params_vals += std::to_string(neighbor_info_array_timeout/SECOND) + "\t";
     FILE * params_log = fopen(params_filename.c_str(), "a");
     fprintf(params_log, "%s\n", params_header.c_str());

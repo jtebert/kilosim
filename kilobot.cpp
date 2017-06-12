@@ -75,8 +75,11 @@ uint32_t rw_turn_dur;
 
 // Bounce off of walls when it hits them (like a screensaver)
 const uint8_t BOUNCE = 100;
-uint32_t bounce_dur = SECOND * 3;  // kiloticks
 uint8_t bounce_turn;
+
+// Alternate between transmitting own message and re-transmitting random neighbor
+bool is_retransmit = false;
+
 
 // Feature detection
 
@@ -685,6 +688,33 @@ void loop() {
 
 // MESSAGE HANDLING
 
+void retransmit_tx_message_data() {
+    // Pick a random message from neighbor array to re-disseminate & mutate the message to be sent
+    // TODO: Possibly update to send specific messages (e.g., oldest, majority value)
+    // Currently ignores which feature to re-transmit
+    // TODO: Will likely need to worry about neighbor array info locking here?
+
+    // Pick neighbor to retransmit
+    uint16_t num_neighbors = 0;
+    for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; i++) {
+        if (neighbor_info_array[i].id != 0) {
+            num_neighbors++;
+        }
+    }
+    uint32_t neighbor_ind = uniform_rand(num_neighbors);
+    neighbor_info_array_t neighbor = neighbor_info_array[neighbor_ind];
+
+    tx_message_data.type = NORMAL;
+    // ID
+    tx_message_data.data[0] = ((uint8_t) ((neighbor.id & 0xff00) >> 8));
+    tx_message_data.data[1] = ((uint8_t) (neighbor.id & 0x00ff));
+    // Feature variable measured
+    tx_message_data.data[2] = neighbor.detect_which_feature;
+    // Estimate of feature
+    tx_message_data.data[3] = neighbor.feature_estimate;
+    tx_message_data.crc =  message_crc(&tx_message_data);
+}
+
 void update_tx_message_data() {
 	tx_message_data.type = NORMAL;
 	// ID
@@ -692,7 +722,7 @@ void update_tx_message_data() {
 	tx_message_data.data[1] = ((uint8_t) (own_id & 0x00ff));
 	// Feature variable measured
 	tx_message_data.data[2] = detect_which_feature;
-	// Belief about feature
+	// Estimate of feature
 	tx_message_data.data[3] = feature_estimate;
 	tx_message_data.crc = message_crc(&tx_message_data);
 }
@@ -701,8 +731,14 @@ void update_tx_message_data() {
 message_t *message_tx() {
     // Message should be changed/set by respective detection/observation function
     if (is_feature_disseminating) {
-        update_tx_message_data();
-	       return &tx_message_data;
+        if (is_retransmit) {
+            retransmit_tx_message_data();
+            is_retransmit = false;
+        } else {
+            update_tx_message_data();
+            is_retransmit = true;
+        }
+       return &tx_message_data;
     } else {
         return NULL;
     }
@@ -710,7 +746,7 @@ message_t *message_tx() {
 
 // Receive message
 void message_rx(message_t *m, distance_measurement_t *d) {
-    if (neighbor_info_array_locked == false) {
+    if (!neighbor_info_array_locked) {
 		rx_message_buffer = (*m);
 		rx_distance_buffer = (*d);
 		new_message = true;
