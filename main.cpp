@@ -556,8 +556,11 @@ void parse_params(int argc, char **argv) {
         if (strcmp(argv[i], "--dissemination_dur") == 0) {
             dissemination_duration_constant = (uint32_t)(stoi(argv[i + 1]) * SECOND);
         }
+        if (strcmp(argv[i], "--observation_dur") == 0) {
+            mean_explore_duration = (uint32_t)(stoi(argv[i + 1]) * SECOND);
+        }
         if (strcmp(argv[i], "--seed") == 0) {
-            seed = stoi(argv[i + 1]);
+            seed = (uint)stoi(argv[i + 1]);
         }
         if (strcmp(argv[i], "--shape") == 0) {
             shapes_filename_base = argv[i + 1];
@@ -586,6 +589,9 @@ void parse_params(int argc, char **argv) {
         if (strcmp(argv[i], "--allow_retransmit") == 0) {
             allow_retransmit = argv[i + 1][0] == 'y';
         }
+        if (strcmp(argv[i], "--num_retransmit") == 0) {
+            num_retransmit = (uint32_t) stoi(argv[i + 1]);
+        }
         if (strcmp(argv[i], "--exp_observation") == 0) {
             exp_observation = argv[i + 1][0] == 'y';
         }
@@ -605,6 +611,7 @@ void save_params() {
     std::string params_header, params_vals;
     params_header += "num_robots\t"; params_vals += std::to_string(num_robots) + "\t";
     params_header += "dissemination_dur\t"; params_vals += std::to_string(dissemination_duration_constant/SECOND) + "\t";
+    params_header += "observation_dur\t"; params_vals += std::to_string(mean_explore_duration/SECOND) + "\t";
     params_header += "num_rows\t"; params_vals += std::to_string(arena_rows) + "\t";
     params_header += "fill_0\t"; params_vals += std::to_string(color_fill_ratio[0]) + "\t";
     params_header += "fill_1\t"; params_vals += std::to_string(color_fill_ratio[1]) + "\t";
@@ -614,6 +621,7 @@ void save_params() {
     params_header += "exp_dissemination\t"; params_vals += std::to_string(exp_dissemination) + "\t";
     params_header += "use_confidence\t"; params_vals += std::to_string(use_confidence) + "\t";
     params_header += "allow_retransmit\t"; params_vals += std::to_string(allow_retransmit) + "\t";
+    params_header += "num_retransmit\t"; params_vals += std::to_string(num_retransmit) + "\t";
     params_header += "neighbor_dur\t"; params_vals += std::to_string(neighbor_info_array_timeout/SECOND) + "\t";
     FILE * params_log = fopen(params_filename.c_str(), "a");
     fprintf(params_log, "%s\n", params_header.c_str());
@@ -627,7 +635,11 @@ int main(int argc, char **argv) {
 
     // Check feature values
     if (!use_features_valid()) {
-        printf("All features IDs used must be 0-%d", num_features);
+        printf("ERROR: All features IDs used must be 0-%d\n", num_features);
+        exit(1);
+    }
+    if (allow_retransmit && num_retransmit <= 0) {
+        printf("ERROR: num_retransmit must be a positive integer (not 0)\n");
         exit(1);
     }
 
@@ -651,6 +663,7 @@ int main(int argc, char **argv) {
     log_filename = log_file_dir + "/" + log_filename_base + std::to_string(trial_num) + ".log";
     comm_log_filename = log_file_dir + "/" + comm_filename_base + std::to_string(trial_num) + ".log";
     params_filename = log_file_dir + "/" + params_filename_base + std::to_string(trial_num) + ".log";
+    std::cout << log_filename << std::endl;
 	// Check if file exists and warn before overwrite
 	if (stat(log_filename.c_str(), &info) == 0) {
 		std::string is_overwrite;
@@ -665,7 +678,6 @@ int main(int argc, char **argv) {
 			exit(1);
 		}
 	}
-	std::cout << log_filename << std::endl;
 
     // DEBUGGING
     // Print stuff here to test parameters/variables
