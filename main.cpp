@@ -221,7 +221,7 @@ bool run_simulation_step() {
 	}
 
 	seed = (rand() % shuffles) * num_robots;
-	//move robots
+	// Move robots
 	for (i = 0; i < num_robots; i++) {
 		int index = order[seed + i];
 		robot *r = robots[index];
