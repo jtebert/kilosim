@@ -198,27 +198,32 @@ bool run_simulation_step() {
 
 	int seed;
 	seed = (rand() % shuffles) * num_robots;
-	// Let robots communicate
-	for (i = 0; i < num_robots; i++) {
-		int index = order[seed + i];
-		robot *rs = robots[index];
-		//if robot wants to communicate, send message to all robots within distance comm_range
-		void *msg = rs->get_message();
-		if (msg) {
-			for (j = 0; j < num_robots; j++) {
-				robot *rd = robots[j];
-				if (j != index) {
-					double range = rs->comm_out_criteria(rd->pos[0], rd->pos[1], safe_distance[index * num_robots + j]);
-					if (range) {
-						if (rd->comm_in_criteria(rs->pos[0], rs->pos[1], range, msg)) {
-							rs->received();
-							//break;
-						}
-					}
-				}
-			}
-		}
-	}
+    // TODO: Kilobots message on every tick? Change to modulo (~3/sec) and then maybe CSMA/DC
+    if (lastrun % comm_rate == 0) {
+        // Let robots communicate
+        for (i = 0; i < num_robots; i++) {
+            int index = order[seed + i];
+            robot *rs = robots[index];
+            //if robot wants to communicate, send message to all robots within distance comm_range
+            void *msg = rs->get_message();
+            if (msg) {
+                //std::cout << rs->id << "\t" << rs->is_retransmit << std::endl;
+                for (j = 0; j < num_robots; j++) {
+                    robot *rd = robots[j];
+                    if (j != index) {
+                        double range = rs->comm_out_criteria(rd->pos[0], rd->pos[1],
+                                                             safe_distance[index * num_robots + j]);
+                        if (range) {
+                            if (rd->comm_in_criteria(rs->pos[0], rs->pos[1], range, msg)) {
+                                rs->received();
+                                //break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
 	seed = (rand() % shuffles) * num_robots;
 	// Move robots
@@ -592,6 +597,9 @@ void parse_params(int argc, char **argv) {
         if (strcmp(argv[i], "--num_retransmit") == 0) {
             num_retransmit = (uint32_t) stoi(argv[i + 1]);
         }
+        if (strcmp(argv[i], "--comm_rate") == 0) {
+            comm_rate = (uint8_t) stoi(argv[i + 1]);
+        }
         if (strcmp(argv[i], "--exp_observation") == 0) {
             exp_observation = argv[i + 1][0] == 'y';
         }
@@ -622,6 +630,7 @@ void save_params() {
     params_header += "use_confidence\t"; params_vals += std::to_string(use_confidence) + "\t";
     params_header += "allow_retransmit\t"; params_vals += std::to_string(allow_retransmit) + "\t";
     params_header += "num_retransmit\t"; params_vals += std::to_string(num_retransmit) + "\t";
+    params_header += "comm_rate\t"; params_vals += std::to_string(comm_rate) + "\t";
     params_header += "neighbor_dur\t"; params_vals += std::to_string(neighbor_info_array_timeout/SECOND) + "\t";
     FILE * params_log = fopen(params_filename.c_str(), "a");
     fprintf(params_log, "%s\n", params_header.c_str());

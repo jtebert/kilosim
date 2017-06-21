@@ -788,6 +788,7 @@ void retransmit_tx_message_data() {
     // TODO: Will likely need to worry about neighbor array info locking here?
 
     if (retransmit_messages.size() > 0) {
+        //printf("RETRANSMIT MESSAGE\n");
         uint32_t use_ind = uniform_rand(retransmit_messages.size());
         tx_message_data = retransmit_messages[use_ind];
     }
@@ -830,11 +831,13 @@ void update_tx_message_data() {
 message_t *message_tx() {
     // Message should be changed/set by respective detection/observation function
     if (is_feature_disseminating) {
-        if (allow_retransmit) {
+        if (allow_retransmit && kilo_ticks % comm_rate == 0) {
             if (is_retransmit) {
+                //printf("RETRANSMIT\n");
                 retransmit_tx_message_data();
                 is_retransmit = false;
             } else {
+                //printf("own message\n");
                 update_tx_message_data();
                 is_retransmit = true;
             }

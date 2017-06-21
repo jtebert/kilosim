@@ -20,6 +20,7 @@ struct rgb { double red, green, blue; };
 
 class robot {
 public:
+
     #define NUM_FEATURES 3
     uint8_t pattern_belief[NUM_FEATURES] = {127, 127, 127};
 	int id;
@@ -35,6 +36,7 @@ public:
     uint8_t collision_turn_dir;
     uint32_t collision_timer;
     uint32_t max_collision_timer;
+    bool is_retransmit;
 
 
     // Pull the arena width/height from main to the class. I don't know if this

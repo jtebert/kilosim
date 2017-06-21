@@ -19,6 +19,7 @@ extern bool exp_dissemination;  // Use exponential distribution for disseminatio
 extern bool use_confidence;  // Use confidence to determine dissemination duration or not
 extern bool allow_retransmit; // Allow re-transmission of messages in neighbor array
 extern uint32_t num_retransmit;  // Max. num. neighbors from table allowed to be retransmitted in each dissem. period
+extern uint8_t comm_rate;  // Number of ticks per message
 
 // Logging results
 extern bool log_debug_info;
