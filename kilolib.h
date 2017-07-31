@@ -4,6 +4,7 @@
 #undef RGB
 
 #include <math.h>
+#include <omp.h>
 #include "robot.h"
 #include "vars.h"
 
@@ -192,26 +193,38 @@ public:
             return {500, 500, 500};
         } else {
             // Check if in any polygon, rectangle or circle
+            bool abort = false;
+            std::vector<uint16_t> colors;
+            #pragma omp parallel for
             for (int i = 0; i < polygons.size(); i++) {
-                polygon_c_t poly= polygons[i];
-                if (point_in_polygon(p, poly)) {
-                    return {uint16_t(poly.color[0] * 1024),
-                            uint16_t(poly.color[1] * 1024),
-                            uint16_t(poly.color[2] * 1024)};
+                #pragma omp flush (abort)
+                if (!abort) {
+                    polygon_c_t poly = polygons[i];
+                    if (point_in_polygon(p, poly)) {
+                        colors = {uint16_t(poly.color[0] * 1024),
+                                  uint16_t(poly.color[1] * 1024),
+                                  uint16_t(poly.color[2] * 1024)};
+                        abort = true;
+                        #pragma omp flush (abort)
+                    }
                 }
             }
+            #pragma omp parallel for
             for (int i = 0; i < rects.size(); i++) {
-                rect_c_t rect = rects[i];
-                if (point_in_rect(p, rect)) {
-                    return {uint16_t(rect.color[0]*1024),
-                            uint16_t(rect.color[1]*1024),
-                            uint16_t(rect.color[2]*1024)};
+                #pragma omp flush (abort)
+                if (!abort) {
+                    rect_c_t rect = rects[i];
+                    if (point_in_rect(p, rect)) {
+                        colors = {uint16_t(rect.color[0] * 1024),
+                                uint16_t(rect.color[1] * 1024),
+                                uint16_t(rect.color[2] * 1024)};
+                        abort = true;
+                        #pragma omp flush (abort)
+                    }
                 }
             }
-            for (int i = 0; i < circles.size(); i++) {
-                if (point_in_circle(p, circles[i])) {
-                    return {1000, 1000, 1000};
-                }
+            if (abort) {
+                return colors;
             }
             return {0, 0, 0};
         }

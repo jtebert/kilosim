@@ -613,13 +613,9 @@ void random_walk(uint32_t mean_straight_dur, uint32_t max_turn_dur) {
 		rw_state = BOUNCE;
 		is_feature_detect_safe = false;
 		bounce_init(wall_hit);
-	} else if (rw_state == BOUNCE) {
-        //std::vector<uint16_t> light_levels = sample_light();
-        //if (light_levels[0] < 250 || light_levels[0] > 750) {
-        if (curr_light_level != GRAY) {
+	} else if (rw_state == BOUNCE && curr_light_level != GRAY) {
 			// end bounce phase
 			rw_state = RW_INIT;
-		}
 	} else if (rw_state == RW_INIT) {
 		// Set up variables
 		rw_state = RW_STRAIGHT;
@@ -700,6 +696,10 @@ void loop() {
         }
         // Update pattern belief based on neighbor information
         update_pattern_beliefs();
+
+        // Display current observation on LED
+        //std::vector<uint16_t> light = sample_light();
+        //set_color(RGB(light[0], light[1], light[2]));
 
         // Update LED color based on OWN ESTIMATE
         //uint8_t est = feature_estimate/255;
