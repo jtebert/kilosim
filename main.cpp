@@ -36,7 +36,6 @@ double time_sim;  //simulation time
 double zoom, view_x, view_y; //var. for zoom and scroll
 
 robot** robots; //creates an array of robots
-int* safe_distance;
 int* order;
 
 int delay = delay_init;
@@ -477,9 +476,6 @@ void setup(void) {
 			order[index] = order[r];
 			order[r] = p;
 		}
-	for (int i = 0; i < num_robots; i++)
-		for (int j = 0; j < num_robots; j++)
-				safe_distance[i * num_robots + j] = 0;
 }
 
 void resize_window(int w, int h) {
@@ -680,7 +676,7 @@ int main(int argc, char **argv) {
 
     // OpenMP settings
     omp_set_dynamic(0);     // Explicitly disable dynamic teams
-    omp_set_num_threads(1); // Use 4 threads for all consecutive parallel regions
+    omp_set_num_threads(4); // Use 4 threads for all consecutive parallel regions
 
     // Main routine.
 	parse_params(argc, argv);
@@ -735,7 +731,6 @@ int main(int argc, char **argv) {
     // Print stuff here to test parameters/variables
 
 	robots = (robot **)malloc(num_robots * sizeof(robot *)); //creates an array of robots
-	safe_distance = (int *) malloc(num_robots * num_robots * sizeof(int));
 	order = (int *) malloc(shuffles * num_robots * sizeof(int));
 	//seed random variable for different random behavior every time
 	unsigned int t = 0;
