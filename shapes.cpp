@@ -81,3 +81,8 @@ bool point_in_rect(point_t point, rect_c_t rect) {
     return point.x >= rect.pos.x && point.x <= rect.pos.x + rect.width
             && point.y >= rect.pos.y && point.y <= rect.pos.y + rect.height;
 }
+
+bool point_in_circle(point_t point, circle_t circ) {
+    double dist = sqrt(pow(point.x - circ.x, 2) + pow(point.y - circ.y, 2));
+    return dist < circ.rad;
+}

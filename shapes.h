@@ -34,5 +34,6 @@ std::string float_to_string(float num);
 
 bool point_in_polygon(point_t point, polygon_c_t polygon);
 bool point_in_rect(point_t point, rect_c_t rect);
+bool point_in_circle(point_t point, circle_t circ);
 
 #endif

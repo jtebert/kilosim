@@ -41,6 +41,9 @@ std::string shapes_dir = "shapes";
 std::vector<polygon_c_t> polygons = {};
 std::vector<rect_c_t> rects = {};
 std::vector<circle_t> circles = {};
+// Rectangle defining boundary of arena (detected by light change)
+rect_c_t arena_bounds = {{edge_width, edge_width}, (float)(arena_width - 2*edge_width), (float)(arena_height - 2*edge_width), {0,0,0}};
+
 
 // Time constants for detection
 uint32_t dissemination_duration_constant = 60 * SECOND;

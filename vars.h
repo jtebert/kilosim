@@ -44,6 +44,7 @@ extern std::string shapes_dir;
 extern std::vector<polygon_c_t> polygons;
 extern std::vector<circle_t> circles;
 extern std::vector<rect_c_t> rects;
+extern rect_c_t arena_bounds;
 
 // Constants
 const uint32_t buffer_size = 1000000;

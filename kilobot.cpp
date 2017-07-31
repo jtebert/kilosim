@@ -17,15 +17,6 @@ typedef struct neighbor_info_array_t
 	uint8_t number_of_times_heard_from;
 } neighbor_info_array_t;
 
-
-// Rectangle defining boundary of arena (detected by light change)
-rect_c_t arena_bounds = {{edge_width, edge_width}, (float)(arena_width - 2*edge_width), (float)(arena_height - 2*edge_width), {0,0,0}};
-
-static bool point_in_circle(point_t point, circle_t circ) {
-	double dist = sqrt(pow(point.x - circ.x, 2) + pow(point.y - circ.y, 2));
-	return dist < circ.rad;
-}
-
 class mykilobot : public kilobot {
 
 // Light levels for edge following & color detection
@@ -40,10 +31,6 @@ uint8_t ef_level;  // DARK or LIGHT level stored
 const uint8_t SET_LEVELS = 0;
 const uint8_t RUN_LOOP = 1;
 uint8_t state = RUN_LOOP;
-
-
-
-
 
 // Feature that this kilobot is observing (may later be changed, but for now its static)
 const uint8_t RED = 0;
@@ -429,7 +416,6 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 void detect_feature_color() {
     // Detect how much time is spent in white vs black
 	//printf("%d\n", is_feature_detect_safe);
-    curr_light_level = detect_light_level(detect_which_feature);
     if (detect_feature_state == DETECT_FEATURE_INIT) {
         if (is_feature_disseminating && kilo_ticks > dissemination_start_time + dissemination_duration) {
             // Check if dissemination time is finished
@@ -565,48 +551,8 @@ void update_pattern_beliefs() {
 // AUXILIARY FUNCTIONS FOR LOOP (DETECTION AND MOVEMENT)
 
 std::vector<uint16_t> sample_light() {
-    // Light sampling function
-	uint16_t num_samples = 0;
-	int32_t sum = 0;
-
-	// FOR SIMULATOR:
-	// Get point at front/nose of robot
-	point_t p;
-	double t = pos[2];
-	p.x = pos[0] + radius * 1 * cos(t);
-	p.y = pos[1] + radius * 1 * sin(t);
-	//p.x = pos[0];
-    //p.y = pos[1];
-    // Check if in arena boundaries. If not, return grey
-    //if (!point_in_polygon(p, arena_bounds)) {
-	if (!point_in_rect(p, arena_bounds)) {
-        // out of arena = GRAY
-        return {500, 500, 500};
-    } else {
-        // Check if in any polygon, rectangle or circle
-        for (int i = 0; i < polygons.size(); i++) {
-            polygon_c_t poly= polygons[i];
-            if (point_in_polygon(p, poly)) {
-                return {uint16_t(poly.color[0] * 1024),
-                        uint16_t(poly.color[1] * 1024),
-                        uint16_t(poly.color[2] * 1024)};
-            }
-        }
-        for (int i = 0; i < rects.size(); i++) {
-            rect_c_t rect = rects[i];
-            if (point_in_rect(p, rect)) {
-                return {uint16_t(rect.color[0]*1024),
-						uint16_t(rect.color[1]*1024),
-						uint16_t(rect.color[2]*1024)};
-            }
-        }
-        for (int i = 0; i < circles.size(); i++) {
-            if (point_in_circle(p, circles[i])) {
-                return {1000, 1000, 1000};
-            }
-        }
-        return {0, 0, 0};
-    }
+    // FOR SIMULATOR:
+    return get_ambientlight();
 
 	// FOR ACTUAL ROBOTS:
 	/*while (num_samples < 300) {
@@ -668,8 +614,9 @@ void random_walk(uint32_t mean_straight_dur, uint32_t max_turn_dur) {
 		is_feature_detect_safe = false;
 		bounce_init(wall_hit);
 	} else if (rw_state == BOUNCE) {
-        std::vector<uint16_t> light_levels = sample_light();
-        if (light_levels[0] < 250 || light_levels[0] > 750) {
+        //std::vector<uint16_t> light_levels = sample_light();
+        //if (light_levels[0] < 250 || light_levels[0] > 750) {
+        if (curr_light_level != GRAY) {
 			// end bounce phase
 			rw_state = RW_INIT;
 		}
@@ -730,6 +677,8 @@ void setup() {
 
 void loop() {
 	if (state == RUN_LOOP) {
+        curr_light_level = detect_light_level(detect_which_feature);
+
         // Movement
         random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
 
@@ -773,7 +722,7 @@ void loop() {
         } else {
             set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
         }*/
-		set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
+		//set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
         //set_color(RGB(is_feature_disseminating, 0, 0));
 	}
 }

@@ -3,6 +3,7 @@
 #define KILOLIB_H
 #undef RGB
 
+#include <math.h>
 #include "robot.h"
 #include "vars.h"
 
@@ -169,6 +170,52 @@ public:
 		else
 			return 255;
 	}
+
+    std::vector<uint16_t> get_ambientlight() {
+        // Use shapes to determine light seen by kilobot
+        // Light sampling function
+        uint16_t num_samples = 0;
+        int32_t sum = 0;
+
+        // FOR SIMULATOR:
+        // Get point at front/nose of robot
+        point_t p;
+        double t = pos[2];
+        p.x = pos[0] + radius * 1 * cos(t);
+        p.y = pos[1] + radius * 1 * sin(t);
+        //p.x = pos[0];
+        //p.y = pos[1];
+        // Check if in arena boundaries. If not, return grey
+        //if (!point_in_polygon(p, arena_bounds)) {
+        if (!point_in_rect(p, arena_bounds)) {
+            // out of arena = GRAY
+            return {500, 500, 500};
+        } else {
+            // Check if in any polygon, rectangle or circle
+            for (int i = 0; i < polygons.size(); i++) {
+                polygon_c_t poly= polygons[i];
+                if (point_in_polygon(p, poly)) {
+                    return {uint16_t(poly.color[0] * 1024),
+                            uint16_t(poly.color[1] * 1024),
+                            uint16_t(poly.color[2] * 1024)};
+                }
+            }
+            for (int i = 0; i < rects.size(); i++) {
+                rect_c_t rect = rects[i];
+                if (point_in_rect(p, rect)) {
+                    return {uint16_t(rect.color[0]*1024),
+                            uint16_t(rect.color[1]*1024),
+                            uint16_t(rect.color[2]*1024)};
+                }
+            }
+            for (int i = 0; i < circles.size(); i++) {
+                if (point_in_circle(p, circles[i])) {
+                    return {1000, 1000, 1000};
+                }
+            }
+            return {0, 0, 0};
+        }
+    }
 
 	void sensing(int features, int type[], int x[], int y[], int value[]) { }
 
