@@ -125,54 +125,6 @@ double convergence_ratio(uint8_t feature) {
 	return convergence;
 }
 
-int find_collisions(int id, double x, double y, double dt) {
-    // Check to see if motion causes robots to collide
-    // Check for collision with wall
-	if (x <= radius || x >= arena_width - radius || y <= radius || y >= arena_height - radius) return 2;
-
-	double two_r = 2 * radius;
-	int i;
-	double x_ulim = x + two_r;
-	double x_llim = x - two_r;
-	double y_ulim = y + two_r;
-	double y_llim = y - two_r;
-	for (i = 0;i < num_robots;i++) {
-		if (i != id) {
-			if (safe_distance[id*num_robots+i]) {
-				safe_distance[id*num_robots + i]--;
-			} else {
-				double dist_x = x - robots[i]->pos[0];
-				double dist_y = y - robots[i]->pos[1];
-				if (x_ulim > robots[i]->pos[0] && x_llim<robots[i]->pos[0] &&
-					y_ulim>robots[i]->pos[1] && y_llim < robots[i]->pos[1]) {
-                    // if not in the square limits, I don't even check the circular ones
-					double distance = sqrt(dist_x*dist_x + dist_y * dist_y);
-					if (distance < two_r) {
-						return 1;
-					}
-				} else {
-					double bd = 0;
-					if (fabs(dist_x)>fabs(dist_y)) {
-						bd = fabs(dist_x);
-					} else {
-						bd = fabs(dist_y);
-					}
-					if (bd > two_r+20) {
-						double speed = (robots[id]->forward_speed + robots[i]->forward_speed) * dt;
-						if (speed > 0) {
-							safe_distance[id*num_robots + i] = (int)((bd - (two_r + 20)) / speed);
-						} else {
-							safe_distance[id*num_robots + i] = 1000000;
-						}
-						safe_distance[i*num_robots + id] = safe_distance[id*num_robots + i];
-					}
-				}
-			}
-		}
-	}
-	return 0;
-}
-
 double* compute_next_step (double dt) {
 	// Compute the next positions of the robots according to their current positions and motor commands
 	// This will be used for collision detection (check if they'd be overlapping on the next step)
@@ -382,70 +334,6 @@ bool run_simulation_step() {
 		// If a bot is touching the wall (collision_type == 2), update angle but not position
 	}
 
-	/*
-	seed = (rand() % shuffles) * num_robots;
-	// Move robots
-	for (i = 0; i < num_robots; i++) {
-		int index = order[seed + i];
-		robot *r = robots[index];
-
-		double theta = r->pos[2];
-        double x = r->pos[0];
-        double y = r->pos[1];
-        double temp_x = x;;
-        double temp_y = y;
-        double temp_cos, temp_sin, phi;
-		switch (r->motor_command) {
-    		case 1: {  // forward
-    			//theta += r->motor_error * dt;
-    			double speed = r->forward_speed * dt;
-                temp_x = speed*cos(theta) + r->pos[0];
-        		temp_y = speed*sin(theta) + r->pos[1];
-    			break;
-    		}
-    		case 2: {  // CW rotation
-                phi = -r->turn_speed * dt;
-    			theta += phi;
-                temp_cos = radius * cos(theta + 4*PI/3);
-                temp_sin = radius * sin(theta + 4*PI/3);
-                temp_x = x + temp_cos - temp_cos*cos(phi) + temp_sin*sin(phi);
-                temp_y = y + temp_sin - temp_cos*sin(phi) - temp_sin*cos(phi);
-    			break;
-    		}
-    		case 3: { // CCW rotation
-                phi = r->turn_speed * dt;
-    			theta += phi;
-                temp_cos = radius * cos(theta + 2*PI/3);
-                temp_sin = radius * sin(theta + 2*PI/3);
-                temp_x = x + temp_cos - temp_cos*cos(phi) + temp_sin*sin(phi);
-                temp_y = y + temp_sin - temp_cos*sin(phi) - temp_sin*cos(phi);
-                break;
-    		}
-		}
-
-        int collision_type = find_collisions(index, temp_x, temp_y, dt);
-		if (collision_type == 0) {  // No collision
-			r->pos[0] = temp_x;
-			r->pos[1] = temp_y;
-            r->collision_timer = 0;
-        } else if (collision_type == 1) {  // Hitting another kilobot
-            if (r->collision_turn_dir == 0) {
-                theta = r->pos[2] - r->turn_speed * dt;  // left/CCW
-            } else {
-                theta = r->pos[2] + r->turn_speed * dt;  // right/CW
-            }
-            if (r->collision_timer > r->max_collision_timer) {  // Change turn dir
-                r->collision_turn_dir = (r->collision_turn_dir + 1) % 2;
-                r->collision_timer = 0;
-
-            }
-            r->collision_timer++;
-		}
-        // If a bot is touching the wall (collision_type == 2), no position update
-
-        r->pos[2] = wrap_angle(theta);
-	}
-	 */
 	static int lastsec =-1;
 	bool result = false;
 
@@ -542,8 +430,8 @@ void draw_scene(void) {
 		glEnable(GL_LINE_SMOOTH);
 		glLineWidth(1.0);
 
-        // Draw robots in different shapes depending on feature to detect
         for (int j = 0; j < num_robots; j++) {
+            // Draw robots in different shapes depending on feature to detect
             glColor4f((GLfloat)robots[j]->color[0], (GLfloat)robots[j]->color[1], (GLfloat)robots[j]->color[2], 1.0);
             if (robots[j]->detect_which_feature == 0) {
                 drawFilledCircle((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1], radius);
@@ -552,22 +440,14 @@ void draw_scene(void) {
             } else  if (robots[j]->detect_which_feature == 2) {
                 drawFilledSquare((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1], radius*1.3, robots[j]->pos[2]);
             }
+            // Draw lines for bearing
+            glBegin(GL_LINES);
+            glColor4f(0.2, 0.2, 0.2, 1.0);
+            glVertex2f((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1]);
+            glVertex2f((GLfloat)(robots[j]->pos[0] + cos(robots[j]->pos[2])*radius), (GLfloat)(robots[j]->pos[1] + sin(robots[j]->pos[2])*radius));
+            glEnd();
         }
 
-		glBegin(GL_LINES);
-		for (int j = 0; j < num_robots; j++) {
-			glBegin(GL_LINES);
-			glColor4f(0, 0, 0, 1.0);
-			glVertex2f((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1]);
-			glVertex2f((GLfloat)(robots[j]->pos[0] + cos(robots[j]->pos[2])*radius), (GLfloat)(robots[j]->pos[1] + sin(robots[j]->pos[2])*radius));
-			if (robots[j]->dest[0] != -1) {
-				glBegin(GL_LINES);
-				glColor4f(1, 1, 1, 1.0);
-				glVertex2f((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1]);
-				glVertex2f((GLfloat)robots[j]->dest[0], (GLfloat)robots[j]->dest[1]);
-			}
-		}
-		glEnd();
 		glFlush();
 
 		glutSwapBuffers();
@@ -799,8 +679,8 @@ void save_params() {
 int main(int argc, char **argv) {
 
     // OpenMP settings
-    //omp_set_dynamic(0);     // Explicitly disable dynamic teams
-    //omp_set_num_threads(8); // Use 4 threads for all consecutive parallel regions
+    omp_set_dynamic(0);     // Explicitly disable dynamic teams
+    omp_set_num_threads(8); // Use 4 threads for all consecutive parallel regions
 
     // Main routine.
 	parse_params(argc, argv);
