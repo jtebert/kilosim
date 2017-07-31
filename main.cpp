@@ -113,6 +113,7 @@ double convergence_ratio(uint8_t feature) {
 	// Find the percentage of kilobots in convergence about belief for given feature
 	int count_converge_up = 0;
     int count_converge_down = 1;
+    //#pragma parallel for
 	for (int i = 0; i < num_robots; i++) {
         if (robots[i]->pattern_belief[feature] > 127) {
             count_converge_up++;
@@ -234,23 +235,34 @@ int find_collisions_alt(double* new_pos, int self_id, int time) {
 	if (self_x <= radius || self_x >= arena_width - radius || self_y <= radius || self_y >= arena_height - radius) {
 		return 2;
 	}
-    int other_id;
-	for (other_id = 0; other_id < num_robots; other_id++) {
-		if (other_id != self_id) {  // Don't compare to self
-			double other_x = new_pos[other_id * 3];
-			double other_y = new_pos[other_id * 3 + 1];
-			// Get distance to other robots
-			double dist_x = self_x - other_x;
-			double dist_y = self_y - other_y;
-			double distance = sqrt(pow(dist_x, 2) + pow(dist_y, 2));
-			// Check if new positions are intersecting
-			if (distance < 2 * radius) {
-				return 1;
-			}
-		}
+    bool abort = false;
+
+    #pragma omp parallel for
+	for (int other_id = 0; other_id < num_robots; other_id++) {
+        #pragma omp flush (abort)
+        if (!abort) {
+            if (other_id != self_id) {  // Don't compare to self
+                double other_x = new_pos[other_id * 3];
+                double other_y = new_pos[other_id * 3 + 1];
+                // Get distance to other robots
+                double dist_x = self_x - other_x;
+                double dist_y = self_y - other_y;
+                double distance = sqrt(pow(dist_x, 2) + pow(dist_y, 2));
+
+                // Check if new positions are intersecting
+                if (distance < 2 * radius) {
+                    abort = true;
+                    #pragma omp flush (abort)
+                }
+            }
+        }
 	}
-    // Otherwise no collisions
-    return 0;
+    if (abort) {
+        return 1;
+    } else {
+        // Otherwise no collisions
+        return 0;
+    }
 }
 
 bool run_simulation_step() {
@@ -787,8 +799,8 @@ void save_params() {
 int main(int argc, char **argv) {
 
     // OpenMP settings
-    omp_set_dynamic(0);     // Explicitly disable dynamic teams
-    omp_set_num_threads(4); // Use 4 threads for all consecutive parallel regions
+    //omp_set_dynamic(0);     // Explicitly disable dynamic teams
+    //omp_set_num_threads(8); // Use 4 threads for all consecutive parallel regions
 
     // Main routine.
 	parse_params(argc, argv);
