@@ -722,7 +722,7 @@ void loop() {
         } else {
             set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
         }*/
-		//set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
+		set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
         //set_color(RGB(is_feature_disseminating, 0, 0));
 	}
 }

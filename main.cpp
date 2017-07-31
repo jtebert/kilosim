@@ -177,7 +177,7 @@ double* compute_next_step (double dt) {
 	return new_pos;
 }
 
-int find_collisions_alt(double* new_pos, int self_id, int time) {
+int find_collisions(double* new_pos, int self_id, int time) {
 	// Check to see if motion causes robots to collide with their updated positions
 	double self_x = new_pos[self_id*3];
 	double self_y = new_pos[self_id*3 + 1];
@@ -244,9 +244,6 @@ bool run_simulation_step() {
 	}
 
 	// COMMUNICATION
-
-	// TODO: Testing new communication approach (remove reliance on global safe_distance variable)
-
 	// Only communicate at tick rate achievable by kilobots (simulate CSMA/CD)
 	if (lastrun % comm_rate == 0) {
         #pragma omp parallel for
@@ -270,39 +267,7 @@ bool run_simulation_step() {
 		}
 	}
 
-	/*
-	int seed;
-	seed = (rand() % shuffles) * num_robots;
-    if (lastrun % comm_rate == 0) {
-        // Let robots communicate
-        for (i = 0; i < num_robots; i++) {
-            int index = order[seed + i];
-            robot *rs = robots[index];
-            //if robot wants to communicate, send message to all robots within distance comm_range
-            void *msg = rs->get_message();
-            if (msg) {
-                //std::cout << rs->id << "\t" << rs->is_retransmit << std::endl;
-                for (j = 0; j < num_robots; j++) {
-                    robot *rd = robots[j];
-                    if (j != index) {
-                        double range = rs->comm_out_criteria(rd->pos[0], rd->pos[1],
-                                                             safe_distance[index * num_robots + j]);
-                        if (range) {
-                            if (rd->comm_in_criteria(rs->pos[0], rs->pos[1], range, msg)) {
-                                rs->received();
-                                //break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    */
-
 	// MOVEMENT
-
-	// TODO: Testing new collision and movement method
 	double* new_pos = compute_next_step(dt);
 	for (int r_id = 0; r_id < num_robots; r_id++) {
 		robot *r = robots[r_id];
@@ -310,7 +275,7 @@ bool run_simulation_step() {
 		double new_y = new_pos[r_id*3 + 1];
 		double new_theta = new_pos[r_id*3 + 2];
 
-		int collision_type = find_collisions_alt(new_pos, r_id, lastrun);
+		int collision_type = find_collisions(new_pos, r_id, lastrun);
 
 		if (collision_type == 0) {  // No collision
 			r->pos[0] = new_x;
@@ -646,6 +611,9 @@ void parse_params(int argc, char **argv) {
         if (strcmp(argv[i], "--neighbor_dur") == 0) {
             neighbor_info_array_timeout = (uint32_t)stoi(argv[i + 1]) * SECOND;
         }
+        if (strcmp(argv[i], "--num_threads") == 0) {
+            num_threads = stoi(argv[i + 1]);
+        }
     }
 }
 
@@ -674,12 +642,14 @@ void save_params() {
 
 int main(int argc, char **argv) {
 
-    // OpenMP settings
-    omp_set_dynamic(0);     // Explicitly disable dynamic teams
-    omp_set_num_threads(4); // Use 4 threads for all consecutive parallel regions
-
     // Main routine.
 	parse_params(argc, argv);
+
+    // OpenMP settings
+    if (num_threads != 0) {
+        omp_set_dynamic(0);     // Explicitly disable dynamic teams
+        omp_set_num_threads(num_threads); // Use num_threads for all consecutive parallel regions
+    }
 
     // Check feature values
     if (!use_features_valid()) {
@@ -794,23 +764,6 @@ int main(int argc, char **argv) {
             //std::cin >> a;
 			run_simulation_step();
 		}
-
-		/*glutInit(&argc, argv);
-		glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-		glutInitWindowSize(windowWidth, windowHeight);
-		glutInitWindowPosition(0, 0);
-
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0.0f, 1000, 1000, 0.0f, 0.0f, 1.0f);
-		glClearColor(1.0, 1.0, 1.0, 0.0);
-		glutCreateWindow("Kilobot simulator");
-
-		glutDisplayFunc(draw_scene);
-		glutReshapeFunc(resize_window);
-		glutIdleFunc(on_idle);
-		glutKeyboardFunc(key_input);
-		glutMainLoop();*/
 	}
 	return 0;
 }

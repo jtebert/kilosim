@@ -87,8 +87,6 @@ public:
 
     virtual double comm_out_criteria(double dist) = 0;
     virtual bool comm_in_criteria(double dist, void *cd) = 0;
-	//virtual double comm_out_criteria(double destination_x, double destination_y, int sd) = 0;
-	//virtual bool comm_in_criteria(double source_x, double source_y, double distance, void *cd) = 0;
 
 	//useful
 	static double distance(double x1, double y1, double x2, double y2) {

@@ -5,6 +5,7 @@
 #include "vars.h"
 
 // General parameters
+int num_threads = 4;  // Number of CPU threads to parallelize across
 int trial_num = 0;
 int num_robots = 120;
 int timelimit = 180 * 60;

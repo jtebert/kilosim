@@ -5,6 +5,7 @@
 #include "shapes.h"
 
 // General parameters
+extern int num_threads;  // Number of CPU threads to parallelize across
 extern int trial_num;
 extern int num_robots;
 extern int timelimit;

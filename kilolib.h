@@ -144,26 +144,11 @@ public:
         return dist;
 	}
 
-	/*double comm_out_criteria(double x, double y, int sd) {
-        //standard circular transmission area
-		if (sd>comm_range) return 0; // it's outside communication range
-		double d = distance(x,y,pos[0],pos[1]);
-		if (d < comm_range)
-			return d;
-		return 0;
-	}*/
-
     bool comm_in_criteria(double dist, void *cd) {
         distance_measurement = dist;
         message_rx((message_t *)cd, &distance_measurement);
         return true;
     }
-
-	/*bool comm_in_criteria(double x, double y, double d, void *cd) {
-		distance_measurement = d;
-		message_rx((message_t *)cd, &distance_measurement);
-		return true;
-	}*/
 
 	unsigned char estimate_distance(distance_measurement_t *d) {
 		if (*d < 255)
