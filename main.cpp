@@ -1,6 +1,7 @@
 #include "shapes.h"
 #pragma warning(disable:4996)
 
+#include <omp.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 #include <iostream>
@@ -125,7 +126,7 @@ double convergence_ratio(uint8_t feature) {
 
 int find_collisions(int id, double x, double y, double dt) {
     // Check to see if motion causes robots to collide
-    // Check for collission with wall
+    // Check for collision with wall
 	if (x <= radius || x >= arena_width - radius || y <= radius || y >= arena_height - radius) return 2;
 
 	double two_r = 2 * radius;
@@ -171,6 +172,87 @@ int find_collisions(int id, double x, double y, double dt) {
 	return 0;
 }
 
+double* compute_next_step (double dt) {
+	// Compute the next positions of the robots according to their current positions and motor commands
+	// This will be used for collision detection (check if they'd be overlapping on the next step)
+	// Does NOT address turning that happens when there is a collision
+	// new positions are serialized: [x_1, y_1, theta_1, x_2, y_2, theta_2, x_3, ...]
+
+	double *new_pos = (double*)malloc( num_robots * 3 * sizeof(double) );
+
+    #pragma omp parallel for
+	for (int i = 0; i < num_robots; i++) {
+		robot *r = robots[i];
+
+		double theta = r->pos[2];
+		double x = r->pos[0];
+		double y = r->pos[1];
+		double temp_x = x;;
+		double temp_y = y;
+		double temp_cos, temp_sin, phi;
+		switch (r->motor_command) {
+			case 1: {  // forward
+				//theta += r->motor_error * dt;
+				double speed = r->forward_speed * dt;
+				temp_x = speed*cos(theta) + r->pos[0];
+				temp_y = speed*sin(theta) + r->pos[1];
+				break;
+			}
+			case 2: {  // CW rotation
+				phi = -r->turn_speed * dt;
+				theta += phi;
+				temp_cos = radius * cos(theta + 4*PI/3);
+				temp_sin = radius * sin(theta + 4*PI/3);
+				temp_x = x + temp_cos - temp_cos*cos(phi) + temp_sin*sin(phi);
+				temp_y = y + temp_sin - temp_cos*sin(phi) - temp_sin*cos(phi);
+				break;
+			}
+			case 3: { // CCW rotation
+				phi = r->turn_speed * dt;
+				theta += phi;
+				temp_cos = radius * cos(theta + 2*PI/3);
+				temp_sin = radius * sin(theta + 2*PI/3);
+				temp_x = x + temp_cos - temp_cos*cos(phi) + temp_sin*sin(phi);
+				temp_y = y + temp_sin - temp_cos*sin(phi) - temp_sin*cos(phi);
+				break;
+			}
+		}
+
+		new_pos[i*3] = temp_x;
+		new_pos[i*3 + 1] = temp_y;
+		new_pos[i*3 + 2] = wrap_angle(theta);
+	}
+	return new_pos;
+}
+
+int find_collisions_alt(double* new_pos, int self_id, int time) {
+	// Check to see if motion causes robots to collide with their updated positions
+	double self_x = new_pos[self_id*3];
+	double self_y = new_pos[self_id*3 + 1];
+
+	// Check for collision with wall
+	if (self_x <= radius || self_x >= arena_width - radius || self_y <= radius || self_y >= arena_height - radius) {
+		return 2;
+	}
+    int other_id;
+	for (other_id = 0; other_id < num_robots; other_id++) {
+		if (other_id != self_id) {  // Don't compare to self
+			double other_x = new_pos[other_id * 3];
+			double other_y = new_pos[other_id * 3 + 1];
+			// Get distance to other robots
+			double dist_x = self_x - other_x;
+			double dist_y = self_y - other_y;
+			double distance = sqrt(pow(dist_x, 2) + pow(dist_y, 2));
+			// Check if new positions are intersecting
+			if (distance < 2 * radius) {
+				return 1;
+			}
+		}
+	}
+    // Otherwise no collisions
+    return 0;
+}
+
 bool run_simulation_step() {
 	static int lastrun = 0;
 	lastrun++;
@@ -189,16 +271,45 @@ bool run_simulation_step() {
     double rotation_step = .05; //motion step size
 
 	//run a step of most or all robot controllers
+    #pragma omp parallel for
 	for (i = 0; i < num_robots; i++) {
+        //printf("%d\n", i);
 		//run controller this time step with p_control_execute probability
 		if ((rand())<(int)(p_control_execute*RAND_MAX)) {
 			robots[i]->robot_controller();
 		}
 	}
 
+	// COMMUNICATION
+
+	// TODO: Testing new communication approach (remove reliance on global safe_distance variable)
+
+	// Only communicate at tick rate achievable by kilobots (simulate CSMA/CD)
+	if (lastrun % comm_rate == 0) {
+        #pragma omp parallel for
+		for (int tx_id = 0; tx_id < num_robots; tx_id++) {
+			// Loop over all transmitting robots
+			robot *tx_r = robots[tx_id];
+			void *msg = tx_r->get_message();
+			if (msg) {
+				for (int rx_id = 0; rx_id < num_robots; rx_id++) {
+					// Loop over receivers if transmitting robot is sending a message
+					robot *rx_r = robots[rx_id];
+					if (tx_id != rx_id) {
+						// Check communication range in both directions (due to potentially noisy communication range)
+						double dist = tx_r->distance(tx_r->pos[0], tx_r->pos[1], rx_r->pos[0], rx_r->pos[1]);
+						if (tx_r->comm_out_criteria(dist) && rx_r->comm_in_criteria(dist, msg)) {
+							rx_r->received();
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/*
 	int seed;
 	seed = (rand() % shuffles) * num_robots;
-    // TODO: Kilobots message on every tick? Change to modulo (~3/sec) and then maybe CSMA/DC
     if (lastrun % comm_rate == 0) {
         // Let robots communicate
         for (i = 0; i < num_robots; i++) {
@@ -224,7 +335,42 @@ bool run_simulation_step() {
             }
         }
     }
+    */
 
+	// MOVEMENT
+
+	// TODO: Testing new collision and movement method
+	double* new_pos = compute_next_step(dt);
+	for (int r_id = 0; r_id < num_robots; r_id++) {
+		robot *r = robots[r_id];
+		double new_x = new_pos[r_id*3];
+		double new_y = new_pos[r_id*3 + 1];
+		double new_theta = new_pos[r_id*3 + 2];
+
+		int collision_type = find_collisions_alt(new_pos, r_id, lastrun);
+
+		if (collision_type == 0) {  // No collision
+			r->pos[0] = new_x;
+			r->pos[1] = new_y;
+			r->collision_timer = 0;
+		} else if (collision_type == 1) {  // Hitting another kilobot
+			if (r->collision_turn_dir == 0) {
+				new_theta = r->pos[2] - r->turn_speed * dt;  // left/CCW
+			} else {
+				new_theta = r->pos[2] + r->turn_speed * dt;  // right/CW
+			}
+			if (r->collision_timer > r->max_collision_timer) {  // Change turn dir
+				r->collision_turn_dir = (r->collision_turn_dir + 1) % 2;
+				r->collision_timer = 0;
+
+			}
+			r->collision_timer++;
+		}
+        r->pos[2] = wrap_angle(new_theta);
+		// If a bot is touching the wall (collision_type == 2), update angle but not position
+	}
+
+	/*
 	seed = (rand() % shuffles) * num_robots;
 	// Move robots
 	for (i = 0; i < num_robots; i++) {
@@ -287,6 +433,7 @@ bool run_simulation_step() {
 
         r->pos[2] = wrap_angle(theta);
 	}
+	 */
 	static int lastsec =-1;
 	bool result = false;
 
@@ -353,7 +500,6 @@ void draw_scene(void) {
 		glRectd(0, 0, arena_width, arena_height);
 
         // Draw projected shapes (background)
-
         for (int i = 0; i < polygons.size(); i++) {
             std::vector<float> c = polygons[i].color;
             glColor3f(c[0]*.6, c[1]*.6, c[2]*.6);
@@ -639,6 +785,11 @@ void save_params() {
 }
 
 int main(int argc, char **argv) {
+
+    // OpenMP settings
+    omp_set_dynamic(0);     // Explicitly disable dynamic teams
+    omp_set_num_threads(4); // Use 4 threads for all consecutive parallel regions
+
     // Main routine.
 	parse_params(argc, argv);
 

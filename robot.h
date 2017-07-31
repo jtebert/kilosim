@@ -24,8 +24,8 @@ public:
     #define NUM_FEATURES 3
     uint8_t pattern_belief[NUM_FEATURES] = {127, 127, 127};
 	int id;
-	double pos[3];  //x,y,theta position in real world, dont use these in controller, thats cheating!!
-	double motor_error;  //value of how motors differ from ideal, dont use these, thats cheating!!
+	double pos[3];  //x,y,theta position in real world, don't use these in controller, that's cheating!!
+	double motor_error;  //value of how motors differ from ideal, don't use these, that's cheating!!
 	double comm_range = comm_dist;  //communication range between robots
 	double color[3];  //robot color output, values 0-1
     uint8_t detect_which_feature;  // Index of which pattern feature to detect
@@ -70,7 +70,7 @@ public:
 
 	virtual void sensing(int, int[], int[], int[], int[]) = 0;
 
-	//flag set to 1 when robot wants to transmitt
+	//flag set to 1 when robot wants to transmit
 	int tx_request;
 
 	//flag set to 1 when new message received
@@ -85,8 +85,10 @@ public:
 
 	virtual char *get_debug_info(char *buffer, char *rt) = 0;
 
-	virtual double comm_out_criteria(double destination_x, double destination_y, int sd) = 0;
-	virtual bool comm_in_criteria(double source_x, double source_y, double distance, void *cd) = 0;
+    virtual double comm_out_criteria(double dist) = 0;
+    virtual bool comm_in_criteria(double dist, void *cd) = 0;
+	//virtual double comm_out_criteria(double destination_x, double destination_y, int sd) = 0;
+	//virtual bool comm_in_criteria(double source_x, double source_y, double distance, void *cd) = 0;
 
 	//useful
 	static double distance(double x1, double y1, double x2, double y2) {
