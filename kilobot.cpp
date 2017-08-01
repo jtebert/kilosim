@@ -13,11 +13,16 @@ typedef struct neighbor_info_array_t
 	uint16_t id;
 	uint8_t detect_which_feature;
 	uint8_t feature_estimate;
+    float belief_concentration;
 	uint32_t time_last_heard_from;
 	uint8_t number_of_times_heard_from;
 } neighbor_info_array_t;
 
+
 class mykilobot : public kilobot {
+
+// TODO: DIFFUSION PARAMETERS
+float concentration = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 
 // Light levels for edge following & color detection
 const uint8_t DARK = 0;
@@ -283,12 +288,12 @@ uint8_t find_wall_collision() {
 }
 
 void print_neighbor_info_array() {
-	printf("Own ID = %x\tPattern beliefs = (%u, %u, %u)\n\r", own_id, pattern_belief[0], pattern_belief[1], pattern_belief[2]);
+	printf("\n\n\nOwn ID = %x\tPattern beliefs = (%u, %u, %u)\n", id, pattern_belief[0], pattern_belief[1], pattern_belief[2]);
 
 	printf("Index\tID\tFeature\tBelief\tD_meas.\tN_Heard\tTime\n\r");
 	for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
 		if (neighbor_info_array[i].id != 0) {
-			printf("%u\t%x\t%u\t%u\t%u\t%u\t%u\n\r",
+			printf("%u\t%x\t%u\t%u\t%u\t%u\t%u",
                 //  1   2   3   4   5   6   7
 					i,
 					neighbor_info_array[i].id,
@@ -338,6 +343,24 @@ void prune_neighbor_info_array() {
 			neighbor_info_array[i].id = 0;
 		}
 	}
+}
+
+uint8_t* float_to_bytes(float f) {
+    uint8_t *out = reinterpret_cast<uint8_t*>(&f);
+    return out;
+}
+
+float bytes_to_float(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) {
+    // Convert the 4 uint8_t to a 32-bit float
+    union {
+        float f;
+        uint8_t b[4];
+    } u;
+    u.b[0] = b0;
+    u.b[1] = b1;
+    u.b[2] = b2;
+    u.b[3] = b3;
+    return u.f;
 }
 
 void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
@@ -392,6 +415,9 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 			neighbor_info_array[index_to_insert].id = rx_id;
 			neighbor_info_array[index_to_insert].measured_distance = measured_distance_instantaneous;
 			neighbor_info_array[index_to_insert].number_of_times_heard_from = 0;
+            // TODO: Concentration update
+            neighbor_info_array[index_to_insert].belief_concentration = bytes_to_float(m->data[2], m->data[3], m->data[4], m->data[5]);
+            update_concentration(m);
 		} else {
 			if (distance_averaging) {
 				neighbor_info_array[index_to_insert].measured_distance *= 0.9;
@@ -405,8 +431,8 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 			}
 		}
 		// Update info whether it's new or not
-		neighbor_info_array[index_to_insert].detect_which_feature = m->data[2];
-		neighbor_info_array[index_to_insert].feature_estimate = m->data[3];
+		//neighbor_info_array[index_to_insert].detect_which_feature = m->data[2];
+		//neighbor_info_array[index_to_insert].feature_estimate = m->data[3];
 	}
 }
 
@@ -547,6 +573,19 @@ void update_pattern_beliefs() {
     }
 }
 
+void update_concentration(message_t* m) {
+    // TODO: Update concentration based on concentration in received message
+    // TEMPORARY: Lock beliefs of first and last kilobots (test generating gradient)
+    if (id == 0) {
+        concentration = 0;
+    } else if (id == 1) {
+        concentration = 1;
+    } else {
+        float rx_concentration = bytes_to_float(m->data[2], m->data[3], m->data[4], m->data[5]);
+        concentration += diffusion_constant * rx_concentration;
+    }
+    printf("%x: %f\n", id, concentration);
+}
 
 // AUXILIARY FUNCTIONS FOR LOOP (DETECTION AND MOVEMENT)
 
@@ -656,6 +695,8 @@ void random_walk(uint32_t mean_straight_dur, uint32_t max_turn_dur) {
 
 void setup() {
 
+    is_feature_disseminating = true;
+
 	// put your setup code here, to be run only once
 	// Set initial light value
     curr_light_level = detect_light_level(detect_which_feature);
@@ -665,10 +706,12 @@ void setup() {
     // Initialize own id
     seed_rng();
 	initialize_neighbor_info_array();
-	own_id = rand();
+	//own_id = rand();
+    // TODO: Use ID from robot.h
+    /*own_id = id;
 	while (own_id == 0 || own_id == 0x1234) {
 		own_id = rand();
-	}
+	}*/
 }
 
 void loop() {
@@ -676,10 +719,10 @@ void loop() {
         curr_light_level = detect_light_level(detect_which_feature);
 
         // Movement
-        random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
+        //random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
 
         // Feature observation
-        detect_feature_color();
+        //detect_feature_color();
 
         // Neighbor updates
         static uint32_t last_printed;
@@ -695,11 +738,10 @@ void loop() {
             last_printed = kilo_ticks;
         }
         // Update pattern belief based on neighbor information
-        update_pattern_beliefs();
+        //update_pattern_beliefs();
 
-        // Display current observation on LED
-        //std::vector<uint16_t> light = sample_light();
-        //set_color(RGB(light[0], light[1], light[2]));
+        // LED: CONCENTRATION
+        set_color(RGB(concentration, 0, 0));
 
         // Update LED color based on OWN ESTIMATE
         //uint8_t est = feature_estimate/255;
@@ -722,8 +764,7 @@ void loop() {
         } else {
             set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
         }*/
-		set_color(RGB((float)pattern_belief[0] / 255, (float)pattern_belief[1] / 255, (float)pattern_belief[2] / 255));
-        //set_color(RGB(is_feature_disseminating, 0, 0));
+		//set_color(RGB((float)pattern_belief[0] / 255, (float)pattern_belief[1] / 255, (float)pattern_belief[2] / 255));
 	}
 }
 
@@ -764,36 +805,28 @@ void retransmit_tx_message_data() {
      */
 }
 
-void update_tx_message_data() {
-	tx_message_data.type = NORMAL;
-	// ID
-	tx_message_data.data[0] = ((uint8_t) ((own_id & 0xff00) >> 8));
-	tx_message_data.data[1] = ((uint8_t) (own_id & 0x00ff));
-	// Feature variable measured
-	tx_message_data.data[2] = detect_which_feature;
-	// Estimate of feature
-	tx_message_data.data[3] = feature_estimate;
-	tx_message_data.crc = message_crc(&tx_message_data);
-}
+    void update_tx_message_data() {
+        // TODO: Send message that includes concentration
+        // Cast concentration float to 4 uint8_t
+        uint8_t *conc_array = float_to_bytes(concentration);
+        // MESSAGE
+        tx_message_data.type = NORMAL;
+        // ID
+        tx_message_data.data[0] = ((uint8_t) ((id & 0xff00) >> 8));
+        tx_message_data.data[1] = ((uint8_t) (id & 0x00ff));
+        // Concentration (float = 32 bits)
+        tx_message_data.data[2] = conc_array[0];
+        tx_message_data.data[3] = conc_array[1];
+        tx_message_data.data[4] = conc_array[2];
+        tx_message_data.data[5] = conc_array[3];
+        tx_message_data.crc = message_crc(&tx_message_data);
+    }
 
 // Send message (continuously)
 message_t *message_tx() {
     // Message should be changed/set by respective detection/observation function
     if (is_feature_disseminating) {
-        if (allow_retransmit && kilo_ticks % comm_rate == 0) {
-            if (is_retransmit) {
-                //printf("RETRANSMIT\n");
-                retransmit_tx_message_data();
-                is_retransmit = false;
-            } else {
-                //printf("own message\n");
-                update_tx_message_data();
-                is_retransmit = true;
-            }
-        } else {
-            update_tx_message_data();
-        }
-       return &tx_message_data;
+        update_tx_message_data();
     } else {
         return NULL;
     }
@@ -801,11 +834,14 @@ message_t *message_tx() {
 
 // Receive message
 void message_rx(message_t *m, distance_measurement_t *d) {
+    //printf("Received message... ");
     if (!neighbor_info_array_locked) {
 		rx_message_buffer = (*m);
 		rx_distance_buffer = (*d);
 		new_message = true;
+        //printf("Can process ");
 	}
+    //printf("\n");
 }
 
 // Executed on successful message send

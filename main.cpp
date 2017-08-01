@@ -530,6 +530,22 @@ void setup_positions() {
 	}
 }
 
+void setup_positions_dense_row() {
+    // Set the positions to be a row of touching kilobots
+    // Robots will also be in order by index
+    float horizontal_separation = 2.1 * radius;
+    int center_x = arena_width / 2;
+    int center_y = arena_height / 2;
+    int start_x = center_x - horizontal_separation * num_robots / 2;
+    for (int i = 0; i < num_robots; i++) {
+        int x = start_x + horizontal_separation * i;
+        int y = center_y;
+        double theta = rand() * 2 * PI / RAND_MAX;
+        robots[i] = new mykilobot();
+        robots[i]->robot_init(x, y, theta);
+    }
+}
+
 void parse_params(int argc, char **argv) {
     // Parse input parameters and mutate appropriate global variables
     for (int i = 0; i < argc-1; i++) {
@@ -738,11 +754,17 @@ int main(int argc, char **argv) {
 	view_x = arena_width;
 	view_y = arena_height;
 
-	//place robots
+	//TODO: Place robots in row
 	//setup_positions_gradient();
-	setup_positions();
+    setup_positions_dense_row();
+	//setup_positions();
+
 
 	setup();
+
+    // TODO: Specialize 1st and last robots
+    robots[0]->id = 0;
+    robots[num_robots-1]->id = 1;
 
 	//do some open gl stuff
 
