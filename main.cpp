@@ -614,6 +614,16 @@ void parse_params(int argc, char **argv) {
         if (strcmp(argv[i], "--num_threads") == 0) {
             num_threads = stoi(argv[i + 1]);
         }
+        // Diffusion parameters
+        if (strcmp(argv[i], "--diffusion_constant") == 0) {
+            diffusion_constant = stof(argv[i + 1]);
+        }
+        if (strcmp(argv[i], "--diffusion_decision_thresh") == 0) {
+            diffusion_decision_thresh= stof(argv[i + 1]);
+        }
+        if (strcmp(argv[i], "--diffusion_decision_time") == 0) {
+            diffusion_decision_time = (uint32_t)stoi(argv[i + 1]);
+        }
     }
 }
 

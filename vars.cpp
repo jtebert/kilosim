@@ -45,8 +45,13 @@ std::vector<circle_t> circles = {};
 // Rectangle defining boundary of arena (detected by light change)
 rect_c_t arena_bounds = {{edge_width, edge_width}, (float)(arena_width - 2*edge_width), (float)(arena_height - 2*edge_width), {0,0,0}};
 
-
 // Time constants for detection
 uint32_t dissemination_duration_constant = 60 * SECOND;
 uint32_t mean_explore_duration = 60 * SECOND;
 uint32_t neighbor_info_array_timeout = 120 * SECOND;
+
+// Diffusion parameters
+float diffusion_constant = 0.1;  // (D) (0-1) influence of concentration messages on own concentration
+//uint32_t neighbor_info_array_timeout;  // Later will have a parameter that's a ratio to neighbor_info_array_timeout
+float diffusion_decision_thresh = 0.1;  // as difference from 0/1
+uint32_t diffusion_decision_time = SECOND;  // (kiloticks) time past threshold before committing to decision
