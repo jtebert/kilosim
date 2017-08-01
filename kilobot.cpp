@@ -661,7 +661,7 @@ void setup() {
     curr_light_level = detect_light_level(detect_which_feature);
 	rw_last_changed = kilo_ticks;
     // Give them some color so they're visible
-    set_color(RGB(1,1,1));
+    set_color(RGB(0.5, 0.5, 0.5));
     // Initialize own id
     seed_rng();
 	initialize_neighbor_info_array();
@@ -722,7 +722,7 @@ void loop() {
         } else {
             set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
         }*/
-		set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
+		set_color(RGB((float)pattern_belief[0] / 255, (float)pattern_belief[1] / 255, (float)pattern_belief[2] / 255));
         //set_color(RGB(is_feature_disseminating, 0, 0));
 	}
 }
