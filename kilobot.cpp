@@ -199,17 +199,17 @@ std::vector<message_t> generate_retransmit_messages(std::vector<uint32_t> neighb
     if (neighbor_inds.size() > 0) {
         for (int i = 0; i < neighbor_inds.size(); i++) {
             neighbor_info_array_t neighbor = neighbor_info_array[neighbor_inds[i]];
-            message_t new_message;
-            new_message.type = NORMAL;
+            message_t message_new;
+            message_new.type = NORMAL;
             // ID
-            new_message.data[0] = ((uint8_t) ((neighbor.id & 0xff00) >> 8));
-            new_message.data[1] = ((uint8_t) (neighbor.id & 0x00ff));
+            message_new.data[0] = ((uint8_t) ((neighbor.id & 0xff00) >> 8));
+            message_new.data[1] = ((uint8_t) (neighbor.id & 0x00ff));
             // Feature variable measured
-            new_message.data[2] = neighbor.detect_which_feature;
+            message_new.data[2] = neighbor.detect_which_feature;
             // Estimate of feature
-            new_message.data[3] = neighbor.feature_estimate;
-            new_message.crc = message_crc(&tx_message_data);
-            messages[i] = new_message;
+            message_new.data[3] = neighbor.feature_estimate;
+            message_new.crc = message_crc(&tx_message_data);
+            messages[i] = message_new;
         }
     }
     return messages;
@@ -288,12 +288,21 @@ uint8_t find_wall_collision() {
 }
 
 void print_neighbor_info_array() {
-	printf("\n\n\nOwn ID = %x\tPattern beliefs = (%u, %u, %u)\n", id, pattern_belief[0], pattern_belief[1], pattern_belief[2]);
+	//printf("\n\n\nOwn ID = %d\tPattern beliefs = (%u, %u, %u)\n", id, pattern_belief[0], pattern_belief[1], pattern_belief[2]);
+    printf("\n\nID = %d\tConcentration = %f\n", id, concentration);
 
-	printf("Index\tID\tFeature\tBelief\tD_meas.\tN_Heard\tTime\n\r");
+	//printf("Index\tID\tFeature\tBelief\tD_meas.\tN_Heard\tTime\n\r");
+    printf("Index\tID\tConcentration\t# heard\tTime\n\r");
 	for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
 		if (neighbor_info_array[i].id != 0) {
-			printf("%u\t%x\t%u\t%u\t%u\t%u\t%u",
+            printf("%u\t%d\t%f\t%u\t%u",
+                   i,
+                   neighbor_info_array[i].id,
+                   neighbor_info_array[i].belief_concentration,
+                   neighbor_info_array[i].number_of_times_heard_from,
+                   (uint16_t)(kilo_ticks - neighbor_info_array[i].time_last_heard_from)
+            );
+			/*printf("%u\t%d\t%u\t%u\t%u\t%u\t%u",
                 //  1   2   3   4   5   6   7
 					i,
 					neighbor_info_array[i].id,
@@ -301,7 +310,7 @@ void print_neighbor_info_array() {
                     neighbor_info_array[i].feature_estimate,
 					((uint8_t) neighbor_info_array[i].measured_distance),
 					neighbor_info_array[i].number_of_times_heard_from,
-					(uint16_t)(kilo_ticks - neighbor_info_array[i].time_last_heard_from));
+					(uint16_t)(kilo_ticks - neighbor_info_array[i].time_last_heard_from));*/
 		}
 	}
 }
@@ -363,26 +372,49 @@ float bytes_to_float(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) {
     return u.f;
 }
 
+uint8_t* uint16_to_bytes(uint16_t n) {
+    uint8_t *out = reinterpret_cast<uint8_t*>(&n);
+    return out;
+}
+
+uint16_t bytes_to_uint16(uint8_t b0, uint8_t b1) {
+    union {
+        uint16_t n;
+        uint8_t b[2];
+    } u;
+    u.b[0] = b0;
+    u.b[1] = b1;
+    return u.n;
+}
+
 void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 	bool can_insert = false;
 	bool new_entry;
 	uint8_t index_to_insert;
 
-	uint16_t rx_id = (((uint16_t) m->data[0]) << 8) | ((uint16_t) (m->data[1]));
+    // TODO: Updated transmission of ID
+    uint16_t rx_id = bytes_to_uint16(m->data[0], m->data[1]);
+	//uint16_t rx_id = (((uint16_t) m->data[0]) << 8) | ((uint16_t) (m->data[1]));
 	uint8_t measured_distance_instantaneous = estimate_distance(d);
+
+    //printf("Update:\t\t%d <- %d\n", id, rx_id);
+
+    //if (id!=0 && id!=1) {
+        //printf("%d\t<- %d\n", id, rx_id);
+    //}
 
 	for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
 		if (neighbor_info_array[i].id == rx_id) {
+            // Message from the neighbor is already in table
 			can_insert = true;
 			new_entry = false;
 			index_to_insert = i;
 		}
 	}
-
 	if (!can_insert) {
-		// Data message
 		for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
 			if (neighbor_info_array[i].id == 0) {
+                // There's an empty spot in the table
 				can_insert = true;
 				new_entry = true;
 				index_to_insert = i;
@@ -390,9 +422,7 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 			}
 		}
 	}
-
 	if (!can_insert) {
-		// Data message
 		uint8_t largest_measured_distance = 0;
 		uint8_t largest_measured_distance_index;
 		for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
@@ -415,9 +445,6 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 			neighbor_info_array[index_to_insert].id = rx_id;
 			neighbor_info_array[index_to_insert].measured_distance = measured_distance_instantaneous;
 			neighbor_info_array[index_to_insert].number_of_times_heard_from = 0;
-            // TODO: Concentration update
-            neighbor_info_array[index_to_insert].belief_concentration = bytes_to_float(m->data[2], m->data[3], m->data[4], m->data[5]);
-            update_concentration(m);
 		} else {
 			if (distance_averaging) {
 				neighbor_info_array[index_to_insert].measured_distance *= 0.9;
@@ -573,18 +600,22 @@ void update_pattern_beliefs() {
     }
 }
 
-void update_concentration(message_t* m) {
+void update_concentration(float rx_concentration, uint16_t rx_id) {
     // TODO: Update concentration based on concentration in received message
+    // TODO: Could also take into account distance of neighbors (delta_concentration/distance)
     // TEMPORARY: Lock beliefs of first and last kilobots (test generating gradient)
-    if (id == 0) {
+    float old_concentration = concentration;
+    /*if (id == 1) {
         concentration = 0;
-    } else if (id == 1) {
+    } else if (id == num_robots) {
         concentration = 1;
-    } else {
-        float rx_concentration = bytes_to_float(m->data[2], m->data[3], m->data[4], m->data[5]);
-        concentration += diffusion_constant * rx_concentration;
-    }
-    printf("%x: %f\n", id, concentration);
+    } else {*/
+        float concentration_change = rx_concentration - concentration;
+        //printf("%d %f\n", rx_id, concentration_change);
+        //print_neighbor_info_array();
+        concentration += diffusion_constant * concentration_change;
+    //}
+    //printf("[update]\t%d:\t%f -> %f\n", id, old_concentration, concentration);
 }
 
 // AUXILIARY FUNCTIONS FOR LOOP (DETECTION AND MOVEMENT)
@@ -715,57 +746,67 @@ void setup() {
 }
 
 void loop() {
-	if (state == RUN_LOOP) {
-        curr_light_level = detect_light_level(detect_which_feature);
-
-        // Movement
-        //random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
-
-        // Feature observation
-        //detect_feature_color();
-
-        // Neighbor updates
-        static uint32_t last_printed;
-        neighbor_info_array_locked = true;
-        if (new_message == true) {
-            update_neighbor_info_array(&rx_message_buffer, &rx_distance_buffer);
-            new_message = false;
+    /*if (kilo_ticks == 1) {
+        // TODO: Test ID conversion/transmission
+        if (id == 1) {
+            concentration = 0;
+        } else if (id == num_robots) {
+            concentration = 1;
         }
-        prune_neighbor_info_array();
-        neighbor_info_array_locked = false;
-        if (kilo_ticks > last_printed + 16) {
-            //print_neighbor_info_array();
-            last_printed = kilo_ticks;
-        }
-        // Update pattern belief based on neighbor information
-        //update_pattern_beliefs();
+        printf("[initial]\t%d:\t%f\n", id, concentration);
+    }*/
 
-        // LED: CONCENTRATION
-        set_color(RGB(concentration, 0, 0));
 
-        // Update LED color based on OWN ESTIMATE
-        //uint8_t est = feature_estimate/255;
-        /*uint8_t est = pattern_belief[detect_which_feature]/255;
-        if (detect_which_feature == 0) {
-    		set_color(RGB(1, 0, 1-est));
-            //set_color(RGB(1, 1-est, 1-est));
-            //set_color(RGB(1, est, est));
-    	} else if (detect_which_feature == 1) {
-    		set_color(RGB(1-est, 1, 0));
-            //set_color(RGB(1-est, 1, 1-est));
-    	} else if (detect_which_feature == 2) {
-    		set_color(RGB(0, 1-est, 1));
-            //set_color(RGB(1-est, 1-est, 1));
-    	}*/
-        // Color full estimates
+    curr_light_level = detect_light_level(detect_which_feature);
 
-        /*if (pattern_belief[1] == 127 || pattern_belief[2] == 127) {
-            set_color(RGB(1,1,1));
-        } else {
-            set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
-        }*/
-		//set_color(RGB((float)pattern_belief[0] / 255, (float)pattern_belief[1] / 255, (float)pattern_belief[2] / 255));
-	}
+    // Movement
+    random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
+
+    // Feature observation
+    //detect_feature_color();
+
+    // Neighbor updates
+    static uint32_t last_printed;
+    neighbor_info_array_locked = true;
+    if (new_message) {
+        update_neighbor_info_array(&rx_message_buffer, &rx_distance_buffer);
+        //print_neighbor_info_array();
+        new_message = false;
+    }
+    prune_neighbor_info_array();
+    neighbor_info_array_locked = false;
+    if (kilo_ticks > last_printed + 16) {
+        //print_neighbor_info_array();
+        last_printed = kilo_ticks;
+    }
+    // Update pattern belief based on neighbor information
+    //update_pattern_beliefs();
+
+    // LED: CONCENTRATION
+    set_color(RGB(concentration, 0, 0));
+
+    // Update LED color based on OWN ESTIMATE
+    //uint8_t est = feature_estimate/255;
+    /*uint8_t est = pattern_belief[detect_which_feature]/255;
+    if (detect_which_feature == 0) {
+        set_color(RGB(1, 0, 1-est));
+        //set_color(RGB(1, 1-est, 1-est));
+        //set_color(RGB(1, est, est));
+    } else if (detect_which_feature == 1) {
+        set_color(RGB(1-est, 1, 0));
+        //set_color(RGB(1-est, 1, 1-est));
+    } else if (detect_which_feature == 2) {
+        set_color(RGB(0, 1-est, 1));
+        //set_color(RGB(1-est, 1-est, 1));
+    }*/
+    // Color full estimates
+
+    /*if (pattern_belief[1] == 127 || pattern_belief[2] == 127) {
+        set_color(RGB(1,1,1));
+    } else {
+        set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
+    }*/
+    //set_color(RGB((float)pattern_belief[0] / 255, (float)pattern_belief[1] / 255, (float)pattern_belief[2] / 255));
 }
 
 
@@ -805,28 +846,30 @@ void retransmit_tx_message_data() {
      */
 }
 
-    void update_tx_message_data() {
-        // TODO: Send message that includes concentration
-        // Cast concentration float to 4 uint8_t
-        uint8_t *conc_array = float_to_bytes(concentration);
-        // MESSAGE
-        tx_message_data.type = NORMAL;
-        // ID
-        tx_message_data.data[0] = ((uint8_t) ((id & 0xff00) >> 8));
-        tx_message_data.data[1] = ((uint8_t) (id & 0x00ff));
-        // Concentration (float = 32 bits)
-        tx_message_data.data[2] = conc_array[0];
-        tx_message_data.data[3] = conc_array[1];
-        tx_message_data.data[4] = conc_array[2];
-        tx_message_data.data[5] = conc_array[3];
-        tx_message_data.crc = message_crc(&tx_message_data);
-    }
+void update_tx_message_data() {
+    // TODO: Send message that includes concentration
+    tx_message_data.type = NORMAL;
+    // ID
+    uint8_t *id_array = uint16_to_bytes(id);
+    tx_message_data.data[0] = id_array[0];
+    tx_message_data.data[1] = id_array[1];
+    //tx_message_data.data[0] = ((uint8_t) ((id & 0xff00) >> 8));
+    //tx_message_data.data[1] = ((uint8_t) (id & 0x00ff));
+    // Concentration (float = 32 bits)
+    uint8_t *conc_array = float_to_bytes(concentration);
+    tx_message_data.data[2] = conc_array[0];
+    tx_message_data.data[3] = conc_array[1];
+    tx_message_data.data[4] = conc_array[2];
+    tx_message_data.data[5] = conc_array[3];
+    tx_message_data.crc = message_crc(&tx_message_data);
+}
 
 // Send message (continuously)
 message_t *message_tx() {
     // Message should be changed/set by respective detection/observation function
     if (is_feature_disseminating) {
         update_tx_message_data();
+        return &tx_message_data;
     } else {
         return NULL;
     }
@@ -834,14 +877,15 @@ message_t *message_tx() {
 
 // Receive message
 void message_rx(message_t *m, distance_measurement_t *d) {
-    //printf("Received message... ");
     if (!neighbor_info_array_locked) {
 		rx_message_buffer = (*m);
 		rx_distance_buffer = (*d);
 		new_message = true;
-        //printf("Can process ");
+        uint16_t rx_id = bytes_to_uint16(m->data[0], m->data[1]);
+        // TODO: Needs to be moved out of here (to loop() function) for actual kilobots
+        float rx_concentration = bytes_to_float(m->data[2], m->data[3], m->data[4], m->data[5]);
+        update_concentration(rx_concentration, rx_id);
 	}
-    //printf("\n");
 }
 
 // Executed on successful message send

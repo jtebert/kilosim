@@ -258,9 +258,9 @@ bool run_simulation_step() {
 					if (tx_id != rx_id) {
 						// Check communication range in both directions (due to potentially noisy communication range)
 						double dist = tx_r->distance(tx_r->pos[0], tx_r->pos[1], rx_r->pos[0], rx_r->pos[1]);
-						if (tx_r->comm_out_criteria(dist) && rx_r->comm_in_criteria(dist, msg)) {
-							rx_r->received();
-						}
+                        if (tx_r->comm_out_criteria(dist) && rx_r->comm_in_criteria(dist, msg)) {
+                            rx_r->received();
+                        }
 					}
 				}
 			}
@@ -756,15 +756,18 @@ int main(int argc, char **argv) {
 
 	//TODO: Place robots in row
 	//setup_positions_gradient();
-    setup_positions_dense_row();
-	//setup_positions();
+    //setup_positions_dense_row();
+	setup_positions();
 
 
 	setup();
 
     // TODO: Specialize 1st and last robots
-    robots[0]->id = 0;
-    robots[num_robots-1]->id = 1;
+    for (int i=0; i<num_robots; i++) {
+        robots[i]->id = (uint16_t)i+1;
+    }
+    //robots[0]->id = 2;
+    //robots[num_robots-1]->id = 3;
 
 	//do some open gl stuff
 
