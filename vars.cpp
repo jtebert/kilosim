@@ -4,6 +4,8 @@
 
 #include "vars.h"
 
+bool is_gradient = true;  // TODO: Temporary
+
 // General parameters
 int num_threads = 4;  // Number of CPU threads to parallelize across
 int trial_num = 0;
@@ -51,7 +53,7 @@ uint32_t mean_explore_duration = 60 * SECOND;
 uint32_t neighbor_info_array_timeout = 120 * SECOND;
 
 // Diffusion parameters
-float diffusion_constant = 0.01;  // (D) (0-1) influence of concentration messages on own concentration
+float diffusion_constant = 0.003;  // (D) (0-1) influence of concentration messages on own concentration
 //uint32_t neighbor_info_array_timeout;  // Later will have a parameter that's a ratio to neighbor_info_array_timeout
 float diffusion_decision_thresh = 0.1;  // as difference from 0/1
 uint32_t diffusion_decision_time = SECOND;  // (kiloticks) time past threshold before committing to decision

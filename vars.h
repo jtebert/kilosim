@@ -4,6 +4,8 @@
 #include <vector>
 #include "shapes.h"
 
+extern bool is_gradient;  // TODO: Temporary
+
 // General parameters
 extern int num_threads;  // Number of CPU threads to parallelize across
 extern int trial_num;

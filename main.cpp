@@ -756,18 +756,21 @@ int main(int argc, char **argv) {
 
 	//TODO: Place robots in row
 	//setup_positions_gradient();
-    //setup_positions_dense_row();
-	setup_positions();
+    if (is_gradient) {
+        setup_positions_dense_row();
+    } else {
+        setup_positions();
+    }
 
 
 	setup();
 
     // TODO: Specialize 1st and last robots
-    for (int i=0; i<num_robots; i++) {
-        robots[i]->id = (uint16_t)i+1;
+    if (is_gradient) {
+        for (int i = 0; i < num_robots; i++) {
+            robots[i]->id = (uint16_t) i + 1;
+        }
     }
-    //robots[0]->id = 2;
-    //robots[num_robots-1]->id = 3;
 
 	//do some open gl stuff
 

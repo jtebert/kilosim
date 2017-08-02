@@ -13,7 +13,6 @@ typedef struct neighbor_info_array_t
 	uint16_t id;
 	uint8_t detect_which_feature;
 	uint8_t feature_estimate;
-    float belief_concentration;
 	uint32_t time_last_heard_from;
 	uint8_t number_of_times_heard_from;
 } neighbor_info_array_t;
@@ -288,21 +287,14 @@ uint8_t find_wall_collision() {
 }
 
 void print_neighbor_info_array() {
-	//printf("\n\n\nOwn ID = %d\tPattern beliefs = (%u, %u, %u)\n", id, pattern_belief[0], pattern_belief[1], pattern_belief[2]);
-    printf("\n\nID = %d\tConcentration = %f\n", id, concentration);
+	printf("\n\n\nOwn ID = %d\tPattern beliefs = (%u, %u, %u)\tConcentration = %f\n",
+           id, pattern_belief[0], pattern_belief[1], pattern_belief[2],
+           concentration);
 
-	//printf("Index\tID\tFeature\tBelief\tD_meas.\tN_Heard\tTime\n\r");
-    printf("Index\tID\tConcentration\t# heard\tTime\n\r");
+	printf("Index\tID\tFeature\tBelief\tD_meas.\tN_Heard\tTime\n\r");
 	for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
 		if (neighbor_info_array[i].id != 0) {
-            printf("%u\t%d\t%f\t%u\t%u",
-                   i,
-                   neighbor_info_array[i].id,
-                   neighbor_info_array[i].belief_concentration,
-                   neighbor_info_array[i].number_of_times_heard_from,
-                   (uint16_t)(kilo_ticks - neighbor_info_array[i].time_last_heard_from)
-            );
-			/*printf("%u\t%d\t%u\t%u\t%u\t%u\t%u",
+			printf("%u\t%d\t%u\t%u\t%u\t%u\t%u",
                 //  1   2   3   4   5   6   7
 					i,
 					neighbor_info_array[i].id,
@@ -310,7 +302,7 @@ void print_neighbor_info_array() {
                     neighbor_info_array[i].feature_estimate,
 					((uint8_t) neighbor_info_array[i].measured_distance),
 					neighbor_info_array[i].number_of_times_heard_from,
-					(uint16_t)(kilo_ticks - neighbor_info_array[i].time_last_heard_from));*/
+					(uint16_t)(kilo_ticks - neighbor_info_array[i].time_last_heard_from));
 		}
 	}
 }
@@ -392,16 +384,8 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 	bool new_entry;
 	uint8_t index_to_insert;
 
-    // TODO: Updated transmission of ID
     uint16_t rx_id = bytes_to_uint16(m->data[0], m->data[1]);
-	//uint16_t rx_id = (((uint16_t) m->data[0]) << 8) | ((uint16_t) (m->data[1]));
 	uint8_t measured_distance_instantaneous = estimate_distance(d);
-
-    //printf("Update:\t\t%d <- %d\n", id, rx_id);
-
-    //if (id!=0 && id!=1) {
-        //printf("%d\t<- %d\n", id, rx_id);
-    //}
 
 	for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
 		if (neighbor_info_array[i].id == rx_id) {
@@ -458,8 +442,8 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 			}
 		}
 		// Update info whether it's new or not
-		//neighbor_info_array[index_to_insert].detect_which_feature = m->data[2];
-		//neighbor_info_array[index_to_insert].feature_estimate = m->data[3];
+		neighbor_info_array[index_to_insert].detect_which_feature = m->data[2];
+		neighbor_info_array[index_to_insert].feature_estimate = m->data[3];
 	}
 }
 
@@ -601,20 +585,18 @@ void update_pattern_beliefs() {
 }
 
 void update_concentration(float rx_concentration, uint16_t rx_id) {
-    // TODO: Update concentration based on concentration in received message
+    // Update concentration based on concentration in received message
     // TODO: Could also take into account distance of neighbors (delta_concentration/distance)
     // TEMPORARY: Lock beliefs of first and last kilobots (test generating gradient)
     float old_concentration = concentration;
-    /*if (id == 1) {
+    if (is_gradient && id == 1) {
         concentration = 0;
-    } else if (id == num_robots) {
+    } else if (is_gradient && id == num_robots) {
         concentration = 1;
-    } else {*/
+    } else {
         float concentration_change = rx_concentration - concentration;
-        //printf("%d %f\n", rx_id, concentration_change);
-        //print_neighbor_info_array();
         concentration += diffusion_constant * concentration_change;
-    //}
+    }
     //printf("[update]\t%d:\t%f -> %f\n", id, old_concentration, concentration);
 }
 
@@ -746,7 +728,7 @@ void setup() {
 }
 
 void loop() {
-    /*if (kilo_ticks == 1) {
+    if (kilo_ticks == 1 && is_gradient) {
         // TODO: Test ID conversion/transmission
         if (id == 1) {
             concentration = 0;
@@ -754,13 +736,15 @@ void loop() {
             concentration = 1;
         }
         printf("[initial]\t%d:\t%f\n", id, concentration);
-    }*/
+    }
 
 
     curr_light_level = detect_light_level(detect_which_feature);
 
     // Movement
-    random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
+    if (!is_gradient) {
+        random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
+    }
 
     // Feature observation
     //detect_feature_color();
