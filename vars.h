@@ -70,7 +70,7 @@ extern uint32_t neighbor_info_array_timeout;
 
 // Diffusion parameters
 extern float diffusion_constant;  // (D) (0-1) influence of concentration messages on own concentration
-//extern uint32_t neighbor_info_array_timeout;  // Later will have a parameter that's a ratio to neighbor_info_array_timeout
+extern uint32_t diffusion_neighbor_timeout;  // Later will have a parameter that's a ratio to neighbor_info_array_timeout
 extern float diffusion_decision_thresh;  // as difference from 0/1
 extern uint32_t diffusion_decision_time;  // (kiloticks) time past threshold before committing to decision
 

@@ -246,9 +246,11 @@ bool run_simulation_step() {
 	// COMMUNICATION
 	// Only communicate at tick rate achievable by kilobots (simulate CSMA/CD)
 	if (lastrun % comm_rate == 0) {
+        seed = (rand() % shuffles) * num_robots;
         #pragma omp parallel for
-		for (int tx_id = 0; tx_id < num_robots; tx_id++) {
+		for (int t = 0; t < num_robots; t++) {
 			// Loop over all transmitting robots
+            int tx_id = order[seed + t];
 			robot *tx_r = robots[tx_id];
 			void *msg = tx_r->get_message();
 			if (msg) {

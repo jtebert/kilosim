@@ -14,6 +14,7 @@ typedef struct neighbor_info_array_t
 	uint8_t detect_which_feature;
 	uint8_t feature_estimate;
 	uint32_t time_last_heard_from;
+    uint32_t diffusion_timer;
 	uint8_t number_of_times_heard_from;
 } neighbor_info_array_t;
 
@@ -21,7 +22,10 @@ typedef struct neighbor_info_array_t
 class mykilobot : public kilobot {
 
 // TODO: DIFFUSION PARAMETERS
-float concentration = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+float concentrations[3] = {0.5, 0.5, 0.5};
+bool decision_locked[3] = {false, false, false};  // Has a decision been made
+uint8_t decision[3];  // What value was decided for each feature?
+uint32_t decision_timer[3] = {0,0,0};  // How long has it been past the threshold?
 
 // Light levels for edge following & color detection
 const uint8_t DARK = 0;
@@ -287,9 +291,9 @@ uint8_t find_wall_collision() {
 }
 
 void print_neighbor_info_array() {
-	printf("\n\n\nOwn ID = %d\tPattern beliefs = (%u, %u, %u)\tConcentration = %f\n",
+	printf("\n\n\nOwn ID = %d\tPattern beliefs = (%u, %u, %u)\tConcentrations = (%f, %f, %f)\n",
            id, pattern_belief[0], pattern_belief[1], pattern_belief[2],
-           concentration);
+           concentrations[0], concentrations[1], concentrations[2]);
 
 	printf("Index\tID\tFeature\tBelief\tD_meas.\tN_Heard\tTime\n\r");
 	for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
@@ -384,7 +388,8 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 	bool new_entry;
 	uint8_t index_to_insert;
 
-    uint16_t rx_id = bytes_to_uint16(m->data[0], m->data[1]);
+    //uint16_t rx_id = bytes_to_uint16(m->data[0], m->data[1]);
+    uint16_t rx_id = (((uint16_t) m->data[0]) << 8) | ((uint16_t) (m->data[1]));
 	uint8_t measured_distance_instantaneous = estimate_distance(d);
 
 	for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
@@ -429,6 +434,11 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 			neighbor_info_array[index_to_insert].id = rx_id;
 			neighbor_info_array[index_to_insert].measured_distance = measured_distance_instantaneous;
 			neighbor_info_array[index_to_insert].number_of_times_heard_from = 0;
+            neighbor_info_array[index_to_insert].diffusion_timer = kilo_ticks;
+            // Update concentrations based on all 3 belief values sent
+            update_concentrations(0, m->data[4]);
+            update_concentrations(1, m->data[5]);
+            update_concentrations(2, m->data[6]);
 		} else {
 			if (distance_averaging) {
 				neighbor_info_array[index_to_insert].measured_distance *= 0.9;
@@ -581,23 +591,51 @@ void update_pattern_beliefs() {
                 }
             }
         }
+        // Use pattern belief updates to update concentrations
+        for (int f = 0; f < 3; f++) {
+            update_concentrations(f, pattern_belief[f]);
+        }
     }
 }
 
-void update_concentration(float rx_concentration, uint16_t rx_id) {
+void update_concentrations(uint8_t which_feature, uint8_t belief_val) {
     // Update concentration based on concentration in received message
     // TODO: Could also take into account distance of neighbors (delta_concentration/distance)
     // TEMPORARY: Lock beliefs of first and last kilobots (test generating gradient)
-    float old_concentration = concentration;
-    if (is_gradient && id == 1) {
-        concentration = 0;
-    } else if (is_gradient && id == num_robots) {
-        concentration = 1;
-    } else {
-        float concentration_change = rx_concentration - concentration;
-        concentration += diffusion_constant * concentration_change;
+    if (!decision_locked[which_feature]) {
+        float *old_concentrations = concentrations;
+        float concentration_change = diffusion_constant * ((float) belief_val / 255 - concentrations[which_feature]);
+        concentrations[which_feature] += concentration_change;
+        /*if (which_feature == 0 && concentrations[0] < 0.3) {
+            printf("[update]\t%u:\t(%f, %f, %f) -> %f -> (%f, %f, %f)\n",
+                   id,
+                   old_concentrations[0], old_concentrations[1], old_concentrations[2],
+                   concentration_change,
+                   concentrations[0], concentrations[1], concentrations[2]);
+        }*/
     }
-    //printf("[update]\t%d:\t%f -> %f\n", id, old_concentration, concentration);
+}
+
+void decision_checker() {
+    // Check if any concentrations are past threshold and start timer(s)
+    for (int f = 0; f < 3; f++) {
+        if (!decision_locked[f]) {
+            if (concentrations[f] < diffusion_decision_thresh || concentrations[f] > 1 - diffusion_decision_thresh) {
+                if (diffusion_decision_time < decision_timer[f] + kilo_ticks) {
+                    // Has been past threshold long enough to lock decision
+                    decision_locked[f] = true;
+                    printf("LOCK %d: %d\t(%f, %f, %f)\n", f, id, concentrations[0], concentrations[1], concentrations[2]);
+                    if (concentrations[f] < diffusion_decision_thresh) {
+                        decision[f] = 0;
+                    } else {
+                        decision[f] = 255;
+                    }
+                }
+            } else {
+                decision_timer[f] = kilo_ticks;
+            }
+        }
+    }
 }
 
 // AUXILIARY FUNCTIONS FOR LOOP (DETECTION AND MOVEMENT)
@@ -708,7 +746,7 @@ void random_walk(uint32_t mean_straight_dur, uint32_t max_turn_dur) {
 
 void setup() {
 
-    is_feature_disseminating = true;
+    //is_feature_disseminating = true;
 
 	// put your setup code here, to be run only once
 	// Set initial light value
@@ -728,26 +766,18 @@ void setup() {
 }
 
 void loop() {
-    if (kilo_ticks == 1 && is_gradient) {
-        // TODO: Test ID conversion/transmission
-        if (id == 1) {
-            concentration = 0;
-        } else if (id == num_robots) {
-            concentration = 1;
-        }
-        printf("[initial]\t%d:\t%f\n", id, concentration);
-    }
 
+    if (kilo_ticks == 1) {
+        printf("[Initial] %d, (%f, %f, %f)\n", id, concentrations[0], concentrations[1], concentrations[2]);
+    }
 
     curr_light_level = detect_light_level(detect_which_feature);
 
     // Movement
-    if (!is_gradient) {
-        random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
-    }
+    random_walk(long_rw_mean_straight_dur, rw_max_turn_dur);
 
     // Feature observation
-    //detect_feature_color();
+    detect_feature_color();
 
     // Neighbor updates
     static uint32_t last_printed;
@@ -763,34 +793,34 @@ void loop() {
         //print_neighbor_info_array();
         last_printed = kilo_ticks;
     }
+
     // Update pattern belief based on neighbor information
-    //update_pattern_beliefs();
+    update_pattern_beliefs();
+    // Incorporate own belief update into concentrations
+
+
+    // Check if decisions can be made from concentrations
+    decision_checker();
 
     // LED: CONCENTRATION
-    set_color(RGB(concentration, 0, 0));
+    //set_color(RGB(concentrations[0]/255, concentrations[1]/255, concentrations[2]/255));
 
-    // Update LED color based on OWN ESTIMATE
-    //uint8_t est = feature_estimate/255;
-    /*uint8_t est = pattern_belief[detect_which_feature]/255;
-    if (detect_which_feature == 0) {
-        set_color(RGB(1, 0, 1-est));
-        //set_color(RGB(1, 1-est, 1-est));
-        //set_color(RGB(1, est, est));
-    } else if (detect_which_feature == 1) {
-        set_color(RGB(1-est, 1, 0));
-        //set_color(RGB(1-est, 1, 1-est));
-    } else if (detect_which_feature == 2) {
-        set_color(RGB(0, 1-est, 1));
-        //set_color(RGB(1-est, 1-est, 1));
-    }*/
-    // Color full estimates
+    // LED: OWN ESTIMATE
+    /*float feature_est = (float)feature_estimate/255;
+    float c[3] = {0.5, 0.5, 0.5};
+    for (int f = 0; f < 3; f++) {
+        if(decision_locked[f]) {
+            if (decision[f] == 255) {
+                c[f] = 1;
+            } else {
+                c[f] = 0;
+            }
+        }
+    }
+    set_color(RGB(c[0], c[1], c[2]));*/
 
-    /*if (pattern_belief[1] == 127 || pattern_belief[2] == 127) {
-        set_color(RGB(1,1,1));
-    } else {
-        set_color(RGB(pattern_belief[0] / 255, pattern_belief[1] / 255, pattern_belief[2] / 255));
-    }*/
-    //set_color(RGB((float)pattern_belief[0] / 255, (float)pattern_belief[1] / 255, (float)pattern_belief[2] / 255));
+    set_color(RGB(concentrations[0], concentrations[1], concentrations[2]));
+
 }
 
 
@@ -830,21 +860,27 @@ void retransmit_tx_message_data() {
      */
 }
 
+float binary_to_float(void) {
+    // Convert the 13-bit binary representation of the number to a float
+}
+
 void update_tx_message_data() {
     // TODO: Send message that includes concentration
     tx_message_data.type = NORMAL;
     // ID
-    uint8_t *id_array = uint16_to_bytes(id);
-    tx_message_data.data[0] = id_array[0];
-    tx_message_data.data[1] = id_array[1];
-    //tx_message_data.data[0] = ((uint8_t) ((id & 0xff00) >> 8));
-    //tx_message_data.data[1] = ((uint8_t) (id & 0x00ff));
-    // Concentration (float = 32 bits)
-    uint8_t *conc_array = float_to_bytes(concentration);
-    tx_message_data.data[2] = conc_array[0];
-    tx_message_data.data[3] = conc_array[1];
-    tx_message_data.data[4] = conc_array[2];
-    tx_message_data.data[5] = conc_array[3];
+    //uint8_t *id_array = uint16_to_bytes(id);
+    //tx_message_data.data[0] = id_array[0];
+    //tx_message_data.data[1] = id_array[1];
+    tx_message_data.data[0] = ((uint8_t) ((id & 0xff00) >> 8));
+    tx_message_data.data[1] = ((uint8_t) (id & 0x00ff));
+    // Feature varaible measured
+    tx_message_data.data[2] = detect_which_feature;
+    // Estimate of feature
+    tx_message_data.data[3] = feature_estimate;
+    // Belief for all 3 features
+    tx_message_data.data[4] = pattern_belief[0];
+    tx_message_data.data[5] = pattern_belief[1];
+    tx_message_data.data[6] = pattern_belief[2];
     tx_message_data.crc = message_crc(&tx_message_data);
 }
 
@@ -865,10 +901,7 @@ void message_rx(message_t *m, distance_measurement_t *d) {
 		rx_message_buffer = (*m);
 		rx_distance_buffer = (*d);
 		new_message = true;
-        uint16_t rx_id = bytes_to_uint16(m->data[0], m->data[1]);
         // TODO: Needs to be moved out of here (to loop() function) for actual kilobots
-        float rx_concentration = bytes_to_float(m->data[2], m->data[3], m->data[4], m->data[5]);
-        update_concentration(rx_concentration, rx_id);
 	}
 }
 
