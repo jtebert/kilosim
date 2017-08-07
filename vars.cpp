@@ -4,8 +4,6 @@
 
 #include "vars.h"
 
-bool is_gradient = false;  // TODO: Temporary
-
 // General parameters
 int num_threads = 4;  // Number of CPU threads to parallelize across
 int trial_num = 0;
@@ -21,7 +19,7 @@ bool exp_observation = true;  // Use exponential distribution for observation du
 bool exp_dissemination = true;
 bool use_confidence = true;
 bool allow_retransmit = false; // Allow re-transmission of messages in neighbor array
-uint32_t num_retransmit = 500;  // Max. num. neighbors from table allowed to be retransmitted in each dissem. period
+//uint32_t num_retransmit = 500;  // Max. num. neighbors from table allowed to be retransmitted in each dissem. period
 uint8_t comm_rate = 3;  // Number of ticks per message
 
 // Logging results

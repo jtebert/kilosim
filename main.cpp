@@ -22,12 +22,6 @@ using namespace std;
 
 uint track_id;
 
-// TODO: Temporary variables for testing communicating beliefs/concentrations
-// Number of belief messages sent with each value (0, 127, 255)
-int sent_values_0[3] = {0, 0, 0};  // Number of 0s sent for features 0, 1, and 2
-int sent_values_127[3] = {0, 0, 0};  // Number of 127s sent for features 0, 1, and 2
-int sent_values_255[3] = {0, 0, 0};  // Number of 255s sent for features 0, 1, and 2
-
 rgb RGB(double r, double g, double b)
 {
     rgb c;
@@ -294,17 +288,6 @@ bool run_simulation_step() {
 						double dist = tx_r->distance(tx_r->pos[0], tx_r->pos[1], rx_r->pos[0], rx_r->pos[1]);
                         if (tx_r->comm_out_criteria(dist) && rx_r->comm_in_criteria(dist, msg)) {
                             rx_r->received();
-							// Test for bias in number of messages recieved
-							message_t* test_message = (message_t *)msg;
-							for (int f = 0; f < 3; f++) {
-								if (test_message->data[f+4] == 0) {
-									sent_values_0[f] += 1;
-								} else if (test_message->data[f+4] == 127) {
-									sent_values_127[f] += 1;
-								} else if (test_message->data[f+4] == 255) {
-									sent_values_255[f] += 1;
-								}
-							}
                         }
 					}
 				}
@@ -589,22 +572,6 @@ void setup_positions() {
 	}
 }
 
-void setup_positions_dense_row() {
-    // Set the positions to be a row of touching kilobots
-    // Robots will also be in order by index
-    float horizontal_separation = 2.1 * radius;
-    int center_x = arena_width / 2;
-    int center_y = arena_height / 2;
-    int start_x = center_x - horizontal_separation * num_robots / 2;
-    for (int i = 0; i < num_robots; i++) {
-        int x = start_x + horizontal_separation * i;
-        int y = center_y;
-        double theta = rand() * 2 * PI / RAND_MAX;
-        robots[i] = new mykilobot();
-        robots[i]->robot_init(x, y, theta);
-    }
-}
-
 void parse_params(int argc, char **argv) {
     // Parse input parameters and mutate appropriate global variables
     for (int i = 0; i < argc-1; i++) {
@@ -668,9 +635,9 @@ void parse_params(int argc, char **argv) {
         if (strcmp(argv[i], "--allow_retransmit") == 0) {
             allow_retransmit = argv[i + 1][0] == 'y';
         }
-        if (strcmp(argv[i], "--num_retransmit") == 0) {
+        /*if (strcmp(argv[i], "--num_retransmit") == 0) {
             num_retransmit = (uint32_t) stoi(argv[i + 1]);
-        }
+        }*/
         if (strcmp(argv[i], "--comm_rate") == 0) {
             comm_rate = (uint8_t) stoi(argv[i + 1]);
         }
@@ -716,7 +683,7 @@ void save_params() {
     params_header += "exp_dissemination\t"; params_vals += std::to_string(exp_dissemination) + "\t";
     params_header += "use_confidence\t"; params_vals += std::to_string(use_confidence) + "\t";
     params_header += "allow_retransmit\t"; params_vals += std::to_string(allow_retransmit) + "\t";
-    params_header += "num_retransmit\t"; params_vals += std::to_string(num_retransmit) + "\t";
+    //params_header += "num_retransmit\t"; params_vals += std::to_string(num_retransmit) + "\t";
     params_header += "comm_rate\t"; params_vals += std::to_string(comm_rate) + "\t";
     params_header += "neighbor_dur\t"; params_vals += std::to_string(neighbor_info_array_timeout/SECOND) + "\t";
     FILE * params_log = fopen(params_filename.c_str(), "a");
@@ -741,10 +708,10 @@ int main(int argc, char **argv) {
         printf("ERROR: All features IDs used must be 0-%d\n", num_features);
         exit(1);
     }
-    if (allow_retransmit && num_retransmit <= 0) {
+    /*if (allow_retransmit && num_retransmit <= 0) {
         printf("ERROR: num_retransmit must be a positive integer (not 0)\n");
         exit(1);
-    }
+    }*/
 
     // Get shapes from file
     std::string shapes_filename = shapes_dir + "/" + shapes_filename_base +
@@ -813,23 +780,10 @@ int main(int argc, char **argv) {
 	view_x = arena_width;
 	view_y = arena_height;
 
-	//TODO: Place robots in row
-	//setup_positions_gradient();
-    if (is_gradient) {
-        setup_positions_dense_row();
-    } else {
-        setup_positions();
-    }
-
+    // Place robots
+    setup_positions();
 
 	setup();
-
-    // TODO: Specialize 1st and last robots
-    if (is_gradient) {
-        for (int i = 0; i < num_robots; i++) {
-            robots[i]->id = (uint16_t) i + 1;
-        }
-    }
 
 	//do some open gl stuff
 

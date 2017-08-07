@@ -74,7 +74,6 @@ uint8_t bounce_turn;
 
 // Retransmission of messages
 bool is_retransmit = false;  // Alternate between transmitting own message and re-transmitting random neighbor
-std::vector<message_t> retransmit_messages;  // List of messages that will be retransmitted in each dissemination period
 
 
 // Feature detection
@@ -194,28 +193,6 @@ std::vector<uint32_t> mult_rand_int(uint32_t max_val, uint32_t num_vals) {
     /* // VERSION 2
 
     }*/
-}
-
-std::vector<message_t> generate_retransmit_messages(std::vector<uint32_t> neighbor_inds) {
-    // Generate a list of neighbor messages for kilobot to retransmit
-    std::vector<message_t> messages(neighbor_inds.size());
-    if (neighbor_inds.size() > 0) {
-        for (int i = 0; i < neighbor_inds.size(); i++) {
-            neighbor_info_array_t neighbor = neighbor_info_array[neighbor_inds[i]];
-            message_t message_new;
-            message_new.type = NORMAL;
-            // ID
-            message_new.data[0] = ((uint8_t) ((neighbor.id & 0xff00) >> 8));
-            message_new.data[1] = ((uint8_t) (neighbor.id & 0x00ff));
-            // Feature variable measured
-            message_new.data[2] = neighbor.detect_which_feature;
-            // Estimate of feature
-            message_new.data[3] = neighbor.feature_estimate;
-            message_new.crc = message_crc(&tx_message_data);
-            messages[i] = message_new;
-        }
-    }
-    return messages;
 }
 
 uint32_t exp_rand(double mean_val) {
@@ -388,7 +365,6 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 	bool new_entry;
 	uint8_t index_to_insert;
 
-    //uint16_t rx_id = bytes_to_uint16(m->data[0], m->data[1]);
     uint16_t rx_id = (((uint16_t) m->data[0]) << 8) | ((uint16_t) (m->data[1]));
 	uint8_t measured_distance_instantaneous = estimate_distance(d);
 
@@ -513,25 +489,6 @@ void detect_feature_color() {
             }
             detect_feature_state = DETECT_FEATURE_INIT;
             is_feature_disseminating = true;  // Tell message_tx to send updated message
-            // Create array of messages to re-disseminate
-            if (allow_retransmit) {
-                //printf("\nDISSEMINATE:\n");
-                //print_neighbor_info_array();
-                uint16_t num_neighbors = count_neighbors();
-                std::vector<uint32_t> neighbor_inds = mult_rand_int(num_neighbors, num_retransmit);
-                retransmit_messages = generate_retransmit_messages(neighbor_inds);
-
-                /*printf("RETRANSMIT:\n");
-                for (uint8_t i = 0; i < retransmit_messages.size(); ++i) {
-                    printf("%u\t%u\t%u\t%u\t%u\n\r",
-                           i,
-                           retransmit_messages[i].data[0],
-                           retransmit_messages[i].data[1],
-                           retransmit_messages[i].data[2],
-                           retransmit_messages[i].data[3]);
-                }*/
-
-            }
             uint32_t dissemination_duration_mean = dissemination_duration_constant;
             if (use_confidence) {
                 dissemination_duration_mean = dissemination_duration_constant * confidence;
@@ -762,8 +719,6 @@ void random_walk(uint32_t mean_straight_dur, uint32_t max_turn_dur) {
 
 void setup() {
 
-    //is_feature_disseminating = true;
-
 	// put your setup code here, to be run only once
 	// Set initial light value
     curr_light_level = detect_light_level(detect_which_feature);
@@ -842,53 +797,50 @@ void loop() {
 // MESSAGE HANDLING
 
 void retransmit_tx_message_data() {
-    // Pick a random message from retransmit_messages to re-disseminate & mutate the message to be sent
-    // TODO: Possibly update to send specific messages (e.g., oldest, majority value)
-    // Currently ignores which feature to re-transmit
+    // Pick a random message from the neighbor table to re-disseminate & mutate the message to be sent
     // TODO: Will likely need to worry about neighbor array info locking here?
 
-    if (retransmit_messages.size() > 0) {
-        //printf("RETRANSMIT MESSAGE\n");
-        uint32_t use_ind = uniform_rand(retransmit_messages.size());
-        tx_message_data = retransmit_messages[use_ind];
-    }
-
-    // Pick neighbor to retransmit
-    /*uint16_t num_neighbors = 0;
+    // Get an array of all non-zero indices in neighbor table (and keep count)
+    uint8_t neighbor_inds[NEIGHBOR_INFO_ARRAY_SIZE];
+    uint8_t num_inds = 0;
     for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; i++) {
         if (neighbor_info_array[i].id != 0) {
-            num_neighbors++;
+            neighbor_inds[num_inds] = i;
+            num_inds += 1;
         }
     }
-    uint32_t neighbor_ind = uniform_rand(num_neighbors);
-    neighbor_info_array_t neighbor = neighbor_info_array[neighbor_ind];
 
-    tx_message_data.type = NORMAL;
-    // ID
-    tx_message_data.data[0] = ((uint8_t) ((neighbor.id & 0xff00) >> 8));
-    tx_message_data.data[1] = ((uint8_t) (neighbor.id & 0x00ff));
-    // Feature variable measured
-    tx_message_data.data[2] = neighbor.detect_which_feature;
-    // Estimate of feature
-    tx_message_data.data[3] = neighbor.feature_estimate;
-    tx_message_data.crc =  message_crc(&tx_message_data);
-     */
-}
-
-float binary_to_float(void) {
-    // Convert the 13-bit binary representation of the number to a float
+    if (num_inds > 0) {
+        // Randomly pick from array of indices [rand() % num_inds]
+        int use_ind = rand() % num_inds;
+        // Update tx_message_data based on this information
+        tx_message_data.type = NORMAL;
+        // ID
+        tx_message_data.data[0] = ((uint8_t) ((neighbor_info_array[use_ind].id & 0xff00) >> 8));
+        tx_message_data.data[1] = ((uint8_t) (neighbor_info_array[use_ind].id & 0x00ff));
+        // Feature variable measured
+        tx_message_data.data[2] = neighbor_info_array[use_ind].detect_which_feature;
+        // Estimate of feature
+        tx_message_data.data[3] = neighbor_info_array[use_ind].feature_estimate;
+        // Keep transmitting OWN BELIEF/DECISION for convergence
+        for (int f = 0; f < 3; f++) {
+            if (decision_locked[f]) {
+                tx_message_data.data[f + 4] = decision[f];
+            } else {
+                tx_message_data.data[f + 4] = pattern_belief[f];
+            }
+        }
+        tx_message_data.crc = message_crc(&tx_message_data);
+    }
 }
 
 void update_tx_message_data() {
     // TODO: Send message that includes concentration
     tx_message_data.type = NORMAL;
     // ID
-    //uint8_t *id_array = uint16_to_bytes(id);
-    //tx_message_data.data[0] = id_array[0];
-    //tx_message_data.data[1] = id_array[1];
     tx_message_data.data[0] = ((uint8_t) ((id & 0xff00) >> 8));
     tx_message_data.data[1] = ((uint8_t) (id & 0x00ff));
-    // Feature varaible measured
+    // Feature variable measured
     tx_message_data.data[2] = detect_which_feature;
     // Estimate of feature
     tx_message_data.data[3] = feature_estimate;
@@ -910,8 +862,18 @@ void update_tx_message_data() {
 message_t *message_tx() {
     // Message should be changed/set by respective detection/observation function
     if (is_feature_disseminating) {
+        if (allow_retransmit) {
+            if (is_retransmit) {
+                retransmit_tx_message_data();
+                is_retransmit = false;
+            } else {
+                update_tx_message_data();
+                is_retransmit = true;
+            }
+        } else {
         update_tx_message_data();
-        return &tx_message_data;
+    }
+    return &tx_message_data;
     } else {
         return NULL;
     }

@@ -4,8 +4,6 @@
 #include <vector>
 #include "shapes.h"
 
-extern bool is_gradient;  // TODO: Temporary
-
 // General parameters
 extern int num_threads;  // Number of CPU threads to parallelize across
 extern int trial_num;
@@ -21,7 +19,7 @@ extern bool exp_observation;  // Use exponential distribution for observation du
 extern bool exp_dissemination;  // Use exponential distribution for dissemination duration (true) or constant (false)
 extern bool use_confidence;  // Use confidence to determine dissemination duration or not
 extern bool allow_retransmit; // Allow re-transmission of messages in neighbor array
-extern uint32_t num_retransmit;  // Max. num. neighbors from table allowed to be retransmitted in each dissem. period
+//extern uint32_t num_retransmit;  // Max. num. neighbors from table allowed to be retransmitted in each dissem. period
 extern uint8_t comm_rate;  // Number of ticks per message
 
 // Logging results
