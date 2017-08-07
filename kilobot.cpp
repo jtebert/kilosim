@@ -298,7 +298,7 @@ void print_neighbor_info_array() {
 	printf("Index\tID\tFeature\tBelief\tD_meas.\tN_Heard\tTime\n\r");
 	for (uint8_t i = 0; i < NEIGHBOR_INFO_ARRAY_SIZE; ++i) {
 		if (neighbor_info_array[i].id != 0) {
-			printf("%u\t%d\t%u\t%u\t%u\t%u\t%u",
+			printf("%u\t%d\t%u\t%u\t%u\t%u\t%u\n\r",
                 //  1   2   3   4   5   6   7
 					i,
 					neighbor_info_array[i].id,
@@ -569,7 +569,20 @@ void update_pattern_beliefs() {
                 }
                 uint8_t new_belief = std::max_element(histogram.begin(), histogram.end()) - histogram.begin();
                 if (histogram[new_belief] != 0) {
-                    pattern_belief[f] = new_belief;
+                    if (histogram[0] == histogram[255]) {
+                        // Flip a coin to choose
+                        int val = rand() % 2;
+                        if (val == 1) {
+                            pattern_belief[f] = 0;
+                        } else {
+                            pattern_belief[f] = 255;
+                        }
+                    } else {
+                        //printf("[%d] %d -> %d\n", f, pattern_belief[f], new_belief);
+                        pattern_belief[f] = new_belief;
+                    }
+                } else {
+                    //printf("No update for feature %d\n", f);
                 }
                 // Else: heard from no one; keep current belief for feature
             }
