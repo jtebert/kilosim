@@ -638,9 +638,9 @@ void decision_checker() {
                 if (diffusion_decision_time < decision_timer[f] + kilo_ticks) {
                     // Has been past threshold long enough to lock decision
                     decision_locked[f] = true;
-                    printf("LOCK %d: %d\t(%f, %f, %f)\n",
+                    /*printf("LOCK %d: %d\t(%f, %f, %f)\n",
                            f, id,
-                           concentrations[0], concentrations[1], concentrations[2]);
+                           concentrations[0], concentrations[1], concentrations[2]);*/
                     if (concentrations[f] < diffusion_decision_thresh) {
                         decision[f] = 0;
                     } else {
