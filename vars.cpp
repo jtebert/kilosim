@@ -55,5 +55,5 @@ uint32_t neighbor_info_array_timeout = 120 * SECOND;
 // Diffusion parameters
 float diffusion_constant = 0.1;  // (D) (0-1) influence of concentration messages on own concentration
 uint32_t diffusion_neighbor_timeout = 120 * SECOND;  // Later will have a parameter that's a ratio to neighbor_info_array_timeout
-float diffusion_decision_thresh = 0.05;  // as difference from 0/1
-uint32_t diffusion_decision_time = 30* SECOND;  // (kiloticks) time past threshold before committing to decision
+float diffusion_decision_thresh = 0.1;  // as difference from 0/1
+uint32_t diffusion_decision_time = 30 * SECOND;  // (kiloticks) time past threshold before committing to decision

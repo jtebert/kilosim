@@ -809,8 +809,7 @@ void loop() {
     //set_color(RGB(concentrations[0]/255, concentrations[1]/255, concentrations[2]/255));
 
     // LED: OWN ESTIMATE
-    /*float feature_est = (float)feature_estimate/255;
-    float c[3] = {0.5, 0.5, 0.5};
+    float c[3] = {concentrations[0], concentrations[1], concentrations[2]};
     for (int f = 0; f < 3; f++) {
         if(decision_locked[f]) {
             if (decision[f] == 255) {
@@ -820,9 +819,9 @@ void loop() {
             }
         }
     }
-    set_color(RGB(c[0], c[1], c[2]));*/
+    set_color(RGB(c[0], c[1], c[2]));
 
-    set_color(RGB(concentrations[0], concentrations[1], concentrations[2]));
+    //set_color(RGB(concentrations[0], concentrations[1], concentrations[2]));
 
 }
 

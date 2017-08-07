@@ -359,12 +359,16 @@ bool run_simulation_step() {
         printf("DECIDE UP:   (%f, %f, %f)\n", decide0[1], decide1[1], decide2[1]);
         printf("MEAN BELIEF: (%f, %f, %f)\n", mean_belief(0), mean_belief(1), mean_belief(2));
 
+        for (int f = 0; f < 3; f++) {
+            printf("\nFeature %d: %d\t%d\t%d", f, sent_values_0[f], sent_values_127[f], sent_values_255[f]);
+        }
+        printf("\n\n");
 
-		printf("\nFeature 0: %d\t%d\t%d\nFeature 1: %d\t%d\t%d\nFeature 2: %d\t%d\t%d\n",
+		/*printf("\nFeature 0: %d\t%d\t%d\nFeature 1: %d\t%d\t%d\nFeature 2: %d\t%d\t%d\n\n",
 			   sent_values_0[0], sent_values_127[0], sent_values_255[0],
 			   sent_values_0[1], sent_values_127[1], sent_values_255[1],
 			   sent_values_0[2], sent_values_127[2], sent_values_255[2]
-		);
+		);*/
     }
 
 	// Log info at each time step
