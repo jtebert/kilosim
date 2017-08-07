@@ -23,6 +23,7 @@ public:
 
     #define NUM_FEATURES 3
     uint8_t pattern_belief[NUM_FEATURES] = {127, 127, 127};
+	uint8_t decision[3] = {127, 127, 127};
 	uint16_t id;
 	double pos[3];  //x,y,theta position in real world, don't use these in controller, that's cheating!!
 	double motor_error;  //value of how motors differ from ideal, don't use these, that's cheating!!

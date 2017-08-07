@@ -22,6 +22,12 @@ using namespace std;
 
 uint track_id;
 
+// TODO: Temporary variables for testing communicating beliefs/concentrations
+// Number of belief messages sent with each value (0, 127, 255)
+int sent_values_0[3] = {0, 0, 0};  // Number of 0s sent for features 0, 1, and 2
+int sent_values_127[3] = {0, 0, 0};  // Number of 127s sent for features 0, 1, and 2
+int sent_values_255[3] = {0, 0, 0};  // Number of 255s sent for features 0, 1, and 2
+
 rgb RGB(double r, double g, double b)
 {
     rgb c;
@@ -111,7 +117,7 @@ void log_str(std::string str) {
 double convergence_ratio(uint8_t feature) {
 	// Find the percentage of kilobots in convergence about belief for given feature
 	int count_converge_up = 0;
-    int count_converge_down = 1;
+    int count_converge_down = 0;
     //#pragma parallel for
 	for (int i = 0; i < num_robots; i++) {
         if (robots[i]->pattern_belief[feature] > 127) {
@@ -122,6 +128,32 @@ double convergence_ratio(uint8_t feature) {
     }
 	double convergence = double(max(count_converge_up, count_converge_down)) / num_robots;
 	return convergence;
+}
+
+double *decision_ratio(uint8_t feature, double *decision_rate) {
+    // Find the percentage of kilobots that have DECIDED on the feature
+    int count_decide_up = 0;
+    int count_decide_down = 0;
+    for (int i = 0; i < num_robots; i++) {
+        if (robots[i]->decision[feature] == 255) {
+            count_decide_up += 1;
+        } else if (robots[i]->decision[feature] == 0) {
+            count_decide_down += 1;
+        }
+    }
+    decision_rate[0] = (double)count_decide_down / num_robots;
+    decision_rate[1] = (double)count_decide_up / num_robots;
+    return decision_rate;
+}
+
+double mean_belief(uint8_t feature) {
+    // Get the mean belief across features
+    int sum_belief = 0;
+    for (int i = 0; i < num_robots; i++) {
+        sum_belief += robots[i]->pattern_belief[feature];
+    }
+    double avg = (double)sum_belief/255/num_robots;
+    return avg;
 }
 
 double* compute_next_step (double dt) {
@@ -262,6 +294,17 @@ bool run_simulation_step() {
 						double dist = tx_r->distance(tx_r->pos[0], tx_r->pos[1], rx_r->pos[0], rx_r->pos[1]);
                         if (tx_r->comm_out_criteria(dist) && rx_r->comm_in_criteria(dist, msg)) {
                             rx_r->received();
+							// Test for bias in number of messages recieved
+							message_t* test_message = (message_t *)msg;
+							for (int f = 0; f < 3; f++) {
+								if (test_message->data[f+4] == 0) {
+									sent_values_0[f] += 1;
+								} else if (test_message->data[f+4] == 127) {
+									sent_values_127[f] += 1;
+								} else if (test_message->data[f+4] == 255) {
+									sent_values_255[f] += 1;
+								}
+							}
                         }
 					}
 				}
@@ -300,8 +343,29 @@ bool run_simulation_step() {
 		// If a bot is touching the wall (collision_type == 2), update angle but not position
 	}
 
+
 	static int lastsec =-1;
 	bool result = false;
+
+    if (lastrun % (30 * SECOND) == 0) {
+        double decide0[2] = {0,0};
+        double decide1[2] = {0,0};
+        double decide2[2] = {0,0};
+        decision_ratio(0, decide0);
+        decision_ratio(1, decide1);
+        decision_ratio(2, decide2);
+        printf("\n[%d]\n", lastrun);
+        printf("DECIDE DOWN: (%f, %f, %f)\n", decide0[0], decide1[0], decide2[0]);
+        printf("DECIDE UP:   (%f, %f, %f)\n", decide0[1], decide1[1], decide2[1]);
+        printf("MEAN BELIEF: (%f, %f, %f)\n", mean_belief(0), mean_belief(1), mean_belief(2));
+
+
+		printf("\nFeature 0: %d\t%d\t%d\nFeature 1: %d\t%d\t%d\nFeature 2: %d\t%d\t%d\n",
+			   sent_values_0[0], sent_values_127[0], sent_values_255[0],
+			   sent_values_0[1], sent_values_127[1], sent_values_255[1],
+			   sent_values_0[2], sent_values_127[2], sent_values_255[2]
+		);
+    }
 
 	// Log info at each time step
 	std::ostringstream os;

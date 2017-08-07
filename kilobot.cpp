@@ -24,7 +24,7 @@ class mykilobot : public kilobot {
 // TODO: DIFFUSION PARAMETERS
 float concentrations[3] = {0.5, 0.5, 0.5};
 bool decision_locked[3] = {false, false, false};  // Has a decision been made
-uint8_t decision[3];  // What value was decided for each feature?
+//uint8_t decision[3];  // What value was decided for each feature?
 uint32_t decision_timer[3] = {0,0,0};  // How long has it been past the threshold?
 
 // Light levels for edge following & color detection
@@ -592,9 +592,9 @@ void update_pattern_beliefs() {
             }
         }
         // Use pattern belief updates to update concentrations
-        for (int f = 0; f < 3; f++) {
+        /*for (int f = 0; f < 3; f++) {
             update_concentrations(f, pattern_belief[f]);
-        }
+        }*/
     }
 }
 
@@ -602,17 +602,18 @@ void update_concentrations(uint8_t which_feature, uint8_t belief_val) {
     // Update concentration based on concentration in received message
     // TODO: Could also take into account distance of neighbors (delta_concentration/distance)
     // TEMPORARY: Lock beliefs of first and last kilobots (test generating gradient)
-    if (!decision_locked[which_feature]) {
+    if (!decision_locked[which_feature] && belief_val != 127) {
         float *old_concentrations = concentrations;
         float concentration_change = diffusion_constant * ((float) belief_val / 255 - concentrations[which_feature]);
+        //printf("[%d]: %f + %d -> %f\n", which_feature, concentrations[which_feature], belief_val, concentration_change);
         concentrations[which_feature] += concentration_change;
-        /*if (which_feature == 0 && concentrations[0] < 0.3) {
-            printf("[update]\t%u:\t(%f, %f, %f) -> %f -> (%f, %f, %f)\n",
-                   id,
-                   old_concentrations[0], old_concentrations[1], old_concentrations[2],
-                   concentration_change,
-                   concentrations[0], concentrations[1], concentrations[2]);
-        }*/
+        //if (which_feature == 0 && concentrations[0] < 0.3) {
+        //    printf("[update] %u:\t(%f, %f, %f) -> %f -> (%f, %f, %f)\n",
+        //           which_feature,
+        //           old_concentrations[0], old_concentrations[1], old_concentrations[2],
+        //           concentration_change,
+        //           concentrations[0], concentrations[1], concentrations[2]);
+        //}
     }
 }
 
@@ -624,7 +625,9 @@ void decision_checker() {
                 if (diffusion_decision_time < decision_timer[f] + kilo_ticks) {
                     // Has been past threshold long enough to lock decision
                     decision_locked[f] = true;
-                    printf("LOCK %d: %d\t(%f, %f, %f)\n", f, id, concentrations[0], concentrations[1], concentrations[2]);
+                    printf("LOCK %d: %d\t(%f, %f, %f)\n",
+                           f, id,
+                           concentrations[0], concentrations[1], concentrations[2]);
                     if (concentrations[f] < diffusion_decision_thresh) {
                         decision[f] = 0;
                     } else {
@@ -767,9 +770,9 @@ void setup() {
 
 void loop() {
 
-    if (kilo_ticks == 1) {
+    /*if (kilo_ticks == 1) {
         printf("[Initial] %d, (%f, %f, %f)\n", id, concentrations[0], concentrations[1], concentrations[2]);
-    }
+    }*/
 
     curr_light_level = detect_light_level(detect_which_feature);
 
@@ -878,9 +881,16 @@ void update_tx_message_data() {
     // Estimate of feature
     tx_message_data.data[3] = feature_estimate;
     // Belief for all 3 features
-    tx_message_data.data[4] = pattern_belief[0];
-    tx_message_data.data[5] = pattern_belief[1];
-    tx_message_data.data[6] = pattern_belief[2];
+    for (int f = 0; f < 3; f++) {
+        if (decision_locked[f]) {
+            tx_message_data.data[f+4] = decision[f];
+        } else {
+            tx_message_data.data[f+4] = pattern_belief[f];
+        }
+    }
+    //tx_message_data.data[4] = pattern_belief[0];
+    //tx_message_data.data[5] = pattern_belief[1];
+    //tx_message_data.data[6] = pattern_belief[2];
     tx_message_data.crc = message_crc(&tx_message_data);
 }
 
