@@ -862,7 +862,7 @@ void update_tx_message_data() {
 message_t *message_tx() {
     // Message should be changed/set by respective detection/observation function
     if (is_feature_disseminating) {
-        if (allow_retransmit) {
+        if (allow_retransmit && kilo_ticks % comm_rate == 0) {
             if (is_retransmit) {
                 retransmit_tx_message_data();
                 is_retransmit = false;
