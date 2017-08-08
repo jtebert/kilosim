@@ -679,7 +679,7 @@ void parse_params(int argc, char **argv) {
             diffusion_decision_thresh= stof(argv[i + 1]);
         }
         if (strcmp(argv[i], "--diffusion_decision_time") == 0) {
-            diffusion_decision_time = (uint32_t)stoi(argv[i + 1]);
+            diffusion_decision_time = (uint32_t)stoi(argv[i + 1]) * SECOND;
         }
     }
 }
