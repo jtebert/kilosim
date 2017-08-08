@@ -338,8 +338,8 @@ bool run_simulation_step() {
 	// Save convergence data
 	std::ostringstream os;
 	os << float(lastrun)/SECOND << "\t"
-       << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2)
-       << mean_belief(0) << "\t" << mean_belief(1) << "\t" << "\t" << mean_belief(2) << "\n";
+       << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2) << "\t"
+       << mean_belief(0) << "\t" << mean_belief(1) << "\t" << mean_belief(2) << "\n";
 	log_buffer = os.str();
 	log_str(log_filename, log_buffer);
 
@@ -350,12 +350,12 @@ bool run_simulation_step() {
     decision_ratio(2, decide2);
     os1 << (float)lastrun/SECOND << "\t" << decide0[0] << "\t" << decide0[1] << "\t"
         << decide1[0] << "\t" << decide1[1] << "\t"
-        << decide2[0] << "\t" << decide2[1] << "\t" << "\n";
+        << decide2[0] << "\t" << decide2[1] << "\n";
     log_buffer = os1.str();
     log_str(decision_filename, log_buffer);
 
 
-    if (lastrun % (30 * SECOND) == 0) {
+    if (lastrun % (120 * SECOND) == 0) {
         printf("\n[%.1f min]\n", (float)lastrun/SECOND/60);
         printf("DECIDE DOWN: (%f, %f, %f)\n", decide0[0], decide1[0], decide2[0]);
         printf("DECIDE UP:   (%f, %f, %f)\n", decide0[1], decide1[1], decide2[1]);
@@ -797,6 +797,11 @@ int main(int argc, char **argv) {
     FILE * log = fopen(log_filename.c_str(), "a");
     fprintf(log, "%s\n", log_header.c_str());
     fclose(log);
+    // Header for communications log
+    std::string comm_header = "time\tid\tfeatures\tnum_neighbors";
+    FILE * comm_log = fopen(comm_log_filename.c_str(), "a");
+    fprintf(comm_log, "%s\n", comm_header.c_str());
+    fclose(comm_log);
 
 	srand(t);
 
