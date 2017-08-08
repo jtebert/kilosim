@@ -527,7 +527,7 @@ void update_pattern_beliefs() {
                 uint8_t new_belief = std::max_element(histogram.begin(), histogram.end()) - histogram.begin();
                 if (histogram[new_belief] != 0) {
                     if (histogram[0] == histogram[255]) {
-                        // Flip a coin to choose
+                        // Flip a coin to choose if there are equal numbers for 0/255
                         int val = rand() % 2;
                         if (val == 1) {
                             pattern_belief[f] = 0;

@@ -35,6 +35,10 @@ rgb RGB(double r, double g, double b)
 double time_sim;  //simulation time
 double zoom, view_x, view_y; //var. for zoom and scroll
 
+double decide0[2] = {0,0};
+double decide1[2] = {0,0};
+double decide2[2] = {0,0};
+
 robot** robots; //creates an array of robots
 int* order;
 
@@ -42,6 +46,7 @@ int delay = delay_init;
 int draw_delay = 1;
 FILE *log_file;
 std::string log_filename;
+std::string decision_filename;
 std::string comm_log_filename;
 std::string params_filename;
 
@@ -98,11 +103,11 @@ bool use_features_valid() {
     return true;
 }
 
-void log_str(std::string str) {
+void log_str(std::string filename, std::string str) {
 	// I don't get what the other log function is doing.
-	// This will just save the input string to log_filename
+	// This will just save the input string to the filename
     if (log_debug_info) {
-        log_file = fopen(log_filename.c_str(), "a");
+        log_file = fopen(filename.c_str(), "a");
         fprintf(log_file, "%s", str.c_str());
         fclose(log_file);
     }
@@ -330,25 +335,32 @@ bool run_simulation_step() {
 	static int lastsec =-1;
 	bool result = false;
 
-    /*if (lastrun % (30 * SECOND) == 0) {
-        double decide0[2] = {0,0};
-        double decide1[2] = {0,0};
-        double decide2[2] = {0,0};
-        decision_ratio(0, decide0);
-        decision_ratio(1, decide1);
-        decision_ratio(2, decide2);
-        printf("\n[%d]\n", lastrun);
+	// Save convergence data
+	std::ostringstream os;
+	os << float(lastrun)/SECOND << "\t"
+       << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2)
+       << mean_belief(0) << "\t" << mean_belief(1) << "\t" << "\t" << mean_belief(2) << "\n";
+	log_buffer = os.str();
+	log_str(log_filename, log_buffer);
+
+    // Save decision-making data
+    std::ostringstream os1;
+    decision_ratio(0, decide0);
+    decision_ratio(1, decide1);
+    decision_ratio(2, decide2);
+    os1 << (float)lastrun/SECOND << "\t" << decide0[0] << "\t" << decide0[1] << "\t"
+        << decide1[0] << "\t" << decide1[1] << "\t"
+        << decide2[0] << "\t" << decide2[1] << "\t" << "\n";
+    log_buffer = os1.str();
+    log_str(decision_filename, log_buffer);
+
+
+    if (lastrun % (30 * SECOND) == 0) {
+        printf("\n[%.1f min]\n", (float)lastrun/SECOND/60);
         printf("DECIDE DOWN: (%f, %f, %f)\n", decide0[0], decide1[0], decide2[0]);
         printf("DECIDE UP:   (%f, %f, %f)\n", decide0[1], decide1[1], decide2[1]);
         printf("MEAN BELIEF: (%f, %f, %f)\n", mean_belief(0), mean_belief(1), mean_belief(2));
-    }*/
-
-	// Log info at each time step
-	std::ostringstream os;
-	os << float(lastrun)/SECOND << "\t" << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2) << "\n";
-	log_buffer = os.str();
-
-	log_str(log_buffer);
+    }
 
     return lastrun % draw_delay == 0;
 }
@@ -593,11 +605,14 @@ void parse_params(int argc, char **argv) {
         if (strcmp(argv[i], "--time") == 0) {
             timelimit = stoi(argv[i + 1]);
         }
+        if (strcmp(argv[i], "--logdir") == 0) {
+            log_file_dir = argv[i + 1];
+        }
         if (strcmp(argv[i], "--logname") == 0) {
             log_filename_base = argv[i + 1];
         }
-        if (strcmp(argv[i], "--logdir") == 0) {
-            log_file_dir = argv[i + 1];
+        if(strcmp(argv[i], "--decision_logname") == 0) {
+            decision_filename = argv[i + 1];
         }
         if (strcmp(argv[i], "--dissemination_dur") == 0) {
             dissemination_duration_constant = (uint32_t)(stoi(argv[i + 1]) * SECOND);
@@ -686,6 +701,9 @@ void save_params() {
     //params_header += "num_retransmit\t"; params_vals += std::to_string(num_retransmit) + "\t";
     params_header += "comm_rate\t"; params_vals += std::to_string(comm_rate) + "\t";
     params_header += "neighbor_dur\t"; params_vals += std::to_string(neighbor_info_array_timeout/SECOND) + "\t";
+    params_header += "diffusion_constant\t"; params_vals += std::to_string(diffusion_constant) + "\t";
+    params_header += "diffusion_decision_thresh\t"; params_vals += std::to_string(diffusion_decision_thresh) + "\t";
+    params_header += "diffusion_decision_time\t"; params_vals += std::to_string((float)diffusion_decision_time/SECOND) + "\t";
     FILE * params_log = fopen(params_filename.c_str(), "a");
     fprintf(params_log, "%s\n", params_header.c_str());
     fprintf(params_log, "%s\n", params_vals.c_str());
@@ -731,6 +749,7 @@ int main(int argc, char **argv) {
 		}
 	}
     log_filename = log_file_dir + "/" + log_filename_base + std::to_string(trial_num) + ".log";
+    decision_filename = log_file_dir + "/" + decision_filename_base + std::to_string(trial_num) + ".log";
     comm_log_filename = log_file_dir + "/" + comm_filename_base + std::to_string(trial_num) + ".log";
     params_filename = log_file_dir + "/" + params_filename_base + std::to_string(trial_num) + ".log";
     std::cout << log_filename << std::endl;
@@ -741,6 +760,7 @@ int main(int argc, char **argv) {
 		std::cin >> is_overwrite;
 		if (strcmp(is_overwrite.c_str(), "y") == 0) {
 			remove(log_filename.c_str());
+            remove(decision_filename.c_str());
             remove(comm_log_filename.c_str());
             remove(params_filename.c_str());
 		} else {
@@ -766,9 +786,17 @@ int main(int argc, char **argv) {
 	// Save parameters to file
 	save_params();
 
-	// Log once at start of simulation
-	//sprintf(log_buffer, "random seed: %d\n", t);
-	//log_str(log_buffer);
+	// LOG ONCE AT START OF SIMULATION
+    // Put header line into decisions log file
+    std::string decision_header = "time\tdecide_0_down\tdecide_0_up\tdecide_1_down\tdecide_1_up\tdecide_2_down\tdecide_2_up";
+    FILE * decision_log = fopen(decision_filename.c_str(), "a");
+    fprintf(decision_log, "%s\n", decision_header.c_str());
+    fclose(decision_log);
+    // Header for default log file
+    std::string log_header = "time\tconverge_0\tconverge_1\tconverge_2\tmean_belief_0\tmean_belief_1\tmean_belief_2";
+    FILE * log = fopen(log_filename.c_str(), "a");
+    fprintf(log, "%s\n", log_header.c_str());
+    fclose(log);
 
 	srand(t);
 
@@ -810,9 +838,6 @@ int main(int argc, char **argv) {
 		glutMainLoop();
 	} else {
 		while (total_secs < timelimit) {
-            //printf("IN TIME\n");
-            //char a;
-            //std::cin >> a;
 			run_simulation_step();
 		}
 	}
