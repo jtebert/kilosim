@@ -55,3 +55,4 @@ uint32_t neighbor_info_array_timeout = 120 * SECOND;
 float diffusion_constant = 0.1;  // (D) (0-1) influence of belief messages on own concentration
 float diffusion_decision_thresh = 0.1;  // as difference from 0/1
 uint32_t diffusion_decision_time = 30 * SECOND;  // (kiloticks) time past threshold before committing to decision
+
