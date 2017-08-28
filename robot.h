@@ -22,6 +22,7 @@ class robot {
 public:
 
     #define NUM_FEATURES 3
+    uint8_t feature_estimate = 127;
     uint8_t pattern_belief[NUM_FEATURES] = {127, 127, 127};
 	uint8_t decision[3] = {127, 127, 127};
 	uint16_t id;

@@ -21,6 +21,7 @@ extern bool use_confidence;  // Use confidence to determine dissemination durati
 extern bool allow_retransmit; // Allow re-transmission of messages in neighbor array
 //extern uint32_t num_retransmit;  // Max. num. neighbors from table allowed to be retransmitted in each dissem. period
 extern uint8_t comm_rate;  // Number of ticks per message
+extern uint8_t belief_update_strategy;  // 1=none, 0=DMMD, 2 = DMVD
 
 // Logging results
 extern bool log_debug_info;

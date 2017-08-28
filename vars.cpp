@@ -21,6 +21,7 @@ bool use_confidence = true;
 bool allow_retransmit = false; // Allow re-transmission of messages in neighbor array
 //uint32_t num_retransmit = 500;  // Max. num. neighbors from table allowed to be retransmitted in each dissem. period
 uint8_t comm_rate = 3;  // Number of ticks per message
+uint8_t belief_update_strategy = 1;  // 0=none, 1=DMMD, 2 = DMVD
 
 // Logging results
 bool log_debug_info = true;

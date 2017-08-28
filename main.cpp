@@ -155,6 +155,24 @@ double mean_belief(uint8_t feature) {
     return avg;
 }
 
+double mean_estimate(uint8_t feature) {
+    // Get the mean feature estimate (from own observations
+    int sum_estimate = 0;
+    int num_use_robots = 0;
+    for (int i = 0; i < num_robots; i++) {
+        if (robots[i]->detect_which_feature == feature) {
+            sum_estimate += robots[i]->feature_estimate;
+            num_use_robots++;
+        }
+    }
+    double avg = (double)sum_estimate/255/num_use_robots;
+    if (std::isnan(avg)) {
+        return 0;
+    } else {
+        return avg;
+    }
+}
+
 double* compute_next_step (double dt) {
 	// Compute the next positions of the robots according to their current positions and motor commands
 	// This will be used for collision detection (check if they'd be overlapping on the next step)
@@ -337,9 +355,15 @@ bool run_simulation_step() {
 
 	// Save convergence data
 	std::ostringstream os;
-	os << float(lastrun)/SECOND << "\t"
-       << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2) << "\t"
-       << mean_belief(0) << "\t" << mean_belief(1) << "\t" << mean_belief(2) << "\n";
+    if (belief_update_strategy == 0) {
+        os << float(lastrun) / SECOND << "\t"
+           << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2) << "\t"
+           << mean_estimate(0) << "\t" << mean_estimate(1) << "\t" << mean_estimate(2) << "\n";
+    } else {
+        os << float(lastrun) / SECOND << "\t"
+           << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2) << "\t"
+           << mean_belief(0) << "\t" << mean_belief(1) << "\t" << mean_belief(2) << "\n";
+    }
 	log_buffer = os.str();
 	log_str(log_filename, log_buffer);
 
@@ -359,7 +383,11 @@ bool run_simulation_step() {
         printf("\n[%.1f min]\n", (float)lastrun/SECOND/60);
         printf("DECIDE DOWN: (%f, %f, %f)\n", decide0[0], decide1[0], decide2[0]);
         printf("DECIDE UP:   (%f, %f, %f)\n", decide0[1], decide1[1], decide2[1]);
-        printf("MEAN BELIEF: (%f, %f, %f)\n", mean_belief(0), mean_belief(1), mean_belief(2));
+        if (belief_update_strategy == 0) {
+            printf("MEAN BELIEF: (%f, %f, %f)\n", mean_estimate(0), mean_estimate(1), mean_estimate(2));
+        } else {
+            printf("MEAN BELIEF: (%f, %f, %f)\n", mean_belief(0), mean_belief(1), mean_belief(2));
+        }
     }
 
     return lastrun % draw_delay == 0;
@@ -650,9 +678,17 @@ void parse_params(int argc, char **argv) {
         if (strcmp(argv[i], "--allow_retransmit") == 0) {
             allow_retransmit = argv[i + 1][0] == 'y';
         }
-        /*if (strcmp(argv[i], "--num_retransmit") == 0) {
-            num_retransmit = (uint32_t) stoi(argv[i + 1]);
-        }*/
+		if (strcmp(argv[i], "--belief_update_strategy") == 0) {
+			if (strcmp(argv[i + 1], "none") == 0) {
+				belief_update_strategy = 0;
+			} else if (strcmp(argv[i + 1], "DMMD") == 0) {
+				belief_update_strategy = 1;
+			} else if (strcmp(argv[i + 1], "DMVD") == 0) {
+				belief_update_strategy = 2;
+			} else {
+				throw std::invalid_argument("belief_update_strategy must be none, DMMD, or DMVD");
+			}
+		}
         if (strcmp(argv[i], "--comm_rate") == 0) {
             comm_rate = (uint8_t) stoi(argv[i + 1]);
         }
@@ -698,7 +734,7 @@ void save_params() {
     params_header += "exp_dissemination\t"; params_vals += std::to_string(exp_dissemination) + "\t";
     params_header += "use_confidence\t"; params_vals += std::to_string(use_confidence) + "\t";
     params_header += "allow_retransmit\t"; params_vals += std::to_string(allow_retransmit) + "\t";
-    //params_header += "num_retransmit\t"; params_vals += std::to_string(num_retransmit) + "\t";
+    params_header += "belief_update_strategy\t"; params_vals += std::to_string(belief_update_strategy) + "\t";
     params_header += "comm_rate\t"; params_vals += std::to_string(comm_rate) + "\t";
     params_header += "neighbor_dur\t"; params_vals += std::to_string(neighbor_info_array_timeout/SECOND) + "\t";
     params_header += "diffusion_constant\t"; params_vals += std::to_string(diffusion_constant) + "\t";

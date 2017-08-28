@@ -62,7 +62,6 @@ const uint8_t RW_TURN = 2;
 uint8_t rw_state = RW_INIT;
 uint32_t rw_last_changed = 0;
 uint32_t long_rw_mean_straight_dur = 240 * SECOND;  // kiloticks
-uint32_t short_rw_mean_straight_dur = 5 * SECOND;  // kiloticks
 uint32_t rw_max_turn_dur = 12 * SECOND;  // kiloticks
 // Turn/straight durations are set at the beginning of each transition to that RW state
 uint32_t rw_straight_dur;
@@ -78,7 +77,7 @@ bool is_retransmit = false;  // Alternate between transmitting own message and r
 
 // Feature detection
 
-uint8_t feature_estimate = 127;  // Feature belief 0-255
+//uint8_t feature_estimate = 127;  // Feature belief 0-255
 uint32_t feature_observe_start_time;
 bool is_feature_disseminating = false;
 //uint32_t dissemination_duration_constant = 60 * SECOND;
@@ -114,9 +113,10 @@ const double temporal_std_thresh = 40;
 // Beliefs about pattern features start as middle/uncertain (each 127)
 // But should be replaced by first message, so starting value likely won't matter much
 bool is_updating_belief = false;
-const uint8_t DMMD = 0;
-const uint8_t DMVD = 1;
-uint8_t pattern_decision_method = DMMD;
+const uint8_t NONE = 0;
+const uint8_t DMMD = 1;
+const uint8_t DMVD = 2;
+//uint8_t belief_update_strategy = DMMD;
 
 // Messages/communication
 #define NEIGHBOR_INFO_ARRAY_SIZE 100
@@ -412,9 +412,13 @@ void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 			neighbor_info_array[index_to_insert].number_of_times_heard_from = 0;
             neighbor_info_array[index_to_insert].diffusion_timer = kilo_ticks;
             // Update concentrations based on all 3 belief values sent
-            update_concentrations(0, m->data[4]);
-            update_concentrations(1, m->data[5]);
-            update_concentrations(2, m->data[6]);
+            if (belief_update_strategy != NONE) {
+                update_concentrations(0, m->data[4]);
+                update_concentrations(1, m->data[5]);
+                update_concentrations(2, m->data[6]);
+            } else {
+                update_concentrations(m->data[2], m->data[3]);
+            }
 		} else {
 			if (distance_averaging) {
 				neighbor_info_array[index_to_insert].measured_distance *= 0.9;
@@ -515,7 +519,7 @@ void update_pattern_beliefs() {
             fprintf(comm_log, "%f\t%d\t%d\t%d\n", float(kilo_ticks)/SECOND, id, detect_which_feature, num_neighbors);
             fclose(comm_log);
         }
-        if (pattern_decision_method == DMMD) {
+        if (belief_update_strategy == DMMD) {
             // Majority-based decisions
             for (uint8_t f = 0; f < NUM_FEATURES; ++f) {
                 std::vector<uint8_t> histogram(UINT8_MAX+1, 0);
@@ -543,7 +547,7 @@ void update_pattern_beliefs() {
                 }
                 // Else: heard from no one; keep current belief for feature
             }
-        } else if (pattern_decision_method == DMVD) {
+        } else if (belief_update_strategy == DMVD) {
             // Voter-based decisions (lottery)
             std::vector<uint8_t> choices(NEIGHBOR_INFO_ARRAY_SIZE);
             uint8_t num_choices = 0;
@@ -845,16 +849,16 @@ void update_tx_message_data() {
     // Estimate of feature
     tx_message_data.data[3] = feature_estimate;
     // Belief for all 3 features
-    for (int f = 0; f < 3; f++) {
-        if (decision_locked[f]) {
-            tx_message_data.data[f+4] = decision[f];
-        } else {
-            tx_message_data.data[f+4] = pattern_belief[f];
+    if (belief_update_strategy != NONE) {
+        for (int f = 0; f < 3; f++) {
+            if (decision_locked[f]) {
+                tx_message_data.data[f + 4] = decision[f];
+            } else {
+                tx_message_data.data[f + 4] = pattern_belief[f];
+            }
         }
     }
-    //tx_message_data.data[4] = pattern_belief[0];
-    //tx_message_data.data[5] = pattern_belief[1];
-    //tx_message_data.data[6] = pattern_belief[2];
+    // If not using beliefs, concentration update will use the feature_estimate
     tx_message_data.crc = message_crc(&tx_message_data);
 }
 
