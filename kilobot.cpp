@@ -572,7 +572,7 @@ void decision_checker() {
                         decision[f] = 255;
                     }
                     // Switch to observing a new feature if current feature if just locked detect_which_feature
-                    if (!all_features_locked()) {
+                    if (dynamic_allocation && !all_features_locked()) {
                         switch_feature();
                     }
                 }

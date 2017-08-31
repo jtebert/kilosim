@@ -717,6 +717,9 @@ void parse_params(int argc, char **argv) {
         if (strcmp(argv[i], "--diffusion_decision_time") == 0) {
             diffusion_decision_time = (uint32_t)stoi(argv[i + 1]) * SECOND;
         }
+        if (strcmp(argv[i], "--dynamic_allocation") == 0) {
+            dynamic_allocation = argv[i + 1][0] == 'y';
+        }
     }
 }
 
@@ -740,6 +743,7 @@ void save_params() {
     params_header += "diffusion_constant\t"; params_vals += std::to_string(diffusion_constant) + "\t";
     params_header += "diffusion_decision_thresh\t"; params_vals += std::to_string(diffusion_decision_thresh) + "\t";
     params_header += "diffusion_decision_time\t"; params_vals += std::to_string((float)diffusion_decision_time/SECOND) + "\t";
+    params_header += "dynamic_allocation\t"; params_vals += std::to_string(dynamic_allocation) + "\t";
     FILE * params_log = fopen(params_filename.c_str(), "a");
     fprintf(params_log, "%s\n", params_header.c_str());
     fprintf(params_log, "%s\n", params_vals.c_str());
