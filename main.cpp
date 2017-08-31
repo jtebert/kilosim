@@ -145,6 +145,17 @@ double *decision_ratio(uint8_t feature, double *decision_rate) {
     return decision_rate;
 }
 
+int num_detecting(uint8_t feature) {
+    // Count the number of robots detecting the feature
+    int count = 0;
+    for (int i = 0; i < num_robots; i++) {
+        if (robots[i]->detect_which_feature == feature) {
+            count += 1;
+        }
+    }
+    return count;
+}
+
 double mean_belief(uint8_t feature) {
     // Get the mean belief across features
     int sum_belief = 0;
@@ -355,15 +366,11 @@ bool run_simulation_step() {
 
 	// Save convergence data
 	std::ostringstream os;
-    if (belief_update_strategy == 0) {
-        os << float(lastrun) / SECOND << "\t"
-           << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2) << "\t"
-           << mean_estimate(0) << "\t" << mean_estimate(1) << "\t" << mean_estimate(2) << "\n";
-    } else {
-        os << float(lastrun) / SECOND << "\t"
-           << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2) << "\t"
-           << mean_belief(0) << "\t" << mean_belief(1) << "\t" << mean_belief(2) << "\n";
-    }
+    os << float(lastrun) / SECOND << "\t"
+       << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2) << "\t"
+       << mean_estimate(0) << "\t" << mean_estimate(1) << "\t" << mean_estimate(2) << "\t"
+       << mean_belief(0) << "\t" << mean_belief(1) << "\t" << mean_belief(2) << "\t"
+       << num_detecting(0) << "\t" << num_detecting(1) << "\t" << num_detecting(2) << "\n";
 	log_buffer = os.str();
 	log_str(log_filename, log_buffer);
 
@@ -379,15 +386,16 @@ bool run_simulation_step() {
     log_str(decision_filename, log_buffer);
 
 
-    if (lastrun % (120 * SECOND) == 0) {
+    if (lastrun % (60 * SECOND) == 0) {
         printf("\n[%.1f min]\n", (float)lastrun/SECOND/60);
-        printf("DECIDE DOWN: (%f, %f, %f)\n", decide0[0], decide1[0], decide2[0]);
-        printf("DECIDE UP:   (%f, %f, %f)\n", decide0[1], decide1[1], decide2[1]);
+        printf("DECIDE DOWN:   (%f, %f, %f)\n", decide0[0], decide1[0], decide2[0]);
+        printf("DECIDE UP:     (%f, %f, %f)\n", decide0[1], decide1[1], decide2[1]);
         if (belief_update_strategy == 0) {
-            printf("MEAN BELIEF: (%f, %f, %f)\n", mean_estimate(0), mean_estimate(1), mean_estimate(2));
+            printf("MEAN ESTIMATE: (%f, %f, %f)\n", mean_estimate(0), mean_estimate(1), mean_estimate(2));
         } else {
-            printf("MEAN BELIEF: (%f, %f, %f)\n", mean_belief(0), mean_belief(1), mean_belief(2));
+            printf("MEAN BELIEF:   (%f, %f, %f)\n", mean_belief(0), mean_belief(1), mean_belief(2));
         }
+        printf("NUM DETECTING: (%d,\t  %d,\t    %d)\n", num_detecting(0), num_detecting(1), num_detecting(2));
     }
 
     return lastrun % draw_delay == 0;
@@ -833,7 +841,7 @@ int main(int argc, char **argv) {
     fprintf(decision_log, "%s\n", decision_header.c_str());
     fclose(decision_log);
     // Header for default log file
-    std::string log_header = "time\tconverge_0\tconverge_1\tconverge_2\tmean_belief_0\tmean_belief_1\tmean_belief_2";
+    std::string log_header = "time\tconverge_0\tconverge_1\tconverge_2\tmean_estimate_0\tmean_estimate_1\tmean_estimate_2\tmean_belief_0\tmean_belief_1\tmean_belief_2\tdetect_0\tdetect_1\tdetect_2";
     FILE * log = fopen(log_filename.c_str(), "a");
     fprintf(log, "%s\n", log_header.c_str());
     fclose(log);

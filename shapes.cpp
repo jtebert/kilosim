@@ -13,7 +13,7 @@ std::vector<polygon_c_t> gen_color_polys(std::string filename) {
     // Generate the list of polygons (colored squares) included in the given file
     struct stat file_info;
     if (stat(filename.c_str(), &file_info) != 0) {
-        printf("Error: Shapes file '%s' does not exist.", filename.c_str());
+        printf("Error: Shapes file '%s' does not exist.\n", filename.c_str());
         exit(1);
     }
 
@@ -33,7 +33,7 @@ std::vector<rect_c_t> gen_color_rects(std::string filename) {
     // Generate the list of colored rectangles included in the given file
     struct stat file_info;
     if (stat(filename.c_str(), &file_info) != 0) {
-        printf("Error: Shapes file '%s' does not exist.", filename.c_str());
+        printf("Error: Shapes file '%s' does not exist.\n", filename.c_str());
         exit(1);
     }
 

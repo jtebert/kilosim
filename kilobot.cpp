@@ -572,7 +572,7 @@ void decision_checker() {
                         decision[f] = 255;
                     }
                     // Switch to observing a new feature if current feature if just locked detect_which_feature
-                    if (dynamic_allocation && !all_features_locked()) {
+                    if (dynamic_allocation && f == detect_which_feature && !all_features_locked()) {
                         switch_feature();
                     }
                 }
@@ -606,6 +606,7 @@ void switch_feature() {
             switch_to = f;
         }
     }
+    printf("SWITCH: %d -> %d\n", detect_which_feature, switch_to);
     detect_which_feature = switch_to;
 }
 
@@ -771,7 +772,7 @@ void loop() {
     //set_color(RGB(concentrations[0]/255, concentrations[1]/255, concentrations[2]/255));
 
     // LED: OWN ESTIMATE
-    float c[3] = {concentrations[0], concentrations[1], concentrations[2]};
+    /*float c[3] = {concentrations[0], concentrations[1], concentrations[2]};
     for (int f = 0; f < 3; f++) {
         if(decision_locked[f]) {
             if (decision[f] == 255) {
@@ -782,6 +783,16 @@ void loop() {
         }
     }
     set_color(RGB(c[0], c[1], c[2]));
+     */
+
+    // LED: DETECTING WHICH FEATURE
+    if (detect_which_feature == 0) {
+        set_color(RGB(1,0,0));
+    } else if (detect_which_feature == 1) {
+        set_color(RGB(0,1,0));
+    } else {
+        set_color(RGB(0,0,1));
+    }
 
     //set_color(RGB(concentrations[0], concentrations[1], concentrations[2]));
 
