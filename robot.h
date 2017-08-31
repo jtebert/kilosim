@@ -31,7 +31,6 @@ public:
 	double comm_range = comm_dist;  //communication range between robots
 	double color[3];  //robot color output, values 0-1
     uint8_t detect_which_feature;  // Index of which pattern feature to detect
-    uint8_t agent_type;  // Index of robot movement type
 
     // TEMPORARY: Make variables accessible in main loop for debugging purposes
     uint8_t curr_level;

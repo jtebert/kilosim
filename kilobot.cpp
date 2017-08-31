@@ -327,39 +327,6 @@ void prune_neighbor_info_array() {
 	}
 }
 
-uint8_t* float_to_bytes(float f) {
-    uint8_t *out = reinterpret_cast<uint8_t*>(&f);
-    return out;
-}
-
-float bytes_to_float(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) {
-    // Convert the 4 uint8_t to a 32-bit float
-    union {
-        float f;
-        uint8_t b[4];
-    } u;
-    u.b[0] = b0;
-    u.b[1] = b1;
-    u.b[2] = b2;
-    u.b[3] = b3;
-    return u.f;
-}
-
-uint8_t* uint16_to_bytes(uint16_t n) {
-    uint8_t *out = reinterpret_cast<uint8_t*>(&n);
-    return out;
-}
-
-uint16_t bytes_to_uint16(uint8_t b0, uint8_t b1) {
-    union {
-        uint16_t n;
-        uint8_t b[2];
-    } u;
-    u.b[0] = b0;
-    u.b[1] = b1;
-    return u.n;
-}
-
 void update_neighbor_info_array(message_t* m, distance_measurement_t* d) {
 	bool can_insert = false;
 	bool new_entry;
@@ -592,27 +559,54 @@ void update_concentrations(uint8_t which_feature, uint8_t belief_val) {
 }
 
 void decision_checker() {
-    // Check if any concentrations are past threshold and start timer(s)
-    for (int f = 0; f < 3; f++) {
+    // Check if any concentrations are past threshold and start timer(s) or lock decision
+    for (int f = 0; f < NUM_FEATURES; f++) {
         if (!decision_locked[f]) {
             if (concentrations[f] < diffusion_decision_thresh || concentrations[f] > 1 - diffusion_decision_thresh) {
                 if (diffusion_decision_time < decision_timer[f] + kilo_ticks) {
                     // Has been past threshold long enough to lock decision
                     decision_locked[f] = true;
-                    /*printf("LOCK %d: %d\t(%f, %f, %f)\n",
-                           f, id,
-                           concentrations[0], concentrations[1], concentrations[2]);*/
                     if (concentrations[f] < diffusion_decision_thresh) {
                         decision[f] = 0;
                     } else {
                         decision[f] = 255;
                     }
+                    // Switch to observing a new feature if current feature if just locked detect_which_feature
+                    if (!all_features_locked()) {
+                        switch_feature();
+                    }
                 }
             } else {
+                // Start timer
                 decision_timer[f] = kilo_ticks;
             }
         }
     }
+}
+
+bool all_features_locked() {
+    // Return whether all features have locked decisions
+    for (uint8_t f = 0; f < NUM_FEATURES; f++) {
+        if (!decision_locked[f]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void switch_feature() {
+    // Switch from the current detect_which_feature to the one with most uncertainty (according to concentration)
+    uint8_t switch_to = detect_which_feature;
+    double conc_diff, switch_to_diff;
+    for (uint8_t f = 0; f < NUM_FEATURES; f++) {
+        conc_diff = std::abs(concentrations[f] - 0.5);
+        switch_to_diff = std::abs(concentrations[switch_to] - 0.5);
+        if (!decision_locked[f] && conc_diff < switch_to_diff) {
+            // Switch to feature with concentration close to 0.5
+            switch_to = f;
+        }
+    }
+    detect_which_feature = switch_to;
 }
 
 // AUXILIARY FUNCTIONS FOR LOOP (DETECTION AND MOVEMENT)
@@ -741,10 +735,6 @@ void setup() {
 }
 
 void loop() {
-
-    /*if (kilo_ticks == 1) {
-        printf("[Initial] %d, (%f, %f, %f)\n", id, concentrations[0], concentrations[1], concentrations[2]);
-    }*/
 
     curr_light_level = detect_light_level(detect_which_feature);
 
