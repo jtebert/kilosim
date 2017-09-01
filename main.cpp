@@ -386,7 +386,7 @@ bool run_simulation_step() {
     log_str(decision_filename, log_buffer);
 
 
-    if (lastrun % (60 * SECOND) == 0) {
+    if (lastrun % (30 * SECOND) == 0) {
         printf("\n[%.1f min]\n", (float)lastrun/SECOND/60);
         printf("DECIDE DOWN:   (%f, %f, %f)\n", decide0[0], decide1[0], decide2[0]);
         printf("DECIDE UP:     (%f, %f, %f)\n", decide0[1], decide1[1], decide2[1]);
