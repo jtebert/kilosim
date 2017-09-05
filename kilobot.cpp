@@ -606,11 +606,12 @@ void switch_feature() {
             switch_to = f;
         }
     }
-    //printf("SWITCH: %d -> %d\n", detect_which_feature, switch_to);
+    printf("%d\tSWITCH: %d -> %d\n", id, detect_which_feature, switch_to);
     detect_which_feature = switch_to;
     // Restart observation to avoid holdover effects
     detect_feature_state = DETECT_FEATURE_INIT;
     is_feature_disseminating = false;
+    feature_estimate = 127;
 }
 
 // AUXILIARY FUNCTIONS FOR LOOP (DETECTION AND MOVEMENT)

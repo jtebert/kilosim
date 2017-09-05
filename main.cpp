@@ -171,7 +171,7 @@ double mean_estimate(uint8_t feature) {
     int sum_estimate = 0;
     int num_use_robots = 0;
     for (int i = 0; i < num_robots; i++) {
-        if (robots[i]->detect_which_feature == feature) {
+        if (robots[i]->detect_which_feature == feature && robots[i]->feature_estimate != 127) {
             sum_estimate += robots[i]->feature_estimate;
             num_use_robots++;
         }
