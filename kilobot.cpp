@@ -790,6 +790,7 @@ void loop() {
      */
 
     // LED: DETECTING WHICH FEATURE
+
     if (detect_which_feature == 0) {
         set_color(RGB(1,0,0));
     } else if (detect_which_feature == 1) {
@@ -797,6 +798,7 @@ void loop() {
     } else {
         set_color(RGB(0,0,1));
     }
+
 
     //set_color(RGB(concentrations[0], concentrations[1], concentrations[2]));
 

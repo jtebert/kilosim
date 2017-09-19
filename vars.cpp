@@ -10,8 +10,10 @@ int trial_num = 0;
 int num_robots = 120;
 int timelimit = 180 * 60;
 uint8_t num_features = 3;
-std::vector<uint8_t> use_features = {0, 1, 2};
+std::vector<int> use_features = {0, 1, 2};
+std::vector<double> initial_distribution = {1.0/3, 1.0/3, 1.0/3} ;  // Set initial distribution of agents between features
 bool showscene = true;
+
 
 // Communication & dissemination
 float comm_dist = 6 * 16;  // 3 body-lengths

@@ -1,5 +1,6 @@
 #include <math.h>
 #include <iostream>
+#include <numeric>
 #include "robot.h"
 #include "vars.h"
 
@@ -66,7 +67,16 @@ void robot::robot_init(double x, double y, double t) {
 	}
     forward_speed = forward_speed + forward_speed_error;
 	init();
+
     // Set detection and movement type
-    uint8_t temp = (uint8_t)rand() % use_features.size();
-    detect_which_feature = use_features[temp];
+    double tmp = ((double) rand() / (RAND_MAX));
+    std::cout << id << ": " << tmp << std::endl;
+    double accum = 0;
+    for (int i = 0; i < initial_distribution.size(); i++) {
+        accum += initial_distribution[i];
+        if (tmp <= accum) {
+            detect_which_feature = (uint8_t)i;
+            break;
+        }
+    }
 }

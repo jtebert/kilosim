@@ -52,9 +52,6 @@ std::string params_filename;
 
 std::string log_buffer;
 
-char shape_file_name[255] = "";
-
-
 int total_secs;
 char rt[100];
 
@@ -76,31 +73,83 @@ double wrap_angle(double angle) {
     return angle;
 }
 
-void parse_use_features(std::string str) {
-    // Parse the input string into new values for use_features
-    use_features = {};
-    std::string delimiter = "-";
-    size_t pos = 0;
-    std::string token;
-    while((pos = str.find(delimiter)) != std::string::npos) {
-        token = str.substr(0, pos);
-        use_features.push_back((uint8_t)stoi(token.c_str()));
-        str.erase(0, pos + delimiter.length());
-    }
-    use_features.push_back((uint8_t)stoi(str.c_str()));
-}
-
-bool use_features_valid() {
-    // Check that all the features are valid
-    if (use_features.size() == 0) {
-        return false;
-    }
-    for (int i; i < use_features.size(); i++) {
-        if (use_features[i] >= num_features) {
-            return false;
+std::vector<double> parse_initial_distribution(std::string str) {
+    // Parse the input string into new values for initial_distribution of robots
+    std::vector<double> v;
+    std::string temp{ "" };
+    for (char c : str) {
+        if (c != '-') {
+            temp += c;
+        } else {
+            double num = std::stof(temp);
+            v.push_back(num);
+            temp = "";
         }
     }
-    return true;
+    double num = std::stof(temp);
+    v.push_back(num);
+    // TEMP
+    for (int i = 0; i < 3; i++) {
+        printf("%d: %f\n", i, v[i]);
+    }
+    return v;
+}
+
+void initial_distribution_valid(std::vector<double> init_dist) {
+    // Check that all the features are valid
+    bool flag = false;
+    if (init_dist.size() != use_features.size()) {
+        flag = true;
+    }
+    double dist_sum = 0;
+    for (int i = 0; i < init_dist.size(); i++) {
+        if (std::find(use_features.begin(), use_features.end(), i) != use_features.end()) {
+            dist_sum += init_dist[i];
+        }
+    }
+    if (dist_sum < 1) {
+        flag = true;
+    } else if (dist_sum > 1) {
+        printf("WARNING: Initial distribution values add to more than 1.\n");
+    }
+    if (flag) {
+        printf("ERROR: Initial distribution of agents for used features must sum to (at least) 1\n");
+        exit(1);
+    }
+}
+
+std::vector<int> parse_use_features(std::string str) {
+    std::vector<int> v;
+    std::string temp{ "" };
+    for (char c : str) {
+        if (c != '-') {
+            temp += c;
+        } else {
+            int num = std::stoi(temp);
+            v.push_back(num);
+            temp = "";
+        }
+    }
+    int num = std::stoi(temp);
+    v.push_back(num);
+    return v;
+}
+
+void use_features_valid(std::vector<int> use_feat) {
+    // Check that all the features are valid
+    bool flag = false;
+    if (use_feat.size() == 0) {
+        flag = true;
+    }
+    for (int i = 0; i < use_feat.size(); i++) {
+        if (use_feat[i] >= num_features) {
+            flag = true;
+        }
+    }
+    if (flag) {
+        printf("ERROR: All features IDs used must be 0-%d\n", num_features-1);
+        exit(1);
+    }
 }
 
 void log_str(std::string filename, std::string str) {
@@ -386,7 +435,7 @@ bool run_simulation_step() {
     log_str(decision_filename, log_buffer);
 
 
-    if (lastrun % (30 * SECOND) == 0) {
+    if (lastrun % (120 * SECOND) == 0) {
         printf("\n[%.1f min]\n", (float)lastrun/SECOND/60);
         printf("DECIDE DOWN:   (%f, %f, %f)\n", decide0[0], decide1[0], decide2[0]);
         printf("DECIDE UP:     (%f, %f, %f)\n", decide0[1], decide1[1], decide2[1]);
@@ -622,6 +671,10 @@ void setup_positions() {
 
 void parse_params(int argc, char **argv) {
     // Parse input parameters and mutate appropriate global variables
+    std::vector<double> temp_initial_distribution;
+    std::vector<int> temp_use_features;
+    bool initial_distribution_specified = false;
+    bool use_features_specified = false;
     for (int i = 0; i < argc-1; i++) {
         if (strcmp(argv[i],"--robots")==0) {
             num_robots = stoi(argv[i + 1]);
@@ -666,7 +719,12 @@ void parse_params(int argc, char **argv) {
             trial_num = stoi(argv[i + 1]);
         }
         if (strcmp(argv[i], "--features") == 0) {
-            parse_use_features(argv[i + 1]);
+            temp_use_features = parse_use_features(argv[i + 1]);
+            use_features_specified = true;
+        }
+        if (strcmp(argv[i], "--initial_distribution") == 0) {
+            temp_initial_distribution = parse_initial_distribution(argv[i + 1]);
+            initial_distribution_specified = true;
         }
         if (strcmp(argv[i], "--rows") == 0) {
             arena_rows = stoi(argv[i + 1]);
@@ -729,6 +787,32 @@ void parse_params(int argc, char **argv) {
             dynamic_allocation = argv[i + 1][0] == 'y';
         }
     }
+
+    // Verify/coordinate values of use_features and initial_distribution
+    if (use_features_specified) {
+        use_features_valid(temp_use_features);
+        use_features = temp_use_features;
+    }
+    if (initial_distribution_specified) {
+        initial_distribution_valid(temp_initial_distribution);
+        initial_distribution = temp_initial_distribution;
+    } else {
+        printf("Not specified\n");
+        // If initial_distribution parameter not used, split evenly between used features
+        int num_use_features = 0;
+        for (int i = 0; i < use_features.size(); i++) {
+            num_use_features += 1;
+        }
+        for (int i = 0; i < initial_distribution.size(); i++) {
+            if (std::find(use_features.begin(), use_features.end(), i) != use_features.end()) {
+                initial_distribution[i] = 1.0/num_use_features;
+            } else {
+                initial_distribution[i] = 0;
+            }
+        }
+    }
+    // actually set values for initial_distribution and use_features
+    // change initialization (robot.cpp) to only use i values of use_features
 }
 
 void save_params() {
@@ -768,16 +852,6 @@ int main(int argc, char **argv) {
         omp_set_dynamic(0);     // Explicitly disable dynamic teams
         omp_set_num_threads(num_threads); // Use num_threads for all consecutive parallel regions
     }
-
-    // Check feature values
-    if (!use_features_valid()) {
-        printf("ERROR: All features IDs used must be 0-%d\n", num_features);
-        exit(1);
-    }
-    /*if (allow_retransmit && num_retransmit <= 0) {
-        printf("ERROR: num_retransmit must be a positive integer (not 0)\n");
-        exit(1);
-    }*/
 
     // Get shapes from file
     std::string shapes_filename = shapes_dir + "/" + shapes_filename_base +

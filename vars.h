@@ -10,7 +10,8 @@ extern int trial_num;
 extern int num_robots;
 extern int timelimit;
 extern uint8_t num_features;
-extern std::vector<uint8_t> use_features;
+extern std::vector<int> use_features;
+extern std::vector<double> initial_distribution;  // Set initial distribution of agents between features
 extern bool showscene;
 
 // Communication & dissemination
