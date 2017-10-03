@@ -11,7 +11,6 @@ int num_robots = 120;
 int timelimit = 180 * 60;
 uint8_t num_features = 3;
 std::vector<int> use_features = {0, 1, 2};
-std::vector<double> initial_distribution = {1.0/3, 1.0/3, 1.0/3} ;  // Set initial distribution of agents between features
 bool showscene = true;
 
 
@@ -61,3 +60,7 @@ uint32_t diffusion_decision_time = 30 * SECOND;  // (kiloticks) time past thresh
 
 // Allocating agents to features
 bool dynamic_allocation = false;  // Whether agents can change which feature they detect
+std::vector<double> initial_distribution = {1.0/3, 1.0/3, 1.0/3} ;  // Set initial distribution of agents between features
+
+// Which feature set to use (color or monochrome)
+uint8_t which_feature_set = 1;  // 0=monochrome, 1=color

@@ -755,6 +755,15 @@ void parse_params(int argc, char **argv) {
 				throw std::invalid_argument("belief_update_strategy must be none, DMMD, or DMVD");
 			}
 		}
+        if (strcmp(argv[i], "--which_feature_set") == 0) {
+            if (strcmp(argv[i+1], "mono") == 0) {
+                which_feature_set = 0;
+            } else if (strcmp(argv[i+1], "color") == 0) {
+                which_feature_set = 1;
+            } else {
+                throw std::invalid_argument("which_feature_set must be mono or color");
+            }
+        }
         if (strcmp(argv[i], "--comm_rate") == 0) {
             comm_rate = (uint8_t) stoi(argv[i + 1]);
         }
@@ -836,6 +845,7 @@ void save_params() {
     params_header += "diffusion_decision_thresh\t"; params_vals += std::to_string(diffusion_decision_thresh) + "\t";
     params_header += "diffusion_decision_time\t"; params_vals += std::to_string((float)diffusion_decision_time/SECOND) + "\t";
     params_header += "dynamic_allocation\t"; params_vals += std::to_string(dynamic_allocation) + "\t";
+    params_header += "which_feature_set\t"; params_vals += std::to_string(which_feature_set) + "\t";
     FILE * params_log = fopen(params_filename.c_str(), "a");
     fprintf(params_log, "%s\n", params_header.c_str());
     fprintf(params_log, "%s\n", params_vals.c_str());
