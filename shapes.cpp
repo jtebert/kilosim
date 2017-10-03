@@ -13,7 +13,7 @@ std::vector<polygon_c_t> gen_color_polys(std::string filename) {
     // Generate the list of polygons (colored squares) included in the given file
     struct stat file_info;
     if (stat(filename.c_str(), &file_info) != 0) {
-        printf("Error: Shapes file '%s' does not exist.\n", filename.c_str());
+        printf("Error: Polygons file '%s' does not exist.\n", filename.c_str());
         exit(1);
     }
 
@@ -29,11 +29,30 @@ std::vector<polygon_c_t> gen_color_polys(std::string filename) {
     return polys;
 }
 
+std::vector<circle_c_t> gen_color_circles(std::string filename) {
+    // Generate the list of colored circles included in the given file
+    struct stat file_info;
+    if (stat(filename.c_str(), &file_info) != 0) {
+        printf("Error: Circles file '%s' does not exist.\n", filename.c_str());
+        exit(1);
+    }
+    std::vector<circle_c_t> circles;
+    std::ifstream infile(filename);
+    float x, y, rad, c1, c2, c3;
+    std::string line;
+
+    while (infile >> x >> y >> rad >> c1 >> c2 >> c3) {
+        circle_c_t new_circle = {x, y, rad, {c1, c2, c3}};
+        circles.push_back(new_circle);
+    }
+    return circles;
+}
+
 std::vector<rect_c_t> gen_color_rects(std::string filename) {
     // Generate the list of colored rectangles included in the given file
     struct stat file_info;
     if (stat(filename.c_str(), &file_info) != 0) {
-        printf("Error: Shapes file '%s' does not exist.\n", filename.c_str());
+        printf("Error: Rectangles file '%s' does not exist.\n", filename.c_str());
         exit(1);
     }
 
@@ -82,7 +101,7 @@ bool point_in_rect(point_t point, rect_c_t rect) {
             && point.y >= rect.pos.y && point.y <= rect.pos.y + rect.height;
 }
 
-bool point_in_circle(point_t point, circle_t circ) {
+bool point_in_circle(point_t point, circle_c_t circ) {
     double dist = sqrt(pow(point.x - circ.x, 2) + pow(point.y - circ.y, 2));
     return dist < circ.rad;
 }

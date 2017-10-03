@@ -177,9 +177,9 @@ public:
             // out of arena = GRAY
             return {500, 500, 500};
         } else {
-            // Check if in any polygon, rectangle or circle
             bool abort = false;
             std::vector<uint16_t> colors;
+            // Check if in any polygon
             #pragma omp parallel for
             for (int i = 0; i < polygons.size(); i++) {
                 #pragma omp flush (abort)
@@ -194,6 +194,22 @@ public:
                     }
                 }
             }
+            // Check if in any circle
+            #pragma omp parallel for
+            for (int i = 0; i < circles.size(); i++) {
+                #pragma omp flush (abort)
+                if (!abort) {
+                    circle_c_t circ = circles[i];
+                    if (point_in_circle(p, circ)) {
+                        colors = {uint16_t(circ.color[0] * 1024),
+                                  uint16_t(circ.color[1] * 1024),
+                                  uint16_t(circ.color[2] * 1024)};
+                        abort = true;
+                        #pragma omp flush (abort)
+                    }
+                }
+            }
+			// Check if in any rectangle
             #pragma omp parallel for
             for (int i = 0; i < rects.size(); i++) {
                 #pragma omp flush (abort)

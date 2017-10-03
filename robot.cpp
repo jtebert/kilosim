@@ -70,7 +70,6 @@ void robot::robot_init(double x, double y, double t) {
 
     // Set detection and movement type
     double tmp = ((double) rand() / (RAND_MAX));
-    std::cout << id << ": " << tmp << std::endl;
     double accum = 0;
     for (int i = 0; i < initial_distribution.size(); i++) {
         accum += initial_distribution[i];

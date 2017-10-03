@@ -569,7 +569,6 @@ void detect_feature_curvature() {
 void update_pattern_beliefs() {
     if (is_updating_belief) {
         is_updating_belief = false;
-        //print_neighbor_info_array();
         if (log_debug_info) {
             // Log how many neighbors they used to make decision
             uint16_t num_neighbors = count_neighbors();
@@ -623,29 +622,15 @@ void update_pattern_beliefs() {
                 }
             }
         }
-        // Use pattern belief updates to update concentrations
-        /*for (int f = 0; f < 3; f++) {
-            update_concentrations(f, pattern_belief[f]);
-        }*/
     }
 }
 
 void update_concentrations(uint8_t which_feature, uint8_t belief_val) {
     // Update concentration based on concentration in received message
-    // TODO: Could also take into account distance of neighbors (delta_concentration/distance)
-    // TEMPORARY: Lock beliefs of first and last kilobots (test generating gradient)
     if (!decision_locked[which_feature] && belief_val != 127) {
         float *old_concentrations = concentrations;
         float concentration_change = diffusion_constant * ((float) belief_val / 255 - concentrations[which_feature]);
-        //printf("[%d]: %f + %d -> %f\n", which_feature, concentrations[which_feature], belief_val, concentration_change);
         concentrations[which_feature] += concentration_change;
-        //if (which_feature == 0 && concentrations[0] < 0.3) {
-        //    printf("[update] %u:\t(%f, %f, %f) -> %f -> (%f, %f, %f)\n",
-        //           which_feature,
-        //           old_concentrations[0], old_concentrations[1], old_concentrations[2],
-        //           concentration_change,
-        //           concentrations[0], concentrations[1], concentrations[2]);
-        //}
     }
 }
 
@@ -692,7 +677,7 @@ void switch_feature() {
     for (uint8_t f = 0; f < NUM_FEATURES; f++) {
         conc_diff = std::abs(concentrations[f] - 0.5);
         switch_to_diff = std::abs(concentrations[switch_to] - 0.5);
-        if (!decision_locked[f] && conc_diff < switch_to_diff) {
+        if (!decision_locked[f] && conc_diff < switch_to_diff && std::find(use_features.begin(), use_features.end(), f) != use_features.end()) {
             // Switch to feature with concentration close to 0.5
             switch_to = f;
         }
@@ -955,7 +940,7 @@ void loop() {
         } else if (detect_which_feature == FEATURE_CURVATURE) {
             detect_feature_curvature();
         } else if (detect_which_feature == FEATURE_PATTERN) {
-            // TODO: patterning
+            // TODO: pattern detection
         }
     } else if (which_feature_set == FEATURE_SET_COLOR) {
         // Color feature set
@@ -989,6 +974,16 @@ void loop() {
     //set_color(RGB(concentrations[0]/255, concentrations[1]/255, concentrations[2]/255));
 
     // LED: OWN ESTIMATE
+    /*float c[3] = {0,0,0};
+    for (int f=0; f<3; f++) {
+        if (detect_which_feature == f) {
+            c[f] = feature_estimate;
+        }
+    }
+    set_color(RGB(c[0], c[1], c[2]));
+     */
+
+    // LED: DECISIONS
     /*float c[3] = {concentrations[0], concentrations[1], concentrations[2]};
     for (int f = 0; f < 3; f++) {
         if(decision_locked[f]) {
@@ -1000,20 +995,9 @@ void loop() {
         }
     }
     set_color(RGB(c[0], c[1], c[2]));
-     */
+    */
 
-    // LED: DETECTING WHICH FEATURE
-
-    if (detect_which_feature == 0) {
-        set_color(RGB(1,0,0));
-    } else if (detect_which_feature == 1) {
-        set_color(RGB(0,1,0));
-    } else {
-        set_color(RGB(0,0,1));
-    }
-
-
-    //set_color(RGB(concentrations[0], concentrations[1], concentrations[2]));
+    set_color(RGB(concentrations[0], concentrations[1], concentrations[2]));
 
 }
 

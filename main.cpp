@@ -517,7 +517,7 @@ void draw_scene(void) {
             glColor3f(c[0]*.6, c[1]*.6, c[2]*.6);
 			glRectd(rects[i].pos.x, rects[i].pos.y, rects[i].pos.x + rects[i].width, rects[i].pos.y + rects[i].height);
         }
-        glColor3f(.6, .6, .6);
+        glColor3f(.6, 0.0, 0.0);
         for (int i = 0; i < circles.size(); i++) {
             drawFilledCircle(circles[i].x, circles[i].y, circles[i].rad);
         }
@@ -712,8 +712,14 @@ void parse_params(int argc, char **argv) {
         if (strcmp(argv[i], "--seed") == 0) {
             seed = (uint)stoi(argv[i + 1]);
         }
-        if (strcmp(argv[i], "--shape") == 0) {
-            shapes_filename_base = argv[i + 1];
+        if (strcmp(argv[i], "--rects_files") == 0) {
+            rects_filename_base = argv[i + 1];
+        }
+        if (strcmp(argv[i], "--circles_files") == 0) {
+            circles_filename_base = argv[i + 1];
+        }
+        if (strcmp(argv[i], "--polys_files") == 0) {
+            polys_filename_base = argv[i + 1];
         }
         if (strcmp(argv[i], "--trial") == 0) {
             trial_num = stoi(argv[i + 1]);
@@ -806,7 +812,6 @@ void parse_params(int argc, char **argv) {
         initial_distribution_valid(temp_initial_distribution);
         initial_distribution = temp_initial_distribution;
     } else {
-        printf("Not specified\n");
         // If initial_distribution parameter not used, split evenly between used features
         int num_use_features = 0;
         for (int i = 0; i < use_features.size(); i++) {
@@ -864,12 +869,31 @@ int main(int argc, char **argv) {
     }
 
     // Get shapes from file
-    std::string shapes_filename = shapes_dir + "/" + shapes_filename_base +
-                                  std::to_string(arena_rows) + "x" + std::to_string(arena_rows) +
-                                  "-[" + float_to_string(color_fill_ratio[0]) + "," + float_to_string(color_fill_ratio[1]) + "," + float_to_string(color_fill_ratio[2]) + "]-" +
-                                  std::to_string(trial_num) + ".txt";
-    //polygons = gen_color_polys(shapes_filename);
-    rects = gen_color_rects(shapes_filename);
+    if (!rects_filename_base.empty()) {
+        std::string rects_filename = shapes_dir + "/" + rects_filename_base + "-" +
+                                     std::to_string(arena_rows) + "x" + std::to_string(arena_rows) +
+                                     "-[" + float_to_string(color_fill_ratio[0]) + "," +
+                                     float_to_string(color_fill_ratio[1]) + "," + float_to_string(color_fill_ratio[2]) +
+                                     "]-" +
+                                     std::to_string(trial_num) + ".txt";
+        std::cout << "Using rectangles:\t" << rects_filename << std::endl;
+        rects = gen_color_rects(rects_filename);
+    }
+    if (!circles_filename_base.empty()) {
+        std::string circles_filename = shapes_dir + "/" + circles_filename_base + "-" +
+                                     float_to_string(color_fill_ratio[0]) + "-" +
+                                     std::to_string(trial_num) + ".txt";
+        std::cout << "Using circles:\t" << circles_filename << std::endl;
+        circles = gen_color_circles(circles_filename);
+    }
+    if (!polys_filename_base.empty()) {
+        std::string polys_filename = shapes_dir + "/" + polys_filename_base + "-" +
+                                     float_to_string(color_fill_ratio[0]) + "-" +
+                                     std::to_string(trial_num) + ".txt";
+        std::cout << "Using polygons:\t" << polys_filename << std::endl;
+        polygons = gen_color_polys(polys_filename);
+    }
+
 
 	// Create directory for logging if it doesn't already exist
 	struct stat info;

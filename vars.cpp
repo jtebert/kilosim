@@ -40,7 +40,9 @@ int arena_height = 2400;  // mm
 // Arena parameters for shapes
 int arena_rows = 10;
 float color_fill_ratio[3] = {0.3, 0.2, 0.8};
-std::string shapes_filename_base = "shapes-";
+std::string circles_filename_base = "";
+std::string rects_filename_base = "";
+std::string polys_filename_base = "";
 std::string shapes_dir = "shapes";
 std::vector<polygon_c_t> polygons = {};
 std::vector<rect_c_t> rects = {};

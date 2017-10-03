@@ -21,19 +21,21 @@ typedef struct rect_c_t {
     std::vector<float> color;
 } rect_c_t;
 
-typedef struct circle_t {
+typedef struct circle_c_t {
     // x, y define center of circle
     double x;
     double y;
     double rad;
+    std::vector<float> color;
 } circle_t;
 
 std::vector<polygon_c_t> gen_color_polys(std::string filename);
+std::vector<circle_c_t> gen_color_circles(std::string filename);
 std::vector<rect_c_t> gen_color_rects(std::string filename);
 std::string float_to_string(float num);
 
 bool point_in_polygon(point_t point, polygon_c_t polygon);
 bool point_in_rect(point_t point, rect_c_t rect);
-bool point_in_circle(point_t point, circle_t circ);
+bool point_in_circle(point_t point, circle_c_t circ);
 
 #endif
