@@ -21,7 +21,6 @@ typedef struct neighbor_info_array_t
 
 class mykilobot : public kilobot {
 
-// TODO: DIFFUSION PARAMETERS
 float concentrations[3] = {0.5, 0.5, 0.5};
 bool decision_locked[3] = {false, false, false};  // Has a decision been made
 //uint8_t decision[3];  // What value was decided for each feature?
