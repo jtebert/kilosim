@@ -41,6 +41,7 @@ int arena_height = 2400;  // mm
 int arena_rows = 10;
 float color_fill_ratio[3] = {0.3, 0.2, 0.8};
 std::string circles_filename_base = "";
+int circles_radius = 32;
 std::string rects_filename_base = "";
 std::string polys_filename_base = "";
 std::string shapes_dir = "shapes";

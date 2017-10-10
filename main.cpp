@@ -718,6 +718,9 @@ void parse_params(int argc, char **argv) {
         if (strcmp(argv[i], "--circles_files") == 0) {
             circles_filename_base = argv[i + 1];
         }
+        if (strcmp(argv[i], "--circles_radius") == 0) {
+            circles_radius = stoi(argv[i + 1]);
+        }
         if (strcmp(argv[i], "--polys_files") == 0) {
             polys_filename_base = argv[i + 1];
         }
@@ -851,6 +854,7 @@ void save_params() {
     params_header += "diffusion_decision_time\t"; params_vals += std::to_string((float)diffusion_decision_time/SECOND) + "\t";
     params_header += "dynamic_allocation\t"; params_vals += std::to_string(dynamic_allocation) + "\t";
     params_header += "which_feature_set\t"; params_vals += std::to_string(which_feature_set) + "\t";
+    params_header += "circles_radius\t"; params_vals += std::to_string(circles_radius) + "\t";
     FILE * params_log = fopen(params_filename.c_str(), "a");
     fprintf(params_log, "%s\n", params_header.c_str());
     fprintf(params_log, "%s\n", params_vals.c_str());
@@ -882,6 +886,7 @@ int main(int argc, char **argv) {
     if (!circles_filename_base.empty()) {
         std::string circles_filename = shapes_dir + "/" + circles_filename_base + "-" +
                                      float_to_string(color_fill_ratio[0]) + "-" +
+                                     "r" + std::to_string(circles_radius) + "-" +
                                      std::to_string(trial_num) + ".txt";
         std::cout << "Using circles:\t" << circles_filename << std::endl;
         circles = gen_color_circles(circles_filename);

@@ -44,6 +44,7 @@ extern int arena_height;  // mm
 extern int arena_rows;
 extern float color_fill_ratio[3];
 extern std::string circles_filename_base;
+extern int circles_radius;
 extern std::string rects_filename_base;
 extern std::string polys_filename_base;
 extern std::string shapes_dir;
