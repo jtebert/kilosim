@@ -100,13 +100,11 @@ uint8_t detect_curvature_dir;
 uint32_t curvature_right_dur = 0;
 uint32_t curvature_left_dur = 0;
 bool is_first_turn = true;
-uint32_t num_curv_samples = 0;  // TODO: Temporary for debugging curvature
 uint32_t curv_straight_max_thresh = radius * 2 * 10;  // Always straight past 10 body lengths
 
 uint16_t detect_color_level;
 uint32_t color_light_dur = 0;
 uint32_t color_dark_dur = 0;
-uint32_t detect_feature_start_time = 0;
 uint32_t detect_level_start_time = 0;
 // States of feature observation
 const uint8_t DETECT_FEATURE_INIT = 0;  // Begin
@@ -424,7 +422,7 @@ void detect_feature_color() {
             // Correct movement state for starting observations
             color_light_dur = 0;
             color_dark_dur = 0;
-            detect_feature_start_time = kilo_ticks;
+            //detect_feature_start_time = kilo_ticks;
             detect_level_start_time = kilo_ticks;
             detect_color_level = curr_light_level;
             detect_feature_state = DETECT_FEATURE_OBSERVE;
@@ -481,16 +479,20 @@ void detect_feature_color() {
 
 void detect_feature_curvature() {
     // Detect how much time is spent turning left vs. right
+
+    // TODO: Temporary
+    set_color(RGB(ef_state == EF_FOLLOW, 0, 0));
+
     if (detect_feature_state == DETECT_FEATURE_INIT) {
         if (is_feature_disseminating && kilo_ticks > dissemination_start_time + dissemination_duration) {
             // Check if dissemination time is finished
             is_feature_disseminating = false;
             is_updating_belief = true;  // In loop, update pattern belief using neighbor array info
-        } else if (!is_feature_disseminating && curr_light_level != GRAY && is_feature_detect_safe) {
-            // Correct movement state for starting observations
+        } else if (!is_feature_disseminating && is_feature_detect_safe) {
+            // Correct movement state for starting observations (not in border, on edge)
+            printf("Start detection\n");
             curvature_left_dur = 0;
             curvature_right_dur = 0;
-            detect_feature_start_time = kilo_ticks;
             detect_level_start_time = kilo_ticks;
             detect_curvature_dir = ef_turn_dir;
             detect_feature_state = DETECT_FEATURE_OBSERVE;
@@ -500,34 +502,38 @@ void detect_feature_curvature() {
             } else {
                 explore_duration = mean_explore_duration;
             }
-            num_curv_samples = 0;
         }
     } else if (detect_feature_state == DETECT_FEATURE_OBSERVE) {
-        // Check for turn direction change
-        if (detect_curvature_dir != ef_turn_dir  && is_feature_detect_safe) {
-            // Changed turning direction but still detecting: add to accumulators
-            num_curv_samples += 1;
+        if (is_feature_detect_safe && ef_state == EF_FOLLOW && detect_curvature_dir != ef_turn_dir) {
+            // Currently detecting feature
+            // Won't add to accumulators when edge lost (lots of turning that doesn't indicate curvature)
             if (is_first_turn) {
+                // Lots of turning to find edge doesn't count toward curvature determination
                 is_first_turn = false;
+                printf("First turn (%d -> %d)\n", detect_level_start_time, kilo_ticks);
             } else {
+                // Changed turning direction but still detecting: add to accumulators
                 if (detect_curvature_dir == TURN_LEFT) {
-                    curvature_left_dur += kilo_ticks - detect_level_start_time;
+                    curvature_left_dur += (kilo_ticks - detect_level_start_time);
                 } else if (detect_curvature_dir == TURN_RIGHT) {
-                    curvature_right_dur += kilo_ticks - detect_level_start_time;
+                    curvature_right_dur += (kilo_ticks - detect_level_start_time);
                 }
+                //printf("Turn: %d, %d (%d -> %d)\n", curvature_left_dur, curvature_right_dur, detect_level_start_time, kilo_ticks);
             }
         }
-        if (detect_curvature_dir != ef_turn_dir || !is_feature_detect_safe) {
-            // Don't start new observation when in the borderlands
+        if (detect_curvature_dir != ef_turn_dir) {
+            // Reset level timer when direction changes
             detect_level_start_time = kilo_ticks;
             detect_curvature_dir = ef_turn_dir;
-        } else if (detect_light_level() == GRAY) {
-            // Placeholder (won't be saved) until moved out of borderlands
-            detect_curvature_dir = TURN_NONE;
         }
-        if (!is_feature_detect_safe || kilo_ticks - detect_feature_start_time > explore_duration) {
-            // Observation period over or enter borderlands
-            // Get feature estimate:
+        if (!is_feature_detect_safe) {
+            // Placeholder (won't be saved) until moved out of borderlands
+            // Will be reset every tick while in border (!is_feature_detect_safe)
+            detect_curvature_dir = TURN_NONE;
+            detect_level_start_time = kilo_ticks;
+        }
+        if (curvature_left_dur + curvature_right_dur >= explore_duration) {
+            // Observation period over => get feature estimate
             double curvature_ratio;
             if (curvature_left_dur > curvature_right_dur) {
                 curvature_ratio = (double)curvature_left_dur / curvature_right_dur;
@@ -537,14 +543,15 @@ void detect_feature_curvature() {
             // Set confidence and estimates:
             double confidence;
             double radius_est = pow(1000/(curvature_ratio-1.01), 1.0/1.7);
+            printf("%d\t%d,\t%d\n", curvature_left_dur, curvature_right_dur, curvature_left_dur+curvature_right_dur);
             if (radius_est >= .5 * curv_straight_max_thresh) {
                 confidence = std::min(radius_est / curv_straight_max_thresh, 1.0);
                 feature_estimate = 0;
-                //if (confidence > 0) printf("STRAIGHT (%f, %f)\n", radius_est, confidence);
+                if (confidence > 0) printf("STRAIGHT (%f, %f)\n", radius_est, confidence);
             } else {
                 confidence = 1 - radius_est / curv_straight_max_thresh;
                 feature_estimate = 255;
-                //if (confidence > 0) printf("CURVED   (%f, %f)\n", radius_est, confidence);
+                if (confidence > 0) printf("CURVED   (%f, %f)\n", radius_est, confidence);
             }
             // Dissemination duration:
             uint32_t dissemination_duration_mean = dissemination_duration_constant;
@@ -997,7 +1004,7 @@ void loop() {
     set_color(RGB(c[0], c[1], c[2]));
     */
 
-    set_color(RGB(concentrations[0], concentrations[1], concentrations[2]));
+    //set_color(RGB(concentrations[0], concentrations[1], concentrations[2]));
 
 }
 
