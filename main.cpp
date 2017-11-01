@@ -900,35 +900,37 @@ int main(int argc, char **argv) {
     }
 
 
-	// Create directory for logging if it doesn't already exist
-	struct stat info;
-	if (stat(log_file_dir.c_str(), &info) != 0) {
-		const int dir_err = mkdir(log_file_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-		if (-1 == dir_err) {
-			printf("Error creating directory!\n");
-			exit(1);
-		}
-	}
-    log_filename = log_file_dir + "/" + log_filename_base + std::to_string(trial_num) + ".log";
-    decision_filename = log_file_dir + "/" + decision_filename_base + std::to_string(trial_num) + ".log";
-    comm_log_filename = log_file_dir + "/" + comm_filename_base + std::to_string(trial_num) + ".log";
-    params_filename = log_file_dir + "/" + params_filename_base + std::to_string(trial_num) + ".log";
-    std::cout << log_filename << std::endl;
-	// Check if file exists and warn before overwrite
-	if (stat(log_filename.c_str(), &info) == 0) {
-		std::string is_overwrite;
-		std::cout << "This log file already exists. Do you want to overwrite it? (y/N) ";
-		std::cin >> is_overwrite;
-		if (strcmp(is_overwrite.c_str(), "y") == 0) {
-			remove(log_filename.c_str());
-            remove(decision_filename.c_str());
-            remove(comm_log_filename.c_str());
-            remove(params_filename.c_str());
-		} else {
-			std::cout << "File not overwritten. Exiting" << std::endl;
-			exit(1);
-		}
-	}
+    if (log_debug_info) {
+        // Create directory for logging if it doesn't already exist
+        struct stat info;
+        if (stat(log_file_dir.c_str(), &info) != 0) {
+            const int dir_err = mkdir(log_file_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            if (-1 == dir_err) {
+                printf("Error creating directory!\n");
+                exit(1);
+            }
+        }
+        log_filename = log_file_dir + "/" + log_filename_base + std::to_string(trial_num) + ".log";
+        decision_filename = log_file_dir + "/" + decision_filename_base + std::to_string(trial_num) + ".log";
+        comm_log_filename = log_file_dir + "/" + comm_filename_base + std::to_string(trial_num) + ".log";
+        params_filename = log_file_dir + "/" + params_filename_base + std::to_string(trial_num) + ".log";
+        std::cout << log_filename << std::endl;
+        // Check if file exists and warn before overwrite
+        if (stat(log_filename.c_str(), &info) == 0) {
+            std::string is_overwrite;
+            std::cout << "This log file already exists. Do you want to overwrite it? (y/N) ";
+            std::cin >> is_overwrite;
+            if (strcmp(is_overwrite.c_str(), "y") == 0) {
+                remove(log_filename.c_str());
+                remove(decision_filename.c_str());
+                remove(comm_log_filename.c_str());
+                remove(params_filename.c_str());
+            } else {
+                std::cout << "File not overwritten. Exiting" << std::endl;
+                exit(1);
+            }
+        }
+    }
 
     // DEBUGGING
     // Print stuff here to test parameters/variables
@@ -944,25 +946,28 @@ int main(int argc, char **argv) {
 		t= (unsigned int) time(NULL);
 	}
 
-	// Save parameters to file
-	save_params();
+    if (log_debug_info) {
+        // Save parameters to file
+        save_params();
 
-	// LOG ONCE AT START OF SIMULATION
-    // Put header line into decisions log file
-    std::string decision_header = "time\tdecide_0_down\tdecide_0_up\tdecide_1_down\tdecide_1_up\tdecide_2_down\tdecide_2_up";
-    FILE * decision_log = fopen(decision_filename.c_str(), "a");
-    fprintf(decision_log, "%s\n", decision_header.c_str());
-    fclose(decision_log);
-    // Header for default log file
-    std::string log_header = "time\tconverge_0\tconverge_1\tconverge_2\tmean_estimate_0\tmean_estimate_1\tmean_estimate_2\tmean_belief_0\tmean_belief_1\tmean_belief_2\tdetect_0\tdetect_1\tdetect_2";
-    FILE * log = fopen(log_filename.c_str(), "a");
-    fprintf(log, "%s\n", log_header.c_str());
-    fclose(log);
-    // Header for communications log
-    std::string comm_header = "time\tid\tfeatures\tnum_neighbors";
-    FILE * comm_log = fopen(comm_log_filename.c_str(), "a");
-    fprintf(comm_log, "%s\n", comm_header.c_str());
-    fclose(comm_log);
+        // LOG ONCE AT START OF SIMULATION
+        // Put header line into decisions log file
+        std::string decision_header = "time\tdecide_0_down\tdecide_0_up\tdecide_1_down\tdecide_1_up\tdecide_2_down\tdecide_2_up";
+        FILE *decision_log = fopen(decision_filename.c_str(), "a");
+        fprintf(decision_log, "%s\n", decision_header.c_str());
+        fclose(decision_log);
+        // Header for default log file
+        std::string log_header = "time\tconverge_0\tconverge_1\tconverge_2\tmean_estimate_0\tmean_estimate_1\tmean_estimate_2\tmean_belief_0\tmean_belief_1\tmean_belief_2\tdetect_0\tdetect_1\tdetect_2";
+        FILE *log = fopen(log_filename.c_str(), "a");
+        fprintf(log, "%s\n", log_header.c_str());
+        fclose(log);
+        // Header for communications log
+        std::string comm_header = "time\tid\tfeatures\tnum_neighbors";
+        FILE *comm_log = fopen(comm_log_filename.c_str(), "a");
+        fprintf(comm_log, "%s\n", comm_header.c_str());
+        fclose(comm_log);
+    }
+
 
 	srand(t);
 

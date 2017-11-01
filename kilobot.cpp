@@ -490,7 +490,6 @@ void detect_feature_curvature() {
             is_updating_belief = true;  // In loop, update pattern belief using neighbor array info
         } else if (!is_feature_disseminating && is_feature_detect_safe) {
             // Correct movement state for starting observations (not in border, on edge)
-            printf("Start detection\n");
             curvature_left_dur = 0;
             curvature_right_dur = 0;
             detect_level_start_time = kilo_ticks;
@@ -510,7 +509,7 @@ void detect_feature_curvature() {
             if (is_first_turn) {
                 // Lots of turning to find edge doesn't count toward curvature determination
                 is_first_turn = false;
-                printf("First turn (%d -> %d)\n", detect_level_start_time, kilo_ticks);
+                //printf("First turn (%d -> %d)\n", detect_level_start_time, kilo_ticks);
             } else {
                 // Changed turning direction but still detecting: add to accumulators
                 if (detect_curvature_dir == TURN_LEFT) {
@@ -540,6 +539,18 @@ void detect_feature_curvature() {
             } else {
                 curvature_ratio = (double)curvature_right_dur / curvature_left_dur;
             }
+
+
+            // TODO: Temporary: circle function fitting
+            if (true) {
+                std::string curv_fit_filename =
+                        "analysis/curvature_fit_data/num_robots=" + std::to_string(num_robots) + "/circle_" +
+                        std::to_string(circles_radius);
+                FILE *curv_fit_log = fopen(curv_fit_filename.c_str(), "a");
+                fprintf(curv_fit_log, "%f\t%d\n", curvature_ratio, curvature_left_dur + curvature_right_dur);
+                fclose(curv_fit_log);
+            }
+
             // Set confidence and estimates:
             double confidence;
             double radius_est = pow(1000/(curvature_ratio-1.01), 1.0/1.7);
