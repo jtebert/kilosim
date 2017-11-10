@@ -804,6 +804,24 @@ void parse_params(int argc, char **argv) {
         if (strcmp(argv[i], "--dynamic_allocation") == 0) {
             dynamic_allocation = argv[i + 1][0] == 'y';
         }
+        if (strcmp(argv[i], "--feature_switch_when") == 0) {
+            if (strcmp(argv[i + 1], "decision") == 0) {
+                feature_switch_when = 0;
+            } else if (strcmp(argv[i + 1], "observation") == 0) {
+                feature_switch_when = 1;
+            } else {
+                throw std::invalid_argument("feature_switch_when must be decision or observation");
+            }
+        }
+        if (strcmp(argv[i], "--feature_switch_to") == 0) {
+            if (strcmp(argv[i + 1], "hardest") == 0) {
+                feature_switch_to = 0;
+            } else if (strcmp(argv[i + 1], "easiest") == 0) {
+                feature_switch_to = 1;
+            } else {
+                throw std::invalid_argument("feature_switch_to must be decision or observation");
+            }
+        }
     }
 
     // Verify/coordinate values of use_features and initial_distribution
@@ -855,6 +873,8 @@ void save_params() {
     params_header += "dynamic_allocation\t"; params_vals += std::to_string(dynamic_allocation) + "\t";
     params_header += "which_feature_set\t"; params_vals += std::to_string(which_feature_set) + "\t";
     params_header += "circles_radius\t"; params_vals += std::to_string(circles_radius) + "\t";
+    params_header += "feature_switch_when\t"; params_vals += std::to_string(feature_switch_when) + "\t";
+    params_header += "feature_switch_to\t"; params_vals += std::to_string(feature_switch_to) + "\t";
     FILE * params_log = fopen(params_filename.c_str(), "a");
     fprintf(params_log, "%s\n", params_header.c_str());
     fprintf(params_log, "%s\n", params_vals.c_str());

@@ -64,6 +64,8 @@ uint32_t diffusion_decision_time = 30 * SECOND;  // (kiloticks) time past thresh
 // Allocating agents to features
 bool dynamic_allocation = false;  // Whether agents can change which feature they detect
 std::vector<double> initial_distribution = {1.0/3, 1.0/3, 1.0/3} ;  // Set initial distribution of agents between features
+uint8_t feature_switch_when = 0;  // 0=switch after decision (default); 1=switch for each observation
+uint8_t feature_switch_to = 0;  // switch to feature with concentration: 0=closest to 0.5; 1=furthest from 0.5
 
 // Which feature set to use (color or monochrome)
 uint8_t which_feature_set = 1;  // 0=monochrome, 1=color

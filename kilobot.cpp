@@ -84,6 +84,11 @@ uint8_t bounce_turn;
 // Retransmission of messages
 bool is_retransmit = false;  // Alternate between transmitting own message and re-transmitting random neighbor
 
+// Constants for readability
+const uint8_t DECISION = 0;
+const uint8_t OBSERVATION = 1;
+const uint8_t HARDEST = 0;
+const uint8_t EASIEST = 1;
 
 // Feature detection
 
@@ -154,51 +159,6 @@ uint16_t count_neighbors() {
     return num_neighbors;
 }
 
-std::vector<uint32_t> mult_rand_int(uint32_t max_val, uint32_t num_vals) {
-    // Generate multiple (num_vals) random values from 0 to max_val (inclusive, I think)
-
-    std::vector<uint32_t> out_vals(num_vals);
-
-    if (num_vals < max_val) {
-        /*if (num_vals > 100) {
-            // Better to generate and check for duplicates
-            std::default_random_engine generator;
-            std::uniform_int_distribution<uint32_t> distribution(0, max_val);
-            for (int i = 0; i < num_vals; i++) {
-                uint32_t new_val = distribution(generator);
-                while (std::find(out_vals.begin(), out_vals.end(), new_val) != out_vals.end()) {
-                    new_val = distribution(generator);
-                }
-                out_vals[i] = new_val;
-            }
-            return out_vals;
-        } else {*/
-            // Better to generate all the values and pick from them
-            // List all possible integer values
-            std::vector<uint32_t> init_all_vals(max_val);
-            std::iota(std::begin(init_all_vals), std::end(init_all_vals), 0);
-            for (int i = 0; i < num_vals; i++) {
-                // Pick one randomly by index and add to out_vals
-                uint32_t use_ind = uniform_rand(init_all_vals.size());
-                out_vals[i] = init_all_vals[use_ind];
-                // Remove the selected number from the base list
-                init_all_vals.erase(init_all_vals.begin() + use_ind);
-            }
-            return out_vals;
-        //}
-    } else {
-        // Not enough values. Return what you have.
-        // List all possible integer values
-        std::vector<uint32_t> init_all_vals(max_val);
-        std::iota(std::begin(init_all_vals), std::end(init_all_vals), 0);
-        return init_all_vals;
-    }
-
-    /* // VERSION 2
-
-    }*/
-}
-
 uint32_t exp_rand(double mean_val) {
 	// Generate random value from exponential distribution with mean mean_val
 	// According to: http://stackoverflow.com/a/11491526/2552873
@@ -206,59 +166,6 @@ uint32_t exp_rand(double mean_val) {
 	double unif_val = (double)rand_hard() / 255.0;
 	uint32_t exp_val = uint32_t(-log(unif_val) * mean_val);
 	return exp_val;
-}
-
-uint32_t sum(std::vector<uint32_t> data) {
-    // Get the sum of all the elements in the vector
-    uint32_t accum = 0;
-    for (int i=0; i<data.size(); ++i) {
-        accum += data[i];
-    }
-    return accum;
-}
-
-double mean(std::vector<uint32_t> data) {
-    // Calculate the mean of the input data vector
-    int accum = 0;
-    for (int i=0; i<data.size(); ++i) {
-        accum += data[i];
-    }
-    return (double)accum/data.size();
-}
-
-double stddev(std::vector<uint32_t> data) {
-    // Calculate standard deviation of input vector
-    double m = mean(data);
-    double accum = 0.0;
-    for (int i=0; i<data.size(); ++i) {
-        accum += (data[i] - m)*(data[i] - m);
-    }
-    return sqrt(accum / data.size());
-}
-
-double nanadd(double a, double b) {
-    // Add together the two numbers, ignoring nans
-    if (std::isnan(a) && std::isnan(b)) {
-        return 0;
-    } else if (std::isnan(a)) {
-        return b;
-    } else if (std::isnan(b)) {
-        return a;
-    } else {
-        return a + b;
-    }
-}
-
-const char* feature_to_color() {
-	char const* ch = new char;
-	if (detect_which_feature == 0) {
-		ch = "R";
-	} else if (detect_which_feature == 1) {
-		ch = "G";
-	} else {
-		ch = "B";
-	}
-	return ch;
 }
 
 uint8_t find_wall_collision() {
@@ -418,6 +325,10 @@ void detect_feature_color() {
             // Check if dissemination time is finished
             is_feature_disseminating = false;
             is_updating_belief = true;  // In loop, update pattern belief using neighbor array info
+            // Switch feature is doing that at every observation (Putting it here prevents occurring on initialization)
+            if (feature_switch_when==OBSERVATION) {
+                switch_feature();
+            }
         } else if (!is_feature_disseminating && curr_light_level != GRAY && is_feature_detect_safe) {
             // Correct movement state for starting observations
             color_light_dur = 0;
@@ -665,8 +576,8 @@ void decision_checker() {
                     } else {
                         decision[f] = 255;
                     }
-                    // Switch to observing a new feature if current feature if just locked detect_which_feature
-                    if (dynamic_allocation && f == detect_which_feature && !all_features_locked()) {
+                    // Switch to observing a new feature if current feature just locked AND using switch after decision-making
+                    if (dynamic_allocation && f == detect_which_feature && !all_features_locked() & feature_switch_when==DECISION) {
                         switch_feature();
                     }
                 }
@@ -690,18 +601,35 @@ bool all_features_locked() {
 
 void switch_feature() {
     // Switch from the current detect_which_feature to the one with most uncertainty (according to concentration)
-    uint8_t switch_to = detect_which_feature;
-    double conc_diff, switch_to_diff;
+    uint8_t switch_to = 127;
+    double conc_diff;
+    double switch_to_diff = 1;
     for (uint8_t f = 0; f < NUM_FEATURES; f++) {
-        conc_diff = std::abs(concentrations[f] - 0.5);
-        switch_to_diff = std::abs(concentrations[switch_to] - 0.5);
-        if (!decision_locked[f] && conc_diff < switch_to_diff && std::find(use_features.begin(), use_features.end(), f) != use_features.end()) {
+        if (feature_switch_to==HARDEST) {
+            conc_diff = std::abs(concentrations[f] - 0.5);
+            if (switch_to!=127) {
+                switch_to_diff = std::abs(concentrations[switch_to] - 0.5);
+            }
+        } else if (feature_switch_to==EASIEST) {
+            conc_diff = std::min(concentrations[f], 1-concentrations[f]);
+            if (switch_to!=127) {
+                switch_to_diff = std::min(concentrations[switch_to], 1 - concentrations[switch_to]);
+            }
+        }
+        // Switch to this feature if it's closer to the target (target = 0.5 or 0/1)
+        if (!decision_locked[f] && conc_diff < switch_to_diff &&
+            std::find(use_features.begin(), use_features.end(), f) != use_features.end()) {
             // Switch to feature with concentration close to 0.5
             switch_to = f;
         }
     }
-    printf("%d\tSWITCH: %d -> %d\n", id, detect_which_feature, switch_to);
-    detect_which_feature = switch_to;
+    //printf("%d %d %d\n", decision_locked[0], decision_locked[1], decision_locked[2]);
+    //printf("%d\tSWITCH: %d -> %d (%f, %f, %f) [%d %d %d]\n", id, detect_which_feature, switch_to,
+    //       concentrations[0], concentrations[1], concentrations[2],
+    //       decision_locked[0], decision_locked[1], decision_locked[2]);
+    if (switch_to != 127) {
+        detect_which_feature = switch_to;
+    }
     // Restart observation to avoid holdover effects
     detect_feature_state = DETECT_FEATURE_INIT;
     is_feature_disseminating = false;

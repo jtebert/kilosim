@@ -80,6 +80,8 @@ extern uint32_t diffusion_decision_time;  // (kiloticks) time past threshold bef
 // Allocating agents to features
 extern bool dynamic_allocation;  // Whether agents can change which feature they detect
 extern std::vector<double> initial_distribution;  // Set initial distribution of agents between features
+extern uint8_t feature_switch_when;  // 0=switch after decision (default); 1=switch for each observation
+extern uint8_t feature_switch_to;  // switch to feature with concentration: 0=closest to 0.5; 1=furthest from 0.5
 
 // Which feature set to use (color or monochrome)
 extern uint8_t which_feature_set;  // 0=monochrome, 1=color
