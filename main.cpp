@@ -233,15 +233,14 @@ double mean_estimate(uint8_t feature) {
     }
 }
 
-double* compute_next_step (double dt) {
+double* compute_next_step (double* new_pos, double dt) {
 	// Compute the next positions of the robots according to their current positions and motor commands
 	// This will be used for collision detection (check if they'd be overlapping on the next step)
 	// Does NOT address turning that happens when there is a collision
 	// new positions are serialized: [x_1, y_1, theta_1, x_2, y_2, theta_2, x_3, ...]
 
-	double *new_pos = (double*)malloc( num_robots * 3 * sizeof(double) );
 
-    #pragma omp parallel for
+    #pragma omp for schedule(static)
 	for (int i = 0; i < num_robots; i++) {
 		robot *r = robots[i];
 
@@ -297,9 +296,9 @@ int find_collisions(double* new_pos, int self_id, int time) {
 	}
     bool abort = false;
 
-    #pragma omp parallel for
+    //#pragma omp for
 	for (int other_id = 0; other_id < num_robots; other_id++) {
-        #pragma omp flush (abort)
+        //#pragma omp flush (abort)
         if (!abort) {
             if (other_id != self_id) {  // Don't compare to self
                 double other_x = new_pos[other_id * 3];
@@ -312,7 +311,7 @@ int find_collisions(double* new_pos, int self_id, int time) {
                 // Check if new positions are intersecting
                 if (distance < 2 * radius) {
                     abort = true;
-                    #pragma omp flush (abort)
+                    //#pragma omp flush (abort)
                 }
             }
         }
@@ -342,72 +341,82 @@ bool run_simulation_step() {
 	//double rotation_step = .025; //motion step size
     double rotation_step = .05; //motion step size
 
-	//run a step of most or all robot controllers
-    #pragma omp parallel for
-	for (i = 0; i < num_robots; i++) {
-        //printf("%d\n", i);
-		//run controller this time step with p_control_execute probability
-		if ((rand())<(int)(p_control_execute*RAND_MAX)) {
-			robots[i]->robot_controller();
-		}
-	}
+    double *new_pos = (double*)malloc( num_robots * 3 * sizeof(double) );
 
-	// COMMUNICATION
-	// Only communicate at tick rate achievable by kilobots (simulate CSMA/CD)
-	if (lastrun % comm_rate == 0) {
-        seed = (rand() % shuffles) * num_robots;
-        #pragma omp parallel for
-		for (int t = 0; t < num_robots; t++) {
-			// Loop over all transmitting robots
-            int tx_id = order[seed + t];
-			robot *tx_r = robots[tx_id];
-			void *msg = tx_r->get_message();
-			if (msg) {
-				for (int rx_id = 0; rx_id < num_robots; rx_id++) {
-					// Loop over receivers if transmitting robot is sending a message
-					robot *rx_r = robots[rx_id];
-					if (tx_id != rx_id) {
-						// Check communication range in both directions (due to potentially noisy communication range)
-						double dist = tx_r->distance(tx_r->pos[0], tx_r->pos[1], rx_r->pos[0], rx_r->pos[1]);
-                        if (tx_r->comm_out_criteria(dist) && rx_r->comm_in_criteria(dist, msg)) {
-                            rx_r->received();
+#pragma omp parallel
+    {
+
+        //run a step of most or all robot controllers
+        #pragma omp for schedule(static)
+        for (i = 0; i < num_robots; i++) {
+            //printf("%d\n", i);
+            //run controller this time step with p_control_execute probability
+            if ((rand()) < (int) (p_control_execute * RAND_MAX)) {
+                robots[i]->robot_controller();
+            }
+        }
+
+        // COMMUNICATION
+        // Only communicate at tick rate achievable by kilobots (simulate CSMA/CD)
+        if (lastrun % comm_rate == 0) {
+            seed = (rand() % shuffles) * num_robots;
+            #pragma omp for
+            for (int t = 0; t < num_robots; t++) {
+                // Loop over all transmitting robots
+                int tx_id = order[seed + t];
+                robot *tx_r = robots[tx_id];
+                void *msg = tx_r->get_message();
+                if (msg) {
+                    for (int rx_id = 0; rx_id < num_robots; rx_id++) {
+                        // Loop over receivers if transmitting robot is sending a message
+                        robot *rx_r = robots[rx_id];
+                        if (tx_id != rx_id) {
+                            // Check communication range in both directions (due to potentially noisy communication range)
+                            double dist = tx_r->distance(tx_r->pos[0], tx_r->pos[1], rx_r->pos[0], rx_r->pos[1]);
+                            if (tx_r->comm_out_criteria(dist) && rx_r->comm_in_criteria(dist, msg)) {
+                                rx_r->received();
+                            }
                         }
-					}
-				}
-			}
-		}
-	}
+                    }
+                }
+            }
+        }
 
-	// MOVEMENT
-	double* new_pos = compute_next_step(dt);
-	for (int r_id = 0; r_id < num_robots; r_id++) {
-		robot *r = robots[r_id];
-		double new_x = new_pos[r_id*3];
-		double new_y = new_pos[r_id*3 + 1];
-		double new_theta = new_pos[r_id*3 + 2];
+        // MOVEMENT
+        // Get a temporary next position for all of the robots (parallelized)
+        compute_next_step(new_pos, dt);
 
-		int collision_type = find_collisions(new_pos, r_id, lastrun);
+        // Check for collisions using the new positions
+        #pragma omp for
+        for (int r_id = 0; r_id < num_robots; r_id++) {
+            robot *r = robots[r_id];
+            double new_x = new_pos[r_id * 3];
+            double new_y = new_pos[r_id * 3 + 1];
+            double new_theta = new_pos[r_id * 3 + 2];
 
-		if (collision_type == 0) {  // No collision
-			r->pos[0] = new_x;
-			r->pos[1] = new_y;
-			r->collision_timer = 0;
-		} else if (collision_type == 1) {  // Hitting another kilobot
-			if (r->collision_turn_dir == 0) {
-				new_theta = r->pos[2] - r->turn_speed * dt;  // left/CCW
-			} else {
-				new_theta = r->pos[2] + r->turn_speed * dt;  // right/CW
-			}
-			if (r->collision_timer > r->max_collision_timer) {  // Change turn dir
-				r->collision_turn_dir = (r->collision_turn_dir + 1) % 2;
-				r->collision_timer = 0;
+            int collision_type = find_collisions(new_pos, r_id, lastrun);
 
-			}
-			r->collision_timer++;
-		}
-        r->pos[2] = wrap_angle(new_theta);
-		// If a bot is touching the wall (collision_type == 2), update angle but not position
-	}
+            if (collision_type == 0) {  // No collision
+                r->pos[0] = new_x;
+                r->pos[1] = new_y;
+                r->collision_timer = 0;
+            } else if (collision_type == 1) {  // Hitting another kilobot
+                if (r->collision_turn_dir == 0) {
+                    new_theta = r->pos[2] - r->turn_speed * dt;  // left/CCW
+                } else {
+                    new_theta = r->pos[2] + r->turn_speed * dt;  // right/CW
+                }
+                if (r->collision_timer > r->max_collision_timer) {  // Change turn dir
+                    r->collision_turn_dir = (r->collision_turn_dir + 1) % 2;
+                    r->collision_timer = 0;
+
+                }
+                r->collision_timer++;
+            }
+            r->pos[2] = wrap_angle(new_theta);
+            // If a bot is touching the wall (collision_type == 2), update angle but not position
+        }
+    }
 
 
 	static int lastsec =-1;

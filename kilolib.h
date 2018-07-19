@@ -180,9 +180,7 @@ public:
             bool abort = false;
             std::vector<uint16_t> colors;
             // Check if in any polygon
-            #pragma omp parallel for
             for (int i = 0; i < polygons.size(); i++) {
-                #pragma omp flush (abort)
                 if (!abort) {
                     polygon_c_t poly = polygons[i];
                     if (point_in_polygon(p, poly)) {
@@ -190,14 +188,11 @@ public:
                                   uint16_t(poly.color[1] * 1024),
                                   uint16_t(poly.color[2] * 1024)};
                         abort = true;
-                        #pragma omp flush (abort)
                     }
                 }
             }
             // Check if in any circle
-            #pragma omp parallel for
             for (int i = 0; i < circles.size(); i++) {
-                #pragma omp flush (abort)
                 if (!abort) {
                     circle_c_t circ = circles[i];
                     if (point_in_circle(p, circ)) {
@@ -205,14 +200,11 @@ public:
                                   uint16_t(circ.color[1] * 1024),
                                   uint16_t(circ.color[2] * 1024)};
                         abort = true;
-                        #pragma omp flush (abort)
                     }
                 }
             }
 			// Check if in any rectangle
-            #pragma omp parallel for
             for (int i = 0; i < rects.size(); i++) {
-                #pragma omp flush (abort)
                 if (!abort) {
                     rect_c_t rect = rects[i];
                     if (point_in_rect(p, rect)) {
@@ -220,7 +212,6 @@ public:
                                 uint16_t(rect.color[1] * 1024),
                                 uint16_t(rect.color[2] * 1024)};
                         abort = true;
-                        #pragma omp flush (abort)
                     }
                 }
             }
