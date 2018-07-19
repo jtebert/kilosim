@@ -414,25 +414,28 @@ bool run_simulation_step() {
 	bool result = false;
 
 	// Save convergence data
-	std::ostringstream os;
-    os << float(lastrun) / SECOND << "\t"
-       << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2) << "\t"
-       << mean_estimate(0) << "\t" << mean_estimate(1) << "\t" << mean_estimate(2) << "\t"
-       << mean_belief(0) << "\t" << mean_belief(1) << "\t" << mean_belief(2) << "\t"
-       << num_detecting(0) << "\t" << num_detecting(1) << "\t" << num_detecting(2) << "\n";
-	log_buffer = os.str();
-	log_str(log_filename, log_buffer);
+    // Log data only every 1 second (every 32 ticks)
+    if (lastrun % SECOND == 0) {
+        std::ostringstream os;
+        os << float(lastrun) / SECOND << "\t"
+           << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2) << "\t"
+           << mean_estimate(0) << "\t" << mean_estimate(1) << "\t" << mean_estimate(2) << "\t"
+           << mean_belief(0) << "\t" << mean_belief(1) << "\t" << mean_belief(2) << "\t"
+           << num_detecting(0) << "\t" << num_detecting(1) << "\t" << num_detecting(2) << "\n";
+        log_buffer = os.str();
+        log_str(log_filename, log_buffer);
 
-    // Save decision-making data
-    std::ostringstream os1;
-    decision_ratio(0, decide0);
-    decision_ratio(1, decide1);
-    decision_ratio(2, decide2);
-    os1 << (float)lastrun/SECOND << "\t" << decide0[0] << "\t" << decide0[1] << "\t"
-        << decide1[0] << "\t" << decide1[1] << "\t"
-        << decide2[0] << "\t" << decide2[1] << "\n";
-    log_buffer = os1.str();
-    log_str(decision_filename, log_buffer);
+        // Save decision-making data
+        std::ostringstream os1;
+        decision_ratio(0, decide0);
+        decision_ratio(1, decide1);
+        decision_ratio(2, decide2);
+        os1 << (float) lastrun / SECOND << "\t" << decide0[0] << "\t" << decide0[1] << "\t"
+            << decide1[0] << "\t" << decide1[1] << "\t"
+            << decide2[0] << "\t" << decide2[1] << "\n";
+        log_buffer = os1.str();
+        log_str(decision_filename, log_buffer);
+    }
 
 
     if (lastrun % (120 * SECOND) == 0) {
@@ -687,9 +690,11 @@ void parse_params(int argc, char **argv) {
         }
         if (strcmp(argv[i], "--width") == 0) {
             arena_width = stoi(argv[i + 1]);
+            rect_c_t arena_bounds = {{edge_width, edge_width}, (float)(arena_width - 2*edge_width), (float)(arena_height - 2*edge_width), {0,0,0}};
         }
         if (strcmp(argv[i], "--height") == 0) {
             arena_height = stoi(argv[i + 1]);
+            arena_bounds = {{edge_width, edge_width}, (float)(arena_width - 2*edge_width), (float)(arena_height - 2*edge_width), {0,0,0}};
         }
         if (strcmp(argv[i], "--time") == 0) {
             timelimit = stoi(argv[i + 1]);
@@ -818,6 +823,8 @@ void parse_params(int argc, char **argv) {
                 feature_switch_to = 0;
             } else if (strcmp(argv[i + 1], "easiest") == 0) {
                 feature_switch_to = 1;
+            } else if (strcmp(argv[i+1], "random") == 0) {
+                feature_switch_to = 2;
             } else {
                 throw std::invalid_argument("feature_switch_to must be decision or observation");
             }
@@ -856,6 +863,7 @@ void save_params() {
     params_header += "dissemination_dur\t"; params_vals += std::to_string(dissemination_duration_constant/SECOND) + "\t";
     params_header += "observation_dur\t"; params_vals += std::to_string(mean_explore_duration/SECOND) + "\t";
     params_header += "num_rows\t"; params_vals += std::to_string(arena_rows) + "\t";
+    params_header += "arena_size\t"; params_vals += std::to_string(arena_width) + "\t";
     params_header += "fill_0\t"; params_vals += std::to_string(color_fill_ratio[0]) + "\t";
     params_header += "fill_1\t"; params_vals += std::to_string(color_fill_ratio[1]) + "\t";
     params_header += "fill_2\t"; params_vals += std::to_string(color_fill_ratio[2]) + "\t";

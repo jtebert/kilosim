@@ -89,6 +89,7 @@ const uint8_t DECISION = 0;
 const uint8_t OBSERVATION = 1;
 const uint8_t HARDEST = 0;
 const uint8_t EASIEST = 1;
+const uint8_t RANDOM = 2;
 
 // Feature detection
 
@@ -600,35 +601,66 @@ bool all_features_locked() {
 }
 
 void switch_feature() {
-    // Switch from the current detect_which_feature to the one with most uncertainty (according to concentration)
+    // Switch from the current detect_which_feature to the one with most/least uncertainty (according to concentration)
+    // or switch to a random feature. (Strategy based on the value of feature_switch_to)
     uint8_t switch_to = 127;
     double conc_diff;
     double switch_to_diff = 1;
-    for (uint8_t f = 0; f < NUM_FEATURES; f++) {
-        if (feature_switch_to==HARDEST) {
-            conc_diff = std::abs(concentrations[f] - 0.5);
-            if (switch_to!=127) {
-                switch_to_diff = std::abs(concentrations[switch_to] - 0.5);
-            }
-        } else if (feature_switch_to==EASIEST) {
-            conc_diff = std::min(concentrations[f], 1-concentrations[f]);
-            if (switch_to!=127) {
-                switch_to_diff = std::min(concentrations[switch_to], 1 - concentrations[switch_to]);
+    if (feature_switch_to == RANDOM) {
+        // Pick a random undecided feature to switch to
+
+        // Get how many features are available to switch to (i.e., not yet decided)
+        uint8_t num_switch_to_features = 0;
+        for (uint8_t f = 0; f < NUM_FEATURES; f++) {
+            if (!decision_locked[f]) {
+                num_switch_to_features += 1;
             }
         }
-        // Switch to this feature if it's closer to the target (target = 0.5 or 0/1)
-        if (!decision_locked[f] && conc_diff < switch_to_diff &&
-            std::find(use_features.begin(), use_features.end(), f) != use_features.end()) {
-            // Switch to feature with concentration close to 0.5
-            switch_to = f;
+        // Create array of probabilities of switching to each feature (evenly distributed among undecided features)
+        float switch_to_probs[NUM_FEATURES] = {0};
+        for (int f = 0; f < NUM_FEATURES; f++) {
+            if (!decision_locked[f]) {
+                switch_to_probs[f] = (float)1.0/num_switch_to_features;
+            }
         }
-    }
-    //printf("%d %d %d\n", decision_locked[0], decision_locked[1], decision_locked[2]);
-    //printf("%d\tSWITCH: %d -> %d (%f, %f, %f) [%d %d %d]\n", id, detect_which_feature, switch_to,
-    //       concentrations[0], concentrations[1], concentrations[2],
-    //       decision_locked[0], decision_locked[1], decision_locked[2]);
-    if (switch_to != 127) {
-        detect_which_feature = switch_to;
+        // Pick feature from probability array
+        double tmp = ((double) rand() / (RAND_MAX));
+        double accum = 0;
+        for (uint8_t f = 0; f < NUM_FEATURES; f++) {
+            accum += switch_to_probs[f];
+            if (tmp <= accum) {
+                detect_which_feature = f;
+                break;
+            }
+        }
+    } else {
+        // Pick which feature to switch to based on the belief concentrations
+        for (uint8_t f = 0; f < NUM_FEATURES; f++) {
+            if (feature_switch_to == HARDEST) {
+                conc_diff = std::abs(concentrations[f] - 0.5);
+                if (switch_to != 127) {
+                    switch_to_diff = std::abs(concentrations[switch_to] - 0.5);
+                }
+            } else if (feature_switch_to == EASIEST) {
+                conc_diff = std::min(concentrations[f], 1 - concentrations[f]);
+                if (switch_to != 127) {
+                    switch_to_diff = std::min(concentrations[switch_to], 1 - concentrations[switch_to]);
+                }
+            }
+            // Switch to this feature if it's closer to the target (target = 0.5 or 0/1)
+            if (!decision_locked[f] && conc_diff < switch_to_diff &&
+                std::find(use_features.begin(), use_features.end(), f) != use_features.end()) {
+                // Switch to feature with concentration close to 0.5
+                switch_to = f;
+            }
+        }
+        //printf("%d %d %d\n", decision_locked[0], decision_locked[1], decision_locked[2]);
+        //printf("%d\tSWITCH: %d -> %d (%f, %f, %f) [%d %d %d]\n", id, detect_which_feature, switch_to,
+        //       concentrations[0], concentrations[1], concentrations[2],
+        //       decision_locked[0], decision_locked[1], decision_locked[2]);
+        if (switch_to != 127) {
+            detect_which_feature = switch_to;
+        }
     }
     // Restart observation to avoid holdover effects
     detect_feature_state = DETECT_FEATURE_INIT;
