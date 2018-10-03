@@ -1,7 +1,4 @@
-# Heterogeneous Kilobot Perception
-Heterogeneous kilobot agents for pattern recognition (simulator)
-
-# *NOTE: THIS IS DEPRECATED AS OF 2018-10-03 WITH THE REPOSITORY SPLIT. INSTEAD USE THESE:*
+# Kilobot Simulator
 
 Simulator code: [kilobot-simulator](https://github.com/jtebert/kilobot-simulator)
 
