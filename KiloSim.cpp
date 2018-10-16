@@ -6,4 +6,11 @@
 
 namespace KiloSim
 {
+World::World(double arenaWidth, double arenaHeight) : arenaWidth(arenaWidth),
+                                                      arenaHeight(arenaHeight) {}
+
+bool World::hasLightPattern()
+{
+    return !lightPattern.data.empty();
 }
+} // namespace KiloSim

@@ -1,5 +1,5 @@
 #include "shapes.h"
-#pragma warning(disable:4996)
+#pragma warning(disable : 4996)
 
 #include <omp.h>
 #include <GL/glew.h>
@@ -32,15 +32,15 @@ rgb RGB(double r, double g, double b)
 }
 
 // Global vars.
-double time_sim;  //simulation time
+double time_sim;             //simulation time
 double zoom, view_x, view_y; //var. for zoom and scroll
 
-double decide0[2] = {0,0};
-double decide1[2] = {0,0};
-double decide2[2] = {0,0};
+double decide0[2] = {0, 0};
+double decide1[2] = {0, 0};
+double decide2[2] = {0, 0};
 
-robot** robots; //creates an array of robots
-int* order;
+Robot **robots; //creates an array of robots
+int *order;
 
 int delay = delay_init;
 int draw_delay = 1;
@@ -61,26 +61,34 @@ bool last = false;
 
 unsigned int seed = 0;
 
-double wrap_angle(double angle) {
+double wrap_angle(double angle)
+{
     // Guarantee that angle will be from 0 to 2*pi
     // While loop is fastest option when angles are close to correct range
-    while (angle > TWO_PI) {
+    while (angle > TWO_PI)
+    {
         angle -= TWO_PI;
     }
-    while (angle < 0) {
+    while (angle < 0)
+    {
         angle += TWO_PI;
     }
     return angle;
 }
 
-std::vector<double> parse_initial_distribution(std::string str) {
+std::vector<double> parse_initial_distribution(std::string str)
+{
     // Parse the input string into new values for initial_distribution of robots
     std::vector<double> v;
-    std::string temp{ "" };
-    for (char c : str) {
-        if (c != '-') {
+    std::string temp{""};
+    for (char c : str)
+    {
+        if (c != '-')
+        {
             temp += c;
-        } else {
+        }
+        else
+        {
             double num = std::stof(temp);
             v.push_back(num);
             temp = "";
@@ -89,42 +97,56 @@ std::vector<double> parse_initial_distribution(std::string str) {
     double num = std::stof(temp);
     v.push_back(num);
     // TEMP
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
+    {
         printf("%d: %f\n", i, v[i]);
     }
     return v;
 }
 
-void initial_distribution_valid(std::vector<double> init_dist) {
+void initial_distribution_valid(std::vector<double> init_dist)
+{
     // Check that all the features are valid
     bool flag = false;
-    if (init_dist.size() != use_features.size()) {
+    if (init_dist.size() != use_features.size())
+    {
         flag = true;
     }
     double dist_sum = 0;
-    for (int i = 0; i < init_dist.size(); i++) {
-        if (std::find(use_features.begin(), use_features.end(), i) != use_features.end()) {
+    for (int i = 0; i < init_dist.size(); i++)
+    {
+        if (std::find(use_features.begin(), use_features.end(), i) != use_features.end())
+        {
             dist_sum += init_dist[i];
         }
     }
-    if (dist_sum < 1) {
+    if (dist_sum < 1)
+    {
         flag = true;
-    } else if (dist_sum > 1) {
+    }
+    else if (dist_sum > 1)
+    {
         printf("WARNING: Initial distribution values add to more than 1.\n");
     }
-    if (flag) {
+    if (flag)
+    {
         printf("ERROR: Initial distribution of agents for used features must sum to (at least) 1\n");
         exit(1);
     }
 }
 
-std::vector<int> parse_use_features(std::string str) {
+std::vector<int> parse_use_features(std::string str)
+{
     std::vector<int> v;
-    std::string temp{ "" };
-    for (char c : str) {
-        if (c != '-') {
+    std::string temp{""};
+    for (char c : str)
+    {
+        if (c != '-')
+        {
             temp += c;
-        } else {
+        }
+        else
+        {
             int num = std::stoi(temp);
             v.push_back(num);
             temp = "";
@@ -135,57 +157,74 @@ std::vector<int> parse_use_features(std::string str) {
     return v;
 }
 
-void use_features_valid(std::vector<int> use_feat) {
+void use_features_valid(std::vector<int> use_feat)
+{
     // Check that all the features are valid
     bool flag = false;
-    if (use_feat.size() == 0) {
+    if (use_feat.size() == 0)
+    {
         flag = true;
     }
-    for (int i = 0; i < use_feat.size(); i++) {
-        if (use_feat[i] >= num_features) {
+    for (int i = 0; i < use_feat.size(); i++)
+    {
+        if (use_feat[i] >= num_features)
+        {
             flag = true;
         }
     }
-    if (flag) {
-        printf("ERROR: All features IDs used must be 0-%d\n", num_features-1);
+    if (flag)
+    {
+        printf("ERROR: All features IDs used must be 0-%d\n", num_features - 1);
         exit(1);
     }
 }
 
-void log_str(std::string filename, std::string str) {
-	// I don't get what the other log function is doing.
-	// This will just save the input string to the filename
-    if (log_debug_info) {
+void log_str(std::string filename, std::string str)
+{
+    // I don't get what the other log function is doing.
+    // This will just save the input string to the filename
+    if (log_debug_info)
+    {
         log_file = fopen(filename.c_str(), "a");
         fprintf(log_file, "%s", str.c_str());
         fclose(log_file);
     }
 }
 
-double convergence_ratio(uint8_t feature) {
-	// Find the percentage of kilobots in convergence about belief for given feature
-	int count_converge_up = 0;
+double convergence_ratio(uint8_t feature)
+{
+    // Find the percentage of kilobots in convergence about belief for given feature
+    int count_converge_up = 0;
     int count_converge_down = 0;
     //#pragma parallel for
-	for (int i = 0; i < num_robots; i++) {
-        if (robots[i]->pattern_belief[feature] > 127) {
+    for (int i = 0; i < num_robots; i++)
+    {
+        if (robots[i]->pattern_belief[feature] > 127)
+        {
             count_converge_up++;
-        } else if (robots[i]->pattern_belief[feature] < 127) {
+        }
+        else if (robots[i]->pattern_belief[feature] < 127)
+        {
             count_converge_down++;
         }
     }
-	double convergence = double(max(count_converge_up, count_converge_down)) / num_robots;
-	return convergence;
+    double convergence = double(max(count_converge_up, count_converge_down)) / num_robots;
+    return convergence;
 }
 
-double *decision_ratio(uint8_t feature, double *decision_rate) {
+double *decision_ratio(uint8_t feature, double *decision_rate)
+{
     // Find the percentage of kilobots that have DECIDED on the feature
     int count_decide_up = 0;
     int count_decide_down = 0;
-    for (int i = 0; i < num_robots; i++) {
-        if (robots[i]->decision[feature] == 255) {
+    for (int i = 0; i < num_robots; i++)
+    {
+        if (robots[i]->decision[feature] == 255)
+        {
             count_decide_up += 1;
-        } else if (robots[i]->decision[feature] == 0) {
+        }
+        else if (robots[i]->decision[feature] == 0)
+        {
             count_decide_down += 1;
         }
     }
@@ -194,113 +233,135 @@ double *decision_ratio(uint8_t feature, double *decision_rate) {
     return decision_rate;
 }
 
-int num_detecting(uint8_t feature) {
+int num_detecting(uint8_t feature)
+{
     // Count the number of robots detecting the feature
     int count = 0;
-    for (int i = 0; i < num_robots; i++) {
-        if (robots[i]->detect_which_feature == feature) {
+    for (int i = 0; i < num_robots; i++)
+    {
+        if (robots[i]->detect_which_feature == feature)
+        {
             count += 1;
         }
     }
     return count;
 }
 
-double mean_belief(uint8_t feature) {
+double mean_belief(uint8_t feature)
+{
     // Get the mean belief across features
     int sum_belief = 0;
-    for (int i = 0; i < num_robots; i++) {
+    for (int i = 0; i < num_robots; i++)
+    {
         sum_belief += robots[i]->pattern_belief[feature];
     }
-    double avg = (double)sum_belief/255/num_robots;
+    double avg = (double)sum_belief / 255 / num_robots;
     return avg;
 }
 
-double mean_estimate(uint8_t feature) {
+double mean_estimate(uint8_t feature)
+{
     // Get the mean feature estimate (from own observations
     int sum_estimate = 0;
     int num_use_robots = 0;
-    for (int i = 0; i < num_robots; i++) {
-        if (robots[i]->detect_which_feature == feature && robots[i]->feature_estimate != 127) {
+    for (int i = 0; i < num_robots; i++)
+    {
+        if (robots[i]->detect_which_feature == feature && robots[i]->feature_estimate != 127)
+        {
             sum_estimate += robots[i]->feature_estimate;
             num_use_robots++;
         }
     }
-    double avg = (double)sum_estimate/255/num_use_robots;
-    if (std::isnan(avg)) {
+    double avg = (double)sum_estimate / 255 / num_use_robots;
+    if (std::isnan(avg))
+    {
         return 0;
-    } else {
+    }
+    else
+    {
         return avg;
     }
 }
 
-double* compute_next_step (double* new_pos, double dt) {
-	// Compute the next positions of the robots according to their current positions and motor commands
-	// This will be used for collision detection (check if they'd be overlapping on the next step)
-	// Does NOT address turning that happens when there is a collision
-	// new positions are serialized: [x_1, y_1, theta_1, x_2, y_2, theta_2, x_3, ...]
+double *compute_next_step(double *new_pos, double dt)
+{
+    // Compute the next positions of the robots according to their current positions and motor commands
+    // This will be used for collision detection (check if they'd be overlapping on the next step)
+    // Does NOT address turning that happens when there is a collision
+    // new positions are serialized: [x_1, y_1, theta_1, x_2, y_2, theta_2, x_3, ...]
 
+#pragma omp for schedule(static)
+    for (int i = 0; i < num_robots; i++)
+    {
+        Robot *r = robots[i];
 
-    #pragma omp for schedule(static)
-	for (int i = 0; i < num_robots; i++) {
-		robot *r = robots[i];
+        double theta = r->pos[2];
+        double x = r->pos[0];
+        double y = r->pos[1];
+        double temp_x = x;
+        ;
+        double temp_y = y;
+        double temp_cos, temp_sin, phi;
+        switch (r->motor_command)
+        {
+        case 1:
+        { // forward
+            //theta += r->motor_error * dt;
+            double speed = r->forward_speed * dt;
+            temp_x = speed * cos(theta) + r->pos[0];
+            temp_y = speed * sin(theta) + r->pos[1];
+            break;
+        }
+        case 2:
+        { // CW rotation
+            phi = -r->turn_speed * dt;
+            theta += phi;
+            temp_cos = radius * cos(theta + 4 * PI / 3);
+            temp_sin = radius * sin(theta + 4 * PI / 3);
+            temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
+            temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
+            break;
+        }
+        case 3:
+        { // CCW rotation
+            phi = r->turn_speed * dt;
+            theta += phi;
+            temp_cos = radius * cos(theta + 2 * PI / 3);
+            temp_sin = radius * sin(theta + 2 * PI / 3);
+            temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
+            temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
+            break;
+        }
+        }
 
-		double theta = r->pos[2];
-		double x = r->pos[0];
-		double y = r->pos[1];
-		double temp_x = x;;
-		double temp_y = y;
-		double temp_cos, temp_sin, phi;
-		switch (r->motor_command) {
-			case 1: {  // forward
-				//theta += r->motor_error * dt;
-				double speed = r->forward_speed * dt;
-				temp_x = speed*cos(theta) + r->pos[0];
-				temp_y = speed*sin(theta) + r->pos[1];
-				break;
-			}
-			case 2: {  // CW rotation
-				phi = -r->turn_speed * dt;
-				theta += phi;
-				temp_cos = radius * cos(theta + 4*PI/3);
-				temp_sin = radius * sin(theta + 4*PI/3);
-				temp_x = x + temp_cos - temp_cos*cos(phi) + temp_sin*sin(phi);
-				temp_y = y + temp_sin - temp_cos*sin(phi) - temp_sin*cos(phi);
-				break;
-			}
-			case 3: { // CCW rotation
-				phi = r->turn_speed * dt;
-				theta += phi;
-				temp_cos = radius * cos(theta + 2*PI/3);
-				temp_sin = radius * sin(theta + 2*PI/3);
-				temp_x = x + temp_cos - temp_cos*cos(phi) + temp_sin*sin(phi);
-				temp_y = y + temp_sin - temp_cos*sin(phi) - temp_sin*cos(phi);
-				break;
-			}
-		}
-
-		new_pos[i*3] = temp_x;
-		new_pos[i*3 + 1] = temp_y;
-		new_pos[i*3 + 2] = wrap_angle(theta);
-	}
-	return new_pos;
+        new_pos[i * 3] = temp_x;
+        new_pos[i * 3 + 1] = temp_y;
+        new_pos[i * 3 + 2] = wrap_angle(theta);
+    }
+    return new_pos;
 }
 
-int find_collisions(double* new_pos, int self_id, int time) {
-	// Check to see if motion causes robots to collide with their updated positions
-	double self_x = new_pos[self_id*3];
-	double self_y = new_pos[self_id*3 + 1];
+int find_collisions(double *new_pos, int self_id, int time)
+{
+    // Check to see if motion causes robots to collide with their updated positions
+    double self_x = new_pos[self_id * 3];
+    double self_y = new_pos[self_id * 3 + 1];
 
-	// Check for collision with wall
-	if (self_x <= radius || self_x >= arena_width - radius || self_y <= radius || self_y >= arena_height - radius) {
-		return 2;
-	}
+    // Check for collision with wall
+    if (self_x <= radius || self_x >= arena_width - radius || self_y <= radius || self_y >= arena_height - radius)
+    {
+        return 2;
+    }
     bool abort = false;
 
     //#pragma omp for
-	for (int other_id = 0; other_id < num_robots; other_id++) {
+    for (int other_id = 0; other_id < num_robots; other_id++)
+    {
         //#pragma omp flush (abort)
-        if (!abort) {
-            if (other_id != self_id) {  // Don't compare to self
+        if (!abort)
+        {
+            if (other_id != self_id)
+            { // Don't compare to self
                 double other_x = new_pos[other_id * 3];
                 double other_y = new_pos[other_id * 3 + 1];
                 // Get distance to other robots
@@ -309,71 +370,84 @@ int find_collisions(double* new_pos, int self_id, int time) {
                 double distance = sqrt(pow(dist_x, 2) + pow(dist_y, 2));
 
                 // Check if new positions are intersecting
-                if (distance < 2 * radius) {
+                if (distance < 2 * radius)
+                {
                     abort = true;
                     //#pragma omp flush (abort)
                 }
             }
         }
-	}
-    if (abort) {
+    }
+    if (abort)
+    {
         return 1;
-    } else {
+    }
+    else
+    {
         // Otherwise no collisions
         return 0;
     }
 }
 
-bool run_simulation_step() {
-	static int lastrun = 0;
-	lastrun++;
+bool run_simulation_step()
+{
+    static int lastrun = 0;
+    lastrun++;
 
-	total_secs = lastrun / SECOND;
-    double dt = 1.0 / SECOND;  // Time change for speed determination
+    total_secs = lastrun / SECOND;
+    double dt = 1.0 / SECOND; // Time change for speed determination
 
-	int secs = total_secs % 60;
-	int mins = (total_secs / 60) % 60;
-	int hours = total_secs / 3600;
-	sprintf(rt, "%02d:%02d:%02d", hours, mins, secs);
+    int secs = total_secs % 60;
+    int mins = (total_secs / 60) % 60;
+    int hours = total_secs / 3600;
+    sprintf(rt, "%02d:%02d:%02d", hours, mins, secs);
 
-	int i, j;
+    int i, j;
 
-	//double rotation_step = .025; //motion step size
+    //double rotation_step = .025; //motion step size
     double rotation_step = .05; //motion step size
 
-    double *new_pos = (double*)malloc( num_robots * 3 * sizeof(double) );
+    double *new_pos = (double *)malloc(num_robots * 3 * sizeof(double));
 
 #pragma omp parallel
     {
 
-        //run a step of most or all robot controllers
-        #pragma omp for schedule(static)
-        for (i = 0; i < num_robots; i++) {
+//run a step of most or all robot controllers
+#pragma omp for schedule(static)
+        for (i = 0; i < num_robots; i++)
+        {
             //printf("%d\n", i);
             //run controller this time step with p_control_execute probability
-            if ((rand()) < (int) (p_control_execute * RAND_MAX)) {
+            if ((rand()) < (int)(p_control_execute * RAND_MAX))
+            {
                 robots[i]->robot_controller();
             }
         }
 
         // COMMUNICATION
         // Only communicate at tick rate achievable by kilobots (simulate CSMA/CD)
-        if (lastrun % comm_rate == 0) {
+        if (lastrun % comm_rate == 0)
+        {
             seed = (rand() % shuffles) * num_robots;
-            #pragma omp for
-            for (int t = 0; t < num_robots; t++) {
+#pragma omp for
+            for (int t = 0; t < num_robots; t++)
+            {
                 // Loop over all transmitting robots
                 int tx_id = order[seed + t];
-                robot *tx_r = robots[tx_id];
+                Robot *tx_r = robots[tx_id];
                 void *msg = tx_r->get_message();
-                if (msg) {
-                    for (int rx_id = 0; rx_id < num_robots; rx_id++) {
+                if (msg)
+                {
+                    for (int rx_id = 0; rx_id < num_robots; rx_id++)
+                    {
                         // Loop over receivers if transmitting robot is sending a message
-                        robot *rx_r = robots[rx_id];
-                        if (tx_id != rx_id) {
+                        Robot *rx_r = robots[rx_id];
+                        if (tx_id != rx_id)
+                        {
                             // Check communication range in both directions (due to potentially noisy communication range)
                             double dist = tx_r->distance(tx_r->pos[0], tx_r->pos[1], rx_r->pos[0], rx_r->pos[1]);
-                            if (tx_r->comm_out_criteria(dist) && rx_r->comm_in_criteria(dist, msg)) {
+                            if (tx_r->comm_out_criteria(dist) && rx_r->comm_in_criteria(dist, msg))
+                            {
                                 rx_r->received();
                             }
                         }
@@ -386,30 +460,37 @@ bool run_simulation_step() {
         // Get a temporary next position for all of the robots (parallelized)
         compute_next_step(new_pos, dt);
 
-        // Check for collisions using the new positions
-        #pragma omp for
-        for (int r_id = 0; r_id < num_robots; r_id++) {
-            robot *r = robots[r_id];
+// Check for collisions using the new positions
+#pragma omp for
+        for (int r_id = 0; r_id < num_robots; r_id++)
+        {
+            Robot *r = robots[r_id];
             double new_x = new_pos[r_id * 3];
             double new_y = new_pos[r_id * 3 + 1];
             double new_theta = new_pos[r_id * 3 + 2];
 
             int collision_type = find_collisions(new_pos, r_id, lastrun);
 
-            if (collision_type == 0) {  // No collision
+            if (collision_type == 0)
+            { // No collision
                 r->pos[0] = new_x;
                 r->pos[1] = new_y;
                 r->collision_timer = 0;
-            } else if (collision_type == 1) {  // Hitting another kilobot
-                if (r->collision_turn_dir == 0) {
-                    new_theta = r->pos[2] - r->turn_speed * dt;  // left/CCW
-                } else {
-                    new_theta = r->pos[2] + r->turn_speed * dt;  // right/CW
+            }
+            else if (collision_type == 1)
+            { // Hitting another kilobot
+                if (r->collision_turn_dir == 0)
+                {
+                    new_theta = r->pos[2] - r->turn_speed * dt; // left/CCW
                 }
-                if (r->collision_timer > r->max_collision_timer) {  // Change turn dir
+                else
+                {
+                    new_theta = r->pos[2] + r->turn_speed * dt; // right/CW
+                }
+                if (r->collision_timer > r->max_collision_timer)
+                { // Change turn dir
                     r->collision_turn_dir = (r->collision_turn_dir + 1) % 2;
                     r->collision_timer = 0;
-
                 }
                 r->collision_timer++;
             }
@@ -418,13 +499,13 @@ bool run_simulation_step() {
         }
     }
 
+    static int lastsec = -1;
+    bool result = false;
 
-	static int lastsec =-1;
-	bool result = false;
-
-	// Save convergence data
+    // Save convergence data
     // Log data only every 1 second (every 32 ticks)
-    if (lastrun % SECOND == 0) {
+    if (lastrun % SECOND == 0)
+    {
         std::ostringstream os;
         os << float(lastrun) / SECOND << "\t"
            << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2) << "\t"
@@ -439,21 +520,24 @@ bool run_simulation_step() {
         decision_ratio(0, decide0);
         decision_ratio(1, decide1);
         decision_ratio(2, decide2);
-        os1 << (float) lastrun / SECOND << "\t" << decide0[0] << "\t" << decide0[1] << "\t"
+        os1 << (float)lastrun / SECOND << "\t" << decide0[0] << "\t" << decide0[1] << "\t"
             << decide1[0] << "\t" << decide1[1] << "\t"
             << decide2[0] << "\t" << decide2[1] << "\n";
         log_buffer = os1.str();
         log_str(decision_filename, log_buffer);
     }
 
-
-    if (lastrun % (120 * SECOND) == 0) {
-        printf("\n[%.1f min]\n", (float)lastrun/SECOND/60);
+    if (lastrun % (120 * SECOND) == 0)
+    {
+        printf("\n[%.1f min]\n", (float)lastrun / SECOND / 60);
         printf("DECIDE DOWN:   (%f, %f, %f)\n", decide0[0], decide1[0], decide2[0]);
         printf("DECIDE UP:     (%f, %f, %f)\n", decide0[1], decide1[1], decide2[1]);
-        if (belief_update_strategy == 0) {
+        if (belief_update_strategy == 0)
+        {
             printf("MEAN ESTIMATE: (%f, %f, %f)\n", mean_estimate(0), mean_estimate(1), mean_estimate(2));
-        } else {
+        }
+        else
+        {
             printf("MEAN BELIEF:   (%f, %f, %f)\n", mean_belief(0), mean_belief(1), mean_belief(2));
         }
         printf("NUM DETECTING: (%d,\t  %d,\t    %d)\n", num_detecting(0), num_detecting(1), num_detecting(2));
@@ -462,402 +546,502 @@ bool run_simulation_step() {
     return lastrun % draw_delay == 0;
 }
 
-void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius) {
-	int i;
-	int triangleAmount = 100; //# of triangles used to draw circle
+void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius)
+{
+    int i;
+    int triangleAmount = 100; //# of triangles used to draw circle
 
-	//GLfloat radius = 0.8f; //radius
-	GLfloat twicePi = 2.0f * PI;
+    //GLfloat radius = 0.8f; //radius
+    GLfloat twicePi = 2.0f * PI;
 
-	glBegin(GL_TRIANGLE_FAN);
-	glVertex2f(x, y); // center of circle
-	for(i = 0; i <= triangleAmount;i++) {
-		glVertex2f(
-            x + (radius * cos(i *  twicePi / triangleAmount)),
-		    y + (radius * sin(i * twicePi / triangleAmount))
-		);
-	}
-	glEnd();
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex2f(x, y); // center of circle
+    for (i = 0; i <= triangleAmount; i++)
+    {
+        glVertex2f(
+            x + (radius * cos(i * twicePi / triangleAmount)),
+            y + (radius * sin(i * twicePi / triangleAmount)));
+    }
+    glEnd();
 }
 
-void drawFilledTriangle(GLfloat x, GLfloat y, double rad, double theta) {
+void drawFilledTriangle(GLfloat x, GLfloat y, double rad, double theta)
+{
     // Draw a filled triangle at the specified location with bearing theta
     // size = equilateral triangle of size inscribed by circle with given radius
     glBegin(GL_TRIANGLES);
-    glVertex2f(x+rad*cos(theta), y+rad*sin(theta));
-    glVertex2f(x+rad*cos(theta+2*PI/3), y+rad*sin(theta+2*PI/3));
-    glVertex2f(x+rad*cos(theta+4*PI/3), y+rad*sin(theta+4*PI/3));
+    glVertex2f(x + rad * cos(theta), y + rad * sin(theta));
+    glVertex2f(x + rad * cos(theta + 2 * PI / 3), y + rad * sin(theta + 2 * PI / 3));
+    glVertex2f(x + rad * cos(theta + 4 * PI / 3), y + rad * sin(theta + 4 * PI / 3));
     glEnd();
 }
 
-void drawFilledSquare(GLfloat x, GLfloat y, double rad, double theta) {
+void drawFilledSquare(GLfloat x, GLfloat y, double rad, double theta)
+{
     // Draw a rectange at the specified location with bearing theta
     // size = square of size inscribed in circle with given radius
     glBegin(GL_QUADS);
-    glVertex2f(x+rad*cos(theta-PI/4), y+rad*sin(theta-PI/4));
-    glVertex2f(x+rad*cos(theta+PI/4), y+rad*sin(theta+PI/4));
-    glVertex2f(x+rad*cos(theta+3*PI/4), y+rad*sin(theta+3*PI/4));
-    glVertex2f(x+rad*cos(theta+5*PI/4), y+rad*sin(theta+5*PI/4));
+    glVertex2f(x + rad * cos(theta - PI / 4), y + rad * sin(theta - PI / 4));
+    glVertex2f(x + rad * cos(theta + PI / 4), y + rad * sin(theta + PI / 4));
+    glVertex2f(x + rad * cos(theta + 3 * PI / 4), y + rad * sin(theta + 3 * PI / 4));
+    glVertex2f(x + rad * cos(theta + 5 * PI / 4), y + rad * sin(theta + 5 * PI / 4));
     glEnd();
 }
 
-void draw_scene(void) {
+void draw_scene(void)
+{
     // Drawing routine
-	static int snapshottaken = 0;
-	static bool takesnapshot = false;
-	//draws the arena
+    static int snapshottaken = 0;
+    static bool takesnapshot = false;
+    //draws the arena
 
-	takesnapshot = run_simulation_step();
+    takesnapshot = run_simulation_step();
 
-	if(takesnapshot) {
+    if (takesnapshot)
+    {
         //Background
-		glColor3f(.15, .15, .15);
-		glRectd(0, 0, arena_width, arena_height);
+        glColor3f(.15, .15, .15);
+        glRectd(0, 0, arena_width, arena_height);
 
         // Draw projected shapes (background)
-        for (int i = 0; i < polygons.size(); i++) {
+        for (int i = 0; i < polygons.size(); i++)
+        {
             std::vector<float> c = polygons[i].color;
-            glColor3f(c[0]*.6, c[1]*.6, c[2]*.6);
+            glColor3f(c[0] * .6, c[1] * .6, c[2] * .6);
             glBegin(GL_POLYGON);
-            for (int j = 0; j < polygons[i].points.size(); j++) {
+            for (int j = 0; j < polygons[i].points.size(); j++)
+            {
                 glVertex2f(polygons[i].points[j].x, polygons[i].points[j].y);
             }
             glEnd();
         }
-        for (int i = 0; i < rects.size(); i++) {
+        for (int i = 0; i < rects.size(); i++)
+        {
             std::vector<float> c = rects[i].color;
-            glColor3f(c[0]*.6, c[1]*.6, c[2]*.6);
-			glRectd(rects[i].pos.x, rects[i].pos.y, rects[i].pos.x + rects[i].width, rects[i].pos.y + rects[i].height);
+            glColor3f(c[0] * .6, c[1] * .6, c[2] * .6);
+            glRectd(rects[i].pos.x, rects[i].pos.y, rects[i].pos.x + rects[i].width, rects[i].pos.y + rects[i].height);
         }
         glColor3f(.6, 0.0, 0.0);
-        for (int i = 0; i < circles.size(); i++) {
+        for (int i = 0; i < circles.size(); i++)
+        {
             drawFilledCircle(circles[i].x, circles[i].y, circles[i].rad);
         }
 
         // Borderlands/edge
         glColor3f(.3, .3, .3);
-        glRectd(0, 0, edge_width, arena_height);  // left
-        glRectd(0, 0, arena_width, edge_width);  // Bottom
-        glRectd(arena_width-edge_width, 0, arena_width, arena_height);  // right
-        glRectd(0, arena_height, arena_width, arena_height-edge_width);  // Top
+        glRectd(0, 0, edge_width, arena_height);                          // left
+        glRectd(0, 0, arena_width, edge_width);                           // Bottom
+        glRectd(arena_width - edge_width, 0, arena_width, arena_height);  // right
+        glRectd(0, arena_height, arena_width, arena_height - edge_width); // Top
 
-		glutSetWindowTitle(rt);
-		glEnable(GL_LINE_SMOOTH);
-		glLineWidth(1.0);
+        glutSetWindowTitle(rt);
+        glEnable(GL_LINE_SMOOTH);
+        glLineWidth(1.0);
 
-        for (int j = 0; j < num_robots; j++) {
+        for (int j = 0; j < num_robots; j++)
+        {
             // Draw robots in different shapes depending on feature to detect
             glColor4f((GLfloat)robots[j]->color[0], (GLfloat)robots[j]->color[1], (GLfloat)robots[j]->color[2], 1.0);
-            if (robots[j]->detect_which_feature == 0) {
+            if (robots[j]->detect_which_feature == 0)
+            {
                 drawFilledCircle((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1], radius);
-            } else if (robots[j]->detect_which_feature == 1) {
-                drawFilledTriangle((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1], radius*1.3, robots[j]->pos[2]);
-            } else  if (robots[j]->detect_which_feature == 2) {
-                drawFilledSquare((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1], radius*1.3, robots[j]->pos[2]);
+            }
+            else if (robots[j]->detect_which_feature == 1)
+            {
+                drawFilledTriangle((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1], radius * 1.3, robots[j]->pos[2]);
+            }
+            else if (robots[j]->detect_which_feature == 2)
+            {
+                drawFilledSquare((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1], radius * 1.3, robots[j]->pos[2]);
             }
             // Draw lines for bearing
             glBegin(GL_LINES);
             glColor4f(0.2, 0.2, 0.2, 1.0);
             glVertex2f((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1]);
-            glVertex2f((GLfloat)(robots[j]->pos[0] + cos(robots[j]->pos[2])*radius), (GLfloat)(robots[j]->pos[1] + sin(robots[j]->pos[2])*radius));
+            glVertex2f((GLfloat)(robots[j]->pos[0] + cos(robots[j]->pos[2]) * radius), (GLfloat)(robots[j]->pos[1] + sin(robots[j]->pos[2]) * radius));
             glEnd();
         }
 
-		glFlush();
+        glFlush();
 
-		glutSwapBuffers();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	}
+        glutSwapBuffers();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
 
-	if (last) {
-		//log_info(NULL);
-		exit(0);
-	}
-	if (total_secs >= timelimit) {
-		last = true;
-	}
+    if (last)
+    {
+        //log_info(NULL);
+        exit(0);
+    }
+    if (total_secs >= timelimit)
+    {
+        last = true;
+    }
 }
 
-void setup(void) {
+void setup(void)
+{
     // Initialization routine.
-	for (int i = 0; i < num_robots; i++)
-		for (int j = 0; j < shuffles; j++)
-				order[i + num_robots*j] = i;
+    for (int i = 0; i < num_robots; i++)
+        for (int j = 0; j < shuffles; j++)
+            order[i + num_robots * j] = i;
 
-	for (int i = 0; i < num_robots - 1; i++)
-		for (int j = 0; j < shuffles; j++) {
-			int index = j*num_robots + i;
-			int r = index + rand() % (num_robots - i);
-			int p = order[index];
-			order[index] = order[r];
-			order[r] = p;
-		}
+    for (int i = 0; i < num_robots - 1; i++)
+        for (int j = 0; j < shuffles; j++)
+        {
+            int index = j * num_robots + i;
+            int r = index + rand() % (num_robots - i);
+            int p = order[index];
+            order[index] = order[r];
+            order[r] = p;
+        }
 }
 
-void resize_window(int w, int h) {
+void resize_window(int w, int h)
+{
     // OpenGL window reshape routine.
-	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(0.0, 100.0, 0.0, 100.0, -1.0, 1.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+    glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, 100.0, 0.0, 100.0, -1.0, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
 
-void key_input(unsigned char key, int x, int y) {
+void key_input(unsigned char key, int x, int y)
+{
     // Keyboard input processing routine.
-	switch (key) {
-	case 27:
-		exit(0);
-		break;
-	case 'w': //up
-		view_y += 100;
-		break;
-	case 'a': //up
-		view_x -= 100;
-		break;
-	case 's': //up
-		view_y -= 100;
-		break;
-	case 'd': //up
-		view_x += 100;
-		break;
-	case '-':
-		zoom = zoom*1.1;
-		break;
-	case '+':
-		zoom = zoom*0.9;
-		break;
-	case '1':
-		if (delay>0)
-				delay--;
-		printf("busy delay %d\n\r",delay);
-		break;
-	case '2':
-		delay++;
-		printf("busy delay %d\n\r",delay);
-		break;
-	case '3':
-		if (draw_delay>1)
-				draw_delay--;
-		printf("draw delay %d\n\r",draw_delay);
-		break;
-    	case '4':
-			draw_delay++;
-			printf("draw delay %d\n\r",draw_delay);
-			break;
-	default:
-		break;
-	}
+    switch (key)
+    {
+    case 27:
+        exit(0);
+        break;
+    case 'w': //up
+        view_y += 100;
+        break;
+    case 'a': //up
+        view_x -= 100;
+        break;
+    case 's': //up
+        view_y -= 100;
+        break;
+    case 'd': //up
+        view_x += 100;
+        break;
+    case '-':
+        zoom = zoom * 1.1;
+        break;
+    case '+':
+        zoom = zoom * 0.9;
+        break;
+    case '1':
+        if (delay > 0)
+            delay--;
+        printf("busy delay %d\n\r", delay);
+        break;
+    case '2':
+        delay++;
+        printf("busy delay %d\n\r", delay);
+        break;
+    case '3':
+        if (draw_delay > 1)
+            draw_delay--;
+        printf("draw delay %d\n\r", draw_delay);
+        break;
+    case '4':
+        draw_delay++;
+        printf("draw delay %d\n\r", draw_delay);
+        break;
+    default:
+        break;
+    }
 }
 
-void on_idle(void) {
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-zoom + view_x, view_x, -zoom + view_y, view_y, 0.0f, 1.0f);
-	std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-	glutPostRedisplay();
+void on_idle(void)
+{
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-zoom + view_x, view_x, -zoom + view_y, view_y, 0.0f, 1.0f);
+    std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+    glutPostRedisplay();
 }
 
-void setup_positions() {
-	int k = 0;
-	int columns = (int)sqrt((num_robots * arena_width / arena_height));
-	int rows = (int)(num_robots / columns);
-	if (num_robots % columns) rows++;
-	int horizontal_separation = arena_width / (columns + 1);
-	int vertical_separation = (int)arena_height / (rows + 1);
-	for (int i = 0; i < num_robots; i++) {
-		int c = i % columns + 1;
-		int r = i / columns + 1;
-		int hr = rand() % (horizontal_separation / 2) + horizontal_separation / 4;
-		int x = c * horizontal_separation; // + hr;
-		int vr = rand() % (vertical_separation / 2) + vertical_separation / 4;
-		int y = r * vertical_separation; // + vr;
-		robots[k] = new mykilobot();
-		double theta = rand() * 2 * PI / RAND_MAX;
-		robots[k]->robot_init(x, y, theta);
+void setup_positions()
+{
+    int k = 0;
+    int columns = (int)sqrt((num_robots * arena_width / arena_height));
+    int rows = (int)(num_robots / columns);
+    if (num_robots % columns)
+        rows++;
+    int horizontal_separation = arena_width / (columns + 1);
+    int vertical_separation = (int)arena_height / (rows + 1);
+    for (int i = 0; i < num_robots; i++)
+    {
+        int c = i % columns + 1;
+        int r = i / columns + 1;
+        int hr = rand() % (horizontal_separation / 2) + horizontal_separation / 4;
+        int x = c * horizontal_separation; // + hr;
+        int vr = rand() % (vertical_separation / 2) + vertical_separation / 4;
+        int y = r * vertical_separation; // + vr;
+        robots[k] = new MyKilobot();
+        double theta = rand() * 2 * PI / RAND_MAX;
+        robots[k]->robot_init(x, y, theta);
         track_id = robots[k]->id;
-		k++;
-	}
+        k++;
+    }
 }
 
-void parse_params(int argc, char **argv) {
+void parse_params(int argc, char **argv)
+{
     // Parse input parameters and mutate appropriate global variables
     std::vector<double> temp_initial_distribution;
     std::vector<int> temp_use_features;
     bool initial_distribution_specified = false;
     bool use_features_specified = false;
-    for (int i = 0; i < argc-1; i++) {
-        if (strcmp(argv[i],"--robots")==0) {
+    for (int i = 0; i < argc - 1; i++)
+    {
+        if (strcmp(argv[i], "--robots") == 0)
+        {
             num_robots = stoi(argv[i + 1]);
         }
-        if (strcmp(argv[i], "--log") == 0) {
-            log_debug_info = argv[i + 1][0]=='y';
+        if (strcmp(argv[i], "--log") == 0)
+        {
+            log_debug_info = argv[i + 1][0] == 'y';
         }
-        if (strcmp(argv[i], "--draw") == 0) {
+        if (strcmp(argv[i], "--draw") == 0)
+        {
             showscene = argv[i + 1][0] == 'y';
         }
-        if (strcmp(argv[i], "--width") == 0) {
+        if (strcmp(argv[i], "--width") == 0)
+        {
             arena_width = stoi(argv[i + 1]);
-            rect_c_t arena_bounds = {{edge_width, edge_width}, (float)(arena_width - 2*edge_width), (float)(arena_height - 2*edge_width), {0,0,0}};
+            rect_c_t arena_bounds = {{edge_width, edge_width}, (float)(arena_width - 2 * edge_width), (float)(arena_height - 2 * edge_width), {0, 0, 0}};
         }
-        if (strcmp(argv[i], "--height") == 0) {
+        if (strcmp(argv[i], "--height") == 0)
+        {
             arena_height = stoi(argv[i + 1]);
-            arena_bounds = {{edge_width, edge_width}, (float)(arena_width - 2*edge_width), (float)(arena_height - 2*edge_width), {0,0,0}};
+            arena_bounds = {{edge_width, edge_width}, (float)(arena_width - 2 * edge_width), (float)(arena_height - 2 * edge_width), {0, 0, 0}};
         }
-        if (strcmp(argv[i], "--time") == 0) {
+        if (strcmp(argv[i], "--time") == 0)
+        {
             timelimit = stoi(argv[i + 1]);
         }
-        if (strcmp(argv[i], "--logdir") == 0) {
+        if (strcmp(argv[i], "--logdir") == 0)
+        {
             log_file_dir = argv[i + 1];
         }
-        if (strcmp(argv[i], "--logname") == 0) {
+        if (strcmp(argv[i], "--logname") == 0)
+        {
             log_filename_base = argv[i + 1];
         }
-        if(strcmp(argv[i], "--decision_logname") == 0) {
+        if (strcmp(argv[i], "--decision_logname") == 0)
+        {
             decision_filename = argv[i + 1];
         }
-        if (strcmp(argv[i], "--dissemination_dur") == 0) {
+        if (strcmp(argv[i], "--dissemination_dur") == 0)
+        {
             dissemination_duration_constant = (uint32_t)(stoi(argv[i + 1]) * SECOND);
         }
-        if (strcmp(argv[i], "--observation_dur") == 0) {
+        if (strcmp(argv[i], "--observation_dur") == 0)
+        {
             mean_explore_duration = (uint32_t)(stoi(argv[i + 1]) * SECOND);
         }
-        if (strcmp(argv[i], "--seed") == 0) {
+        if (strcmp(argv[i], "--seed") == 0)
+        {
             seed = (uint)stoi(argv[i + 1]);
         }
-        if (strcmp(argv[i], "--rects_files") == 0) {
+        if (strcmp(argv[i], "--rects_files") == 0)
+        {
             rects_filename_base = argv[i + 1];
         }
-        if (strcmp(argv[i], "--circles_files") == 0) {
+        if (strcmp(argv[i], "--circles_files") == 0)
+        {
             circles_filename_base = argv[i + 1];
         }
-        if (strcmp(argv[i], "--circles_radius") == 0) {
+        if (strcmp(argv[i], "--circles_radius") == 0)
+        {
             circles_radius = stoi(argv[i + 1]);
         }
-        if (strcmp(argv[i], "--polys_files") == 0) {
+        if (strcmp(argv[i], "--polys_files") == 0)
+        {
             polys_filename_base = argv[i + 1];
         }
-        if (strcmp(argv[i], "--trial") == 0) {
+        if (strcmp(argv[i], "--trial") == 0)
+        {
             trial_num = stoi(argv[i + 1]);
         }
-        if (strcmp(argv[i], "--features") == 0) {
+        if (strcmp(argv[i], "--features") == 0)
+        {
             temp_use_features = parse_use_features(argv[i + 1]);
             use_features_specified = true;
         }
-        if (strcmp(argv[i], "--initial_distribution") == 0) {
+        if (strcmp(argv[i], "--initial_distribution") == 0)
+        {
             temp_initial_distribution = parse_initial_distribution(argv[i + 1]);
             initial_distribution_specified = true;
         }
-        if (strcmp(argv[i], "--rows") == 0) {
+        if (strcmp(argv[i], "--rows") == 0)
+        {
             arena_rows = stoi(argv[i + 1]);
         }
-        if (strcmp(argv[i], "-r") == 0) {
+        if (strcmp(argv[i], "-r") == 0)
+        {
             color_fill_ratio[0] = stof(argv[i + 1]);
         }
-        if (strcmp(argv[i], "-g") == 0) {
+        if (strcmp(argv[i], "-g") == 0)
+        {
             color_fill_ratio[1] = stof(argv[i + 1]);
         }
-        if (strcmp(argv[i], "-b") == 0) {
+        if (strcmp(argv[i], "-b") == 0)
+        {
             color_fill_ratio[2] = stof(argv[i + 1]);
         }
-        if (strcmp(argv[i], "--use_confidence") == 0) {
+        if (strcmp(argv[i], "--use_confidence") == 0)
+        {
             use_confidence = argv[i + 1][0] == 'y';
         }
-        if (strcmp(argv[i], "--allow_retransmit") == 0) {
+        if (strcmp(argv[i], "--allow_retransmit") == 0)
+        {
             allow_retransmit = argv[i + 1][0] == 'y';
         }
-		if (strcmp(argv[i], "--belief_update_strategy") == 0) {
-			if (strcmp(argv[i + 1], "none") == 0) {
-				belief_update_strategy = 0;
-			} else if (strcmp(argv[i + 1], "DMMD") == 0) {
-				belief_update_strategy = 1;
-			} else if (strcmp(argv[i + 1], "DMVD") == 0) {
-				belief_update_strategy = 2;
-			} else {
-				throw std::invalid_argument("belief_update_strategy must be none, DMMD, or DMVD");
-			}
-		}
-        if (strcmp(argv[i], "--which_feature_set") == 0) {
-            if (strcmp(argv[i+1], "mono") == 0) {
+        if (strcmp(argv[i], "--belief_update_strategy") == 0)
+        {
+            if (strcmp(argv[i + 1], "none") == 0)
+            {
+                belief_update_strategy = 0;
+            }
+            else if (strcmp(argv[i + 1], "DMMD") == 0)
+            {
+                belief_update_strategy = 1;
+            }
+            else if (strcmp(argv[i + 1], "DMVD") == 0)
+            {
+                belief_update_strategy = 2;
+            }
+            else
+            {
+                throw std::invalid_argument("belief_update_strategy must be none, DMMD, or DMVD");
+            }
+        }
+        if (strcmp(argv[i], "--which_feature_set") == 0)
+        {
+            if (strcmp(argv[i + 1], "mono") == 0)
+            {
                 which_feature_set = 0;
-            } else if (strcmp(argv[i+1], "color") == 0) {
+            }
+            else if (strcmp(argv[i + 1], "color") == 0)
+            {
                 which_feature_set = 1;
-            } else {
+            }
+            else
+            {
                 throw std::invalid_argument("which_feature_set must be mono or color");
             }
         }
-        if (strcmp(argv[i], "--comm_rate") == 0) {
-            comm_rate = (uint8_t) stoi(argv[i + 1]);
+        if (strcmp(argv[i], "--comm_rate") == 0)
+        {
+            comm_rate = (uint8_t)stoi(argv[i + 1]);
         }
-        if (strcmp(argv[i], "--exp_observation") == 0) {
+        if (strcmp(argv[i], "--exp_observation") == 0)
+        {
             exp_observation = argv[i + 1][0] == 'y';
         }
-        if (strcmp(argv[i], "--exp_dissemination") == 0) {
+        if (strcmp(argv[i], "--exp_dissemination") == 0)
+        {
             exp_dissemination = argv[i + 1][0] == 'y';
         }
-        if (strcmp(argv[i], "--comm_dist") == 0) {
+        if (strcmp(argv[i], "--comm_dist") == 0)
+        {
             comm_dist = stof(argv[i + 1]);
         }
-        if (strcmp(argv[i], "--neighbor_dur") == 0) {
+        if (strcmp(argv[i], "--neighbor_dur") == 0)
+        {
             neighbor_info_array_timeout = (uint32_t)stoi(argv[i + 1]) * SECOND;
         }
-        if (strcmp(argv[i], "--num_threads") == 0) {
+        if (strcmp(argv[i], "--num_threads") == 0)
+        {
             num_threads = stoi(argv[i + 1]);
         }
         // Diffusion parameters
-        if (strcmp(argv[i], "--diffusion_constant") == 0) {
+        if (strcmp(argv[i], "--diffusion_constant") == 0)
+        {
             diffusion_constant = stof(argv[i + 1]);
         }
-        if (strcmp(argv[i], "--diffusion_decision_thresh") == 0) {
-            diffusion_decision_thresh= stof(argv[i + 1]);
+        if (strcmp(argv[i], "--diffusion_decision_thresh") == 0)
+        {
+            diffusion_decision_thresh = stof(argv[i + 1]);
         }
-        if (strcmp(argv[i], "--diffusion_decision_time") == 0) {
+        if (strcmp(argv[i], "--diffusion_decision_time") == 0)
+        {
             diffusion_decision_time = (uint32_t)stoi(argv[i + 1]) * SECOND;
         }
-        if (strcmp(argv[i], "--dynamic_allocation") == 0) {
+        if (strcmp(argv[i], "--dynamic_allocation") == 0)
+        {
             dynamic_allocation = argv[i + 1][0] == 'y';
         }
-        if (strcmp(argv[i], "--feature_switch_when") == 0) {
-            if (strcmp(argv[i + 1], "decision") == 0) {
+        if (strcmp(argv[i], "--feature_switch_when") == 0)
+        {
+            if (strcmp(argv[i + 1], "decision") == 0)
+            {
                 feature_switch_when = 0;
-            } else if (strcmp(argv[i + 1], "observation") == 0) {
+            }
+            else if (strcmp(argv[i + 1], "observation") == 0)
+            {
                 feature_switch_when = 1;
-            } else {
+            }
+            else
+            {
                 throw std::invalid_argument("feature_switch_when must be decision or observation");
             }
         }
-        if (strcmp(argv[i], "--feature_switch_to") == 0) {
-            if (strcmp(argv[i + 1], "hardest") == 0) {
+        if (strcmp(argv[i], "--feature_switch_to") == 0)
+        {
+            if (strcmp(argv[i + 1], "hardest") == 0)
+            {
                 feature_switch_to = 0;
-            } else if (strcmp(argv[i + 1], "easiest") == 0) {
+            }
+            else if (strcmp(argv[i + 1], "easiest") == 0)
+            {
                 feature_switch_to = 1;
-            } else if (strcmp(argv[i+1], "random") == 0) {
+            }
+            else if (strcmp(argv[i + 1], "random") == 0)
+            {
                 feature_switch_to = 2;
-            } else {
+            }
+            else
+            {
                 throw std::invalid_argument("feature_switch_to must be decision or observation");
             }
         }
     }
 
     // Verify/coordinate values of use_features and initial_distribution
-    if (use_features_specified) {
+    if (use_features_specified)
+    {
         use_features_valid(temp_use_features);
         use_features = temp_use_features;
     }
-    if (initial_distribution_specified) {
+    if (initial_distribution_specified)
+    {
         initial_distribution_valid(temp_initial_distribution);
         initial_distribution = temp_initial_distribution;
-    } else {
+    }
+    else
+    {
         // If initial_distribution parameter not used, split evenly between used features
         int num_use_features = 0;
-        for (int i = 0; i < use_features.size(); i++) {
+        for (int i = 0; i < use_features.size(); i++)
+        {
             num_use_features += 1;
         }
-        for (int i = 0; i < initial_distribution.size(); i++) {
-            if (std::find(use_features.begin(), use_features.end(), i) != use_features.end()) {
-                initial_distribution[i] = 1.0/num_use_features;
-            } else {
+        for (int i = 0; i < initial_distribution.size(); i++)
+        {
+            if (std::find(use_features.begin(), use_features.end(), i) != use_features.end())
+            {
+                initial_distribution[i] = 1.0 / num_use_features;
+            }
+            else
+            {
                 initial_distribution[i] = 0;
             }
         }
@@ -866,51 +1050,79 @@ void parse_params(int argc, char **argv) {
     // change initialization (robot.cpp) to only use i values of use_features
 }
 
-void save_params() {
+void save_params()
+{
     std::string params_header, params_vals;
-    params_header += "num_robots\t"; params_vals += std::to_string(num_robots) + "\t";
-    params_header += "dissemination_dur\t"; params_vals += std::to_string(dissemination_duration_constant/SECOND) + "\t";
-    params_header += "observation_dur\t"; params_vals += std::to_string(mean_explore_duration/SECOND) + "\t";
-    params_header += "num_rows\t"; params_vals += std::to_string(arena_rows) + "\t";
-    params_header += "arena_size\t"; params_vals += std::to_string(arena_width) + "\t";
-    params_header += "fill_0\t"; params_vals += std::to_string(color_fill_ratio[0]) + "\t";
-    params_header += "fill_1\t"; params_vals += std::to_string(color_fill_ratio[1]) + "\t";
-    params_header += "fill_2\t"; params_vals += std::to_string(color_fill_ratio[2]) + "\t";
-    params_header += "comm_range\t"; params_vals += std::to_string(comm_dist) + "\t";
-    params_header += "exp_observation\t"; params_vals += std::to_string(exp_observation) + "\t";
-    params_header += "exp_dissemination\t"; params_vals += std::to_string(exp_dissemination) + "\t";
-    params_header += "use_confidence\t"; params_vals += std::to_string(use_confidence) + "\t";
-    params_header += "allow_retransmit\t"; params_vals += std::to_string(allow_retransmit) + "\t";
-    params_header += "belief_update_strategy\t"; params_vals += std::to_string(belief_update_strategy) + "\t";
-    params_header += "comm_rate\t"; params_vals += std::to_string(comm_rate) + "\t";
-    params_header += "neighbor_dur\t"; params_vals += std::to_string(neighbor_info_array_timeout/SECOND) + "\t";
-    params_header += "diffusion_constant\t"; params_vals += std::to_string(diffusion_constant) + "\t";
-    params_header += "diffusion_decision_thresh\t"; params_vals += std::to_string(diffusion_decision_thresh) + "\t";
-    params_header += "diffusion_decision_time\t"; params_vals += std::to_string((float)diffusion_decision_time/SECOND) + "\t";
-    params_header += "dynamic_allocation\t"; params_vals += std::to_string(dynamic_allocation) + "\t";
-    params_header += "which_feature_set\t"; params_vals += std::to_string(which_feature_set) + "\t";
-    params_header += "circles_radius\t"; params_vals += std::to_string(circles_radius) + "\t";
-    params_header += "feature_switch_when\t"; params_vals += std::to_string(feature_switch_when) + "\t";
-    params_header += "feature_switch_to\t"; params_vals += std::to_string(feature_switch_to) + "\t";
-    FILE * params_log = fopen(params_filename.c_str(), "a");
+    params_header += "num_robots\t";
+    params_vals += std::to_string(num_robots) + "\t";
+    params_header += "dissemination_dur\t";
+    params_vals += std::to_string(dissemination_duration_constant / SECOND) + "\t";
+    params_header += "observation_dur\t";
+    params_vals += std::to_string(mean_explore_duration / SECOND) + "\t";
+    params_header += "num_rows\t";
+    params_vals += std::to_string(arena_rows) + "\t";
+    params_header += "arena_size\t";
+    params_vals += std::to_string(arena_width) + "\t";
+    params_header += "fill_0\t";
+    params_vals += std::to_string(color_fill_ratio[0]) + "\t";
+    params_header += "fill_1\t";
+    params_vals += std::to_string(color_fill_ratio[1]) + "\t";
+    params_header += "fill_2\t";
+    params_vals += std::to_string(color_fill_ratio[2]) + "\t";
+    params_header += "comm_range\t";
+    params_vals += std::to_string(comm_dist) + "\t";
+    params_header += "exp_observation\t";
+    params_vals += std::to_string(exp_observation) + "\t";
+    params_header += "exp_dissemination\t";
+    params_vals += std::to_string(exp_dissemination) + "\t";
+    params_header += "use_confidence\t";
+    params_vals += std::to_string(use_confidence) + "\t";
+    params_header += "allow_retransmit\t";
+    params_vals += std::to_string(allow_retransmit) + "\t";
+    params_header += "belief_update_strategy\t";
+    params_vals += std::to_string(belief_update_strategy) + "\t";
+    params_header += "comm_rate\t";
+    params_vals += std::to_string(comm_rate) + "\t";
+    params_header += "neighbor_dur\t";
+    params_vals += std::to_string(neighbor_info_array_timeout / SECOND) + "\t";
+    params_header += "diffusion_constant\t";
+    params_vals += std::to_string(diffusion_constant) + "\t";
+    params_header += "diffusion_decision_thresh\t";
+    params_vals += std::to_string(diffusion_decision_thresh) + "\t";
+    params_header += "diffusion_decision_time\t";
+    params_vals += std::to_string((float)diffusion_decision_time / SECOND) + "\t";
+    params_header += "dynamic_allocation\t";
+    params_vals += std::to_string(dynamic_allocation) + "\t";
+    params_header += "which_feature_set\t";
+    params_vals += std::to_string(which_feature_set) + "\t";
+    params_header += "circles_radius\t";
+    params_vals += std::to_string(circles_radius) + "\t";
+    params_header += "feature_switch_when\t";
+    params_vals += std::to_string(feature_switch_when) + "\t";
+    params_header += "feature_switch_to\t";
+    params_vals += std::to_string(feature_switch_to) + "\t";
+    FILE *params_log = fopen(params_filename.c_str(), "a");
     fprintf(params_log, "%s\n", params_header.c_str());
     fprintf(params_log, "%s\n", params_vals.c_str());
     fclose(params_log);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
     // Main routine.
-	parse_params(argc, argv);
+    parse_params(argc, argv);
 
     // OpenMP settings
-    if (num_threads != 0) {
-        omp_set_dynamic(0);     // Explicitly disable dynamic teams
+    if (num_threads != 0)
+    {
+        omp_set_dynamic(0);               // Explicitly disable dynamic teams
         omp_set_num_threads(num_threads); // Use num_threads for all consecutive parallel regions
     }
 
     // Get shapes from file
-    if (!rects_filename_base.empty()) {
+    if (!rects_filename_base.empty())
+    {
         std::string rects_filename = shapes_dir + "/" + rects_filename_base + "-" +
                                      std::to_string(arena_rows) + "x" + std::to_string(arena_rows) +
                                      "-[" + float_to_string(color_fill_ratio[0]) + "," +
@@ -920,15 +1132,17 @@ int main(int argc, char **argv) {
         std::cout << "Using rectangles:\t" << rects_filename << std::endl;
         rects = gen_color_rects(rects_filename);
     }
-    if (!circles_filename_base.empty()) {
+    if (!circles_filename_base.empty())
+    {
         std::string circles_filename = shapes_dir + "/" + circles_filename_base + "-" +
-                                     float_to_string(color_fill_ratio[0]) + "-" +
-                                     "r" + std::to_string(circles_radius) + "-" +
-                                     std::to_string(trial_num) + ".txt";
+                                       float_to_string(color_fill_ratio[0]) + "-" +
+                                       "r" + std::to_string(circles_radius) + "-" +
+                                       std::to_string(trial_num) + ".txt";
         std::cout << "Using circles:\t" << circles_filename << std::endl;
         circles = gen_color_circles(circles_filename);
     }
-    if (!polys_filename_base.empty()) {
+    if (!polys_filename_base.empty())
+    {
         std::string polys_filename = shapes_dir + "/" + polys_filename_base + "-" +
                                      float_to_string(color_fill_ratio[0]) + "-" +
                                      std::to_string(trial_num) + ".txt";
@@ -936,13 +1150,15 @@ int main(int argc, char **argv) {
         polygons = gen_color_polys(polys_filename);
     }
 
-
-    if (log_debug_info) {
+    if (log_debug_info)
+    {
         // Create directory for logging if it doesn't already exist
         struct stat info;
-        if (stat(log_file_dir.c_str(), &info) != 0) {
+        if (stat(log_file_dir.c_str(), &info) != 0)
+        {
             const int dir_err = mkdir(log_file_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-            if (-1 == dir_err) {
+            if (-1 == dir_err)
+            {
                 printf("Error creating directory!\n");
                 exit(1);
             }
@@ -953,16 +1169,20 @@ int main(int argc, char **argv) {
         params_filename = log_file_dir + "/" + params_filename_base + std::to_string(trial_num) + ".log";
         std::cout << log_filename << std::endl;
         // Check if file exists and warn before overwrite
-        if (stat(log_filename.c_str(), &info) == 0) {
+        if (stat(log_filename.c_str(), &info) == 0)
+        {
             std::string is_overwrite;
             std::cout << "This log file already exists. Do you want to overwrite it? (y/N) ";
             std::cin >> is_overwrite;
-            if (strcmp(is_overwrite.c_str(), "y") == 0) {
+            if (strcmp(is_overwrite.c_str(), "y") == 0)
+            {
                 remove(log_filename.c_str());
                 remove(decision_filename.c_str());
                 remove(comm_log_filename.c_str());
                 remove(params_filename.c_str());
-            } else {
+            }
+            else
+            {
                 std::cout << "File not overwritten. Exiting" << std::endl;
                 exit(1);
             }
@@ -972,18 +1192,22 @@ int main(int argc, char **argv) {
     // DEBUGGING
     // Print stuff here to test parameters/variables
 
-	robots = (robot **)malloc(num_robots * sizeof(robot *)); //creates an array of robots
-	order = (int *) malloc(shuffles * num_robots * sizeof(int));
-	//seed random variable for different random behavior every time
-	unsigned int t = 0;
+    robots = (Robot **)malloc(num_robots * sizeof(Robot *)); //creates an array of robots
+    order = (int *)malloc(shuffles * num_robots * sizeof(int));
+    //seed random variable for different random behavior every time
+    unsigned int t = 0;
 
-	if (seed) {
-		t = seed;
-	} else {
-		t= (unsigned int) time(NULL);
-	}
+    if (seed)
+    {
+        t = seed;
+    }
+    else
+    {
+        t = (unsigned int)time(NULL);
+    }
 
-    if (log_debug_info) {
+    if (log_debug_info)
+    {
         // Save parameters to file
         save_params();
 
@@ -1005,49 +1229,53 @@ int main(int argc, char **argv) {
         fclose(comm_log);
     }
 
+    srand(t);
 
-	srand(t);
+    //set the simulation time to 0
+    time_sim = 0;
 
-	//set the simulation time to 0
-	time_sim = 0;
-
-	//inital zoom and scroll positions
-	zoom = arena_width;
-	view_x = arena_width;
-	view_y = arena_height;
+    //inital zoom and scroll positions
+    zoom = arena_width;
+    view_x = arena_width;
+    view_y = arena_height;
 
     // Place robots
     setup_positions();
 
-	setup();
+    setup();
 
-	//do some open gl stuff
+    //do some open gl stuff
 
-	for (int i = 0; i < radius; i++) {
-		ch[i] = sqrt(radius*radius - i*i);
-	}
+    for (int i = 0; i < radius; i++)
+    {
+        ch[i] = sqrt(radius * radius - i * i);
+    }
 
-	if (showscene) {
-		glutInit(&argc, argv);
-		glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-		glutInitWindowSize(windowWidth, windowHeight);
-		glutInitWindowPosition(0, 0);
+    if (showscene)
+    {
+        glutInit(&argc, argv);
+        glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+        glutInitWindowSize(windowWidth, windowHeight);
+        glutInitWindowPosition(0, 0);
 
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0.0f, 1000, 1000, 0.0f, 0.0f, 1.0f);
-		glClearColor(1.0, 1.0, 1.0, 0.0);
-		glutCreateWindow("Kilobot simulator");
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0.0f, 1000, 1000, 0.0f, 0.0f, 1.0f);
+        glClearColor(1.0, 1.0, 1.0, 0.0);
+        glutCreateWindow("Kilobot simulator");
 
-		glutDisplayFunc(draw_scene);
-		glutReshapeFunc(resize_window);
-		glutIdleFunc(on_idle);
-		glutKeyboardFunc(key_input);
-		glutMainLoop();
-	} else {
-		while (total_secs < timelimit) {
-			run_simulation_step();
-		}
-	}
-	return 0;
+        glutDisplayFunc(draw_scene);
+        glutReshapeFunc(resize_window);
+        glutIdleFunc(on_idle);
+        glutKeyboardFunc(key_input);
+        glutMainLoop();
+    }
+    else
+    {
+        while (total_secs < timelimit)
+        {
+            run_simulation_step();
+        }
+    }
+    return 0;
 }

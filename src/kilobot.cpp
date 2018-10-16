@@ -18,7 +18,7 @@ typedef struct neighbor_info_array_t
     uint8_t number_of_times_heard_from;
 } neighbor_info_array_t;
 
-class mykilobot : public kilobot
+class MyKilobot : public kilobot
 {
 
     float concentrations[3] = {0.5, 0.5, 0.5};
