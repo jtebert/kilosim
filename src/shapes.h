@@ -4,24 +4,28 @@
 #include <vector>
 #include <string>
 
-typedef struct point_t {
+typedef struct point_t
+{
     double x;
     double y;
 } point_t;
 
-typedef struct polygon_c_t {
+typedef struct polygon_c_t
+{
     std::vector<point_t> points;
     std::vector<float> color;
 } polygon_c_t;
 
-typedef struct rect_c_t {
-    point_t pos;  // lower right corner
+typedef struct rect_c_t
+{
+    point_t pos; // lower right corner
     float width;
     float height;
     std::vector<float> color;
 } rect_c_t;
 
-typedef struct circle_c_t {
+typedef struct circle_c_t
+{
     // x, y define center of circle
     double x;
     double y;
