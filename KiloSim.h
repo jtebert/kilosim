@@ -31,7 +31,7 @@ class World
         unsigned width;
         // Height of the light image
         unsigned height;
-        // Data of the light pattern
+        // Data of the light pattern (8-bit brayscale 0-255)
         std::vector<uint8_t> data;
     };
 
@@ -39,13 +39,13 @@ class World
     LightPattern lightPattern;
 
   protected:
-    // Compute the next positions of the robots form positions and motor commands
+    // Compute the next positions of the robots from positions and motor commands
     double *
     computeNextStep(double *newPos, double dt);
     // Check to see if motion causes robots to collide
     int findCollisions(double *newPos, int selfID, int time);
     // Draw the scene
-    void draw_scene(void);
+    void drawScene();
 
   public:
     // Construct a world of a fixed size with the background light pattern

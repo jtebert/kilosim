@@ -1,5 +1,6 @@
 // Example/pseudocode for used of simulator + experiment code
 // Based on enki minimal example
+// Right now this won't run because literally none of this is implemented
 
 #include <kilosim/KiloSim.h>
 #include "kilobot.cpp"
@@ -17,7 +18,8 @@ int main(int argc, char *argv[])
     world.addRobot(testKilobot);
 
     // Create a logger
-    KiloSim::Logger logger("/log/file/name.h5");
+    int trialNum = 1;
+    KiloSim::Logger logger("/log/file/name.h5", trialNum);
     logger.addAggregate('mean', 'decision');
     logger.addAggregate('count number detecting');
 
@@ -29,7 +31,7 @@ int main(int argc, char *argv[])
 
     // TODO: Add/set up logger connected to world
     world.addLogger(logger);
-    world.logWorldParams();
+    world.logWorldParams(); // Save general parameters like dimensions
 
     unsigned int sim_duration = 60 * 60; // Trial duration in minutes
     unsigned int tick = 0;
@@ -49,13 +51,3 @@ int main(int argc, char *argv[])
         tick++;
     }
 }
-
-/*
-    Add to world:
-    - tick rate attribute (default = 32 ticks/s)
-    - logParams(): Save stuff like light pattern, config params
-    - logState(): Save the current
-
-    Logger:
-    -
-*/
