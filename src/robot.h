@@ -3,6 +3,7 @@
 #define ROBOT_H
 
 #include <iostream>
+#include <math.h>
 #include "vars.h"
 
 const double motion_error_std = .02;
