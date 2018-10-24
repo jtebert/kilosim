@@ -13,4 +13,15 @@ bool World::hasLightPattern()
 {
     return !lightPattern.data.empty();
 }
+
+void addLogger(Logger &lgr)
+{
+    logger = lgr;
+}
+
+void logState()
+{
+    logger.logState(self.tick);
+}
+
 } // namespace KiloSim

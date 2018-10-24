@@ -17,11 +17,23 @@ Logger::Logger(std::string fileID, int trialNum) : fileID(fileID),
     h5fileP = createOrOpen(fileID);
     // TODO: Create group for the trial. This should overwrite any existing group,
     // maybe with confirmation?
+    trialGroupName = "trial_" + std::to_string(trialNum);
+    paramsGroupName = trialGroupName + "/params";
+    try
+    {
+        h5fileP->unlink(trialGroupName.c_str());
+        std::cout << "WARNING: Overwrote trial data" << std::endl;
+    }
+    catch (H5::FileIException &)
+    {
+    }
+    H5::Group *trialGroup = new H5::Group(h5fileP->createGroup(trialGroupName.c_str()));
+    delete trialGroup;
 }
 
 Logger::~Logger(void)
 {
-    std::cout << "TODO: Close the file when out of scope" << std::endl;
+    std::cout << "TODO: Close the file when out of scope?" << std::endl;
 }
 
 void Logger::addAggregator(std::string aggName, aggregatorFunc aggFunc)
@@ -46,13 +58,14 @@ void Logger::logParams(std::unordered_map<std::string, double> paramPairs)
     // Create the params group if it doesn't already exist (ugly)
     // https://stackoverflow.com/q/35668056
     H5::Group *paramsGroup;
+    ;
     try
     {
-        paramsGroup = new H5::Group(h5fileP->openGroup("/params"));
+        paramsGroup = new H5::Group(h5fileP->openGroup(paramsGroupName));
     }
     catch (H5::Exception &err)
     {
-        paramsGroup = new H5::Group(h5fileP->createGroup("/params"));
+        paramsGroup = new H5::Group(h5fileP->createGroup(paramsGroupName));
     }
     for (std::pair<std::string, int> paramPair : paramPairs)
     {
@@ -81,9 +94,17 @@ void Logger::logParam(std::string name, double val)
         valType = H5::PredType::NATIVE_H_BOOL;
         break;
     }*/
-    std::string dsetName = "/params" + name;
-    H5::DataSet *dataset = new H5::DataSet(h5fileP->createDataSet(dsetName.c_str(), H5::PredType::NATIVE_FLOAT, *dataspace, val));
-    delete dataset;
+    std::cout << val << std::endl;
+    std::string dsetName = paramsGroupName + "/" + name;
+
+    H5::DataSet *dataset = new H5::DataSet(h5fileP->createDataSet(
+        dsetName.c_str(),
+        H5::PredType::NATIVE_DOUBLE,
+        *dataspace,
+        val));
+
+    std::cout << "Created dataset" << std::endl;
+    //delete dataset;
     delete dataspace;
 }
 
@@ -99,7 +120,7 @@ Logger::H5FilePtr Logger::createOrOpen(const std::string &fname)
     // TODO: Not sure if I'm gonna keep this. Might only be used once and I don't understand the shared pointer thing
     // From: https://stackoverflow.com/a/13849946
     H5::Exception::dontPrint();
-    H5::H5File *file = 0;
+    H5::H5File *file;
     try
     {
         file = new H5::H5File(fname.c_str(), H5F_ACC_RDWR);

@@ -39,7 +39,7 @@ double decide0[2] = {0, 0};
 double decide1[2] = {0, 0};
 double decide2[2] = {0, 0};
 
-Robot **robots; //creates an array of robots
+std::vector<Robot> robots;
 int *order;
 
 int delay = delay_init;
@@ -197,18 +197,18 @@ double convergence_ratio(uint8_t feature)
     int count_converge_up = 0;
     int count_converge_down = 0;
     //#pragma parallel for
-    for (int i = 0; i < num_robots; i++)
+    for (auto &robot : robots)
     {
-        if (robots[i]->pattern_belief[feature] > 127)
+        if (robot.pattern_belief[feature] > 127)
         {
             count_converge_up++;
         }
-        else if (robots[i]->pattern_belief[feature] < 127)
+        else if (robot.pattern_belief[feature] < 127)
         {
             count_converge_down++;
         }
     }
-    double convergence = double(max(count_converge_up, count_converge_down)) / num_robots;
+    double convergence = double(max(count_converge_up, count_converge_down)) / robots.size();
     return convergence;
 }
 
@@ -217,17 +217,18 @@ double *decision_ratio(uint8_t feature, double *decision_rate)
     // Find the percentage of kilobots that have DECIDED on the feature
     int count_decide_up = 0;
     int count_decide_down = 0;
-    for (int i = 0; i < num_robots; i++)
+    for (auto &robot : robots)
     {
-        if (robots[i]->decision[feature] == 255)
+        if (robot.decision[feature] == 255)
         {
             count_decide_up += 1;
         }
-        else if (robots[i]->decision[feature] == 0)
+        else if (robot.decision[feature] == 0)
         {
             count_decide_down += 1;
         }
     }
+    int num_robots = robots.size();
     decision_rate[0] = (double)count_decide_down / num_robots;
     decision_rate[1] = (double)count_decide_up / num_robots;
     return decision_rate;
@@ -237,9 +238,9 @@ int num_detecting(uint8_t feature)
 {
     // Count the number of robots detecting the feature
     int count = 0;
-    for (int i = 0; i < num_robots; i++)
+    for (auto &robot : robots)
     {
-        if (robots[i]->detect_which_feature == feature)
+        if (robot.detect_which_feature == feature)
         {
             count += 1;
         }
@@ -251,11 +252,11 @@ double mean_belief(uint8_t feature)
 {
     // Get the mean belief across features
     int sum_belief = 0;
-    for (int i = 0; i < num_robots; i++)
+    for (auto &robot : robots)
     {
-        sum_belief += robots[i]->pattern_belief[feature];
+        sum_belief += robot.pattern_belief[feature];
     }
-    double avg = (double)sum_belief / 255 / num_robots;
+    double avg = (double)sum_belief / 255 / robots.size();
     return avg;
 }
 
@@ -264,11 +265,11 @@ double mean_estimate(uint8_t feature)
     // Get the mean feature estimate (from own observations
     int sum_estimate = 0;
     int num_use_robots = 0;
-    for (int i = 0; i < num_robots; i++)
+    for (auto &robot : robots)
     {
-        if (robots[i]->detect_which_feature == feature && robots[i]->feature_estimate != 127)
+        if (robot.detect_which_feature == feature && robot.feature_estimate != 127)
         {
-            sum_estimate += robots[i]->feature_estimate;
+            sum_estimate += robot.feature_estimate;
             num_use_robots++;
         }
     }
@@ -291,30 +292,29 @@ double *compute_next_step(double *new_pos, double dt)
     // new positions are serialized: [x_1, y_1, theta_1, x_2, y_2, theta_2, x_3, ...]
 
 #pragma omp for schedule(static)
-    for (int i = 0; i < num_robots; i++)
+    for (auto &r : robots)
     {
-        Robot *r = robots[i];
 
-        double theta = r->pos[2];
-        double x = r->pos[0];
-        double y = r->pos[1];
+        double theta = r.pos[2];
+        double x = r.pos[0];
+        double y = r.pos[1];
         double temp_x = x;
-        ;
+
         double temp_y = y;
         double temp_cos, temp_sin, phi;
-        switch (r->motor_command)
+        switch (r.motor_command)
         {
         case 1:
         { // forward
             //theta += r->motor_error * dt;
-            double speed = r->forward_speed * dt;
-            temp_x = speed * cos(theta) + r->pos[0];
-            temp_y = speed * sin(theta) + r->pos[1];
+            double speed = r.forward_speed * dt;
+            temp_x = speed * cos(theta) + r.pos[0];
+            temp_y = speed * sin(theta) + r.pos[1];
             break;
         }
         case 2:
         { // CW rotation
-            phi = -r->turn_speed * dt;
+            phi = -r.turn_speed * dt;
             theta += phi;
             temp_cos = radius * cos(theta + 4 * PI / 3);
             temp_sin = radius * sin(theta + 4 * PI / 3);
@@ -324,7 +324,7 @@ double *compute_next_step(double *new_pos, double dt)
         }
         case 3:
         { // CCW rotation
-            phi = r->turn_speed * dt;
+            phi = r.turn_speed * dt;
             theta += phi;
             temp_cos = radius * cos(theta + 2 * PI / 3);
             temp_sin = radius * sin(theta + 2 * PI / 3);
@@ -420,7 +420,7 @@ bool run_simulation_step()
             //run controller this time step with p_control_execute probability
             if ((rand()) < (int)(p_control_execute * RAND_MAX))
             {
-                robots[i]->robot_controller();
+                robots[i].robot_controller();
             }
         }
 
@@ -434,21 +434,21 @@ bool run_simulation_step()
             {
                 // Loop over all transmitting robots
                 int tx_id = order[seed + t];
-                Robot *tx_r = robots[tx_id];
-                void *msg = tx_r->get_message();
+                Robot &tx_r = robots[tx_id];
+                void *msg = tx_r.get_message();
                 if (msg)
                 {
                     for (int rx_id = 0; rx_id < num_robots; rx_id++)
                     {
                         // Loop over receivers if transmitting robot is sending a message
-                        Robot *rx_r = robots[rx_id];
+                        Robot &rx_r = robots[rx_id];
                         if (tx_id != rx_id)
                         {
                             // Check communication range in both directions (due to potentially noisy communication range)
-                            double dist = tx_r->distance(tx_r->pos[0], tx_r->pos[1], rx_r->pos[0], rx_r->pos[1]);
-                            if (tx_r->comm_out_criteria(dist) && rx_r->comm_in_criteria(dist, msg))
+                            double dist = tx_r.distance(tx_r.pos[0], tx_r.pos[1], rx_r.pos[0], rx_r.pos[1]);
+                            if (tx_r.comm_out_criteria(dist) && rx_r.comm_in_criteria(dist, msg))
                             {
-                                rx_r->received();
+                                rx_r.received();
                             }
                         }
                     }
@@ -464,7 +464,7 @@ bool run_simulation_step()
 #pragma omp for
         for (int r_id = 0; r_id < num_robots; r_id++)
         {
-            Robot *r = robots[r_id];
+            Robot &r = robots[r_id];
             double new_x = new_pos[r_id * 3];
             double new_y = new_pos[r_id * 3 + 1];
             double new_theta = new_pos[r_id * 3 + 2];
@@ -473,28 +473,28 @@ bool run_simulation_step()
 
             if (collision_type == 0)
             { // No collision
-                r->pos[0] = new_x;
-                r->pos[1] = new_y;
-                r->collision_timer = 0;
+                r.pos[0] = new_x;
+                r.pos[1] = new_y;
+                r.collision_timer = 0;
             }
             else if (collision_type == 1)
             { // Hitting another kilobot
-                if (r->collision_turn_dir == 0)
+                if (r.collision_turn_dir == 0)
                 {
-                    new_theta = r->pos[2] - r->turn_speed * dt; // left/CCW
+                    new_theta = r.pos[2] - r.turn_speed * dt; // left/CCW
                 }
                 else
                 {
-                    new_theta = r->pos[2] + r->turn_speed * dt; // right/CW
+                    new_theta = r.pos[2] + r.turn_speed * dt; // right/CW
                 }
-                if (r->collision_timer > r->max_collision_timer)
+                if (r.collision_timer > r.max_collision_timer)
                 { // Change turn dir
-                    r->collision_turn_dir = (r->collision_turn_dir + 1) % 2;
-                    r->collision_timer = 0;
+                    r.collision_turn_dir = (r.collision_turn_dir + 1) % 2;
+                    r.collision_timer = 0;
                 }
-                r->collision_timer++;
+                r.collision_timer++;
             }
-            r->pos[2] = wrap_angle(new_theta);
+            r.pos[2] = wrap_angle(new_theta);
             // If a bot is touching the wall (collision_type == 2), update angle but not position
         }
     }
@@ -641,24 +641,24 @@ void draw_scene(void)
         for (int j = 0; j < num_robots; j++)
         {
             // Draw robots in different shapes depending on feature to detect
-            glColor4f((GLfloat)robots[j]->color[0], (GLfloat)robots[j]->color[1], (GLfloat)robots[j]->color[2], 1.0);
-            if (robots[j]->detect_which_feature == 0)
+            glColor4f((GLfloat)robots[j].color[0], (GLfloat)robots[j].color[1], (GLfloat)robots[j].color[2], 1.0);
+            if (robots[j].detect_which_feature == 0)
             {
-                drawFilledCircle((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1], radius);
+                drawFilledCircle((GLfloat)robots[j].pos[0], (GLfloat)robots[j].pos[1], radius);
             }
-            else if (robots[j]->detect_which_feature == 1)
+            else if (robots[j].detect_which_feature == 1)
             {
-                drawFilledTriangle((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1], radius * 1.3, robots[j]->pos[2]);
+                drawFilledTriangle((GLfloat)robots[j].pos[0], (GLfloat)robots[j].pos[1], radius * 1.3, robots[j].pos[2]);
             }
-            else if (robots[j]->detect_which_feature == 2)
+            else if (robots[j].detect_which_feature == 2)
             {
-                drawFilledSquare((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1], radius * 1.3, robots[j]->pos[2]);
+                drawFilledSquare((GLfloat)robots[j].pos[0], (GLfloat)robots[j].pos[1], radius * 1.3, robots[j].pos[2]);
             }
             // Draw lines for bearing
             glBegin(GL_LINES);
             glColor4f(0.2, 0.2, 0.2, 1.0);
-            glVertex2f((GLfloat)robots[j]->pos[0], (GLfloat)robots[j]->pos[1]);
-            glVertex2f((GLfloat)(robots[j]->pos[0] + cos(robots[j]->pos[2]) * radius), (GLfloat)(robots[j]->pos[1] + sin(robots[j]->pos[2]) * radius));
+            glVertex2f((GLfloat)robots[j].pos[0], (GLfloat)robots[j].pos[1]);
+            glVertex2f((GLfloat)(robots[j].pos[0] + cos(robots[j].pos[2]) * radius), (GLfloat)(robots[j].pos[1] + sin(robots[j].pos[2]) * radius));
             glEnd();
         }
 
@@ -785,8 +785,8 @@ void setup_positions()
         int y = r * vertical_separation; // + vr;
         robots[k] = new MyKilobot();
         double theta = rand() * 2 * PI / RAND_MAX;
-        robots[k]->robot_init(x, y, theta);
-        track_id = robots[k]->id;
+        robots[k].robot_init(x, y, theta);
+        track_id = robots[k].id;
         k++;
     }
 }
@@ -1191,8 +1191,7 @@ int main(int argc, char **argv)
 
     // DEBUGGING
     // Print stuff here to test parameters/variables
-
-    robots = (Robot **)malloc(num_robots * sizeof(Robot *)); //creates an array of robots
+    //robots = (Robot **)malloc(num_robots * sizeof(Robot *)); //creates an array of robots
     order = (int *)malloc(shuffles * num_robots * sizeof(int));
     //seed random variable for different random behavior every time
     unsigned int t = 0;
