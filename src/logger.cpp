@@ -13,9 +13,8 @@ Logger::Logger(std::string fileID, int trialNum) : fileID(fileID),
                                                    trialNum(trialNum)
 {
     // Create the HDF5 file if it doesn't already exist
-    // TODO: Save this pointer?
-    h5fileP = createOrOpen(fileID);
-    // TODO: Create group for the trial. This should overwrite any existing group,
+    h5fileP = createOrOpenFile(fileID);
+    // Create group for the trial. This should overwrite any existing group,
     // maybe with confirmation?
     trialGroupName = "trial_" + std::to_string(trialNum);
     paramsGroupName = trialGroupName + "/params";
@@ -29,6 +28,26 @@ Logger::Logger(std::string fileID, int trialNum) : fileID(fileID),
     }
     H5::Group *trialGroup = new H5::Group(h5fileP->createGroup(trialGroupName.c_str()));
     delete trialGroup;
+
+    // Create the params group if it doesn't already exist
+    paramsGroup = createOrOpenGroup(h5fileP, paramsGroupName);
+
+    // Create a packet table dataset for the timeseries
+    timeDsetName = trialGroupName + "/time";
+    FL_PacketTable timeTable(h5fileP->getId(), (char *)timeDsetName.c_str(), H5T_NATIVE_FLOAT, 1);
+    if (!timeTable.IsValid())
+    {
+        fprintf(stderr, "WARNING: Failed to create time series");
+    }
+    /* Append five packets to the packet table, one at a time */
+    herr_t err;
+    for (int x = 0; x < 5; x++)
+    {
+        float y = x;
+        err = timeTable.AppendPacket(&y);
+        if (err < 0)
+            fprintf(stderr, "Error adding record.");
+    }
 }
 
 Logger::~Logger(void)
@@ -48,31 +67,18 @@ void Logger::logState(double timeSec, std::vector<Robot> &robots)
     // https://thispointer.com/how-to-iterate-over-an-unordered_map-in-c11/
     for (std::pair<std::string, aggregatorFunc> agg : aggregators)
     {
-        // Not sure about passing the pointer here?
+        // Not sure about passing the pointer/reference here?
         logAggregator(agg.first, agg.second, robots);
+        // TODO: Create a packet table for each aggregator
     }
 }
 
-void Logger::logParams(std::unordered_map<std::string, double> paramPairs)
+void Logger::logParams(Params paramPairs)
 {
-    // Create the params group if it doesn't already exist (ugly)
-    // https://stackoverflow.com/q/35668056
-    H5::Group *paramsGroup;
-    ;
-    try
-    {
-        paramsGroup = new H5::Group(h5fileP->openGroup(paramsGroupName));
-    }
-    catch (H5::Exception &err)
-    {
-        paramsGroup = new H5::Group(h5fileP->createGroup(paramsGroupName));
-    }
     for (std::pair<std::string, int> paramPair : paramPairs)
     {
         logParam(paramPair.first, paramPair.second);
     }
-    // Close the group
-    delete paramsGroup;
 }
 
 void Logger::logParam(std::string name, double val)
@@ -104,7 +110,7 @@ void Logger::logParam(std::string name, double val)
         val));
 
     std::cout << "Created dataset" << std::endl;
-    //delete dataset;
+    delete dataset;
     delete dataspace;
 }
 
@@ -115,7 +121,7 @@ void Logger::logAggregator(std::string aggName, aggregatorFunc aggFunc, std::vec
     // TODO: append to the packet table (should be created by addAggregator)
 }
 
-Logger::H5FilePtr Logger::createOrOpen(const std::string &fname)
+Logger::H5FilePtr Logger::createOrOpenFile(const std::string &fname)
 {
     // TODO: Not sure if I'm gonna keep this. Might only be used once and I don't understand the shared pointer thing
     // From: https://stackoverflow.com/a/13849946
@@ -131,4 +137,20 @@ Logger::H5FilePtr Logger::createOrOpen(const std::string &fname)
     }
     return H5FilePtr(file);
 }
+
+Logger::H5GroupPtr Logger::createOrOpenGroup(H5FilePtr file, std::string &groupName)
+{
+    // https://stackoverflow.com/q/35668056
+    H5::Exception::dontPrint();
+    H5::Group *group;
+    try
+    {
+        group = new H5::Group(file->openGroup(groupName));
+    }
+    catch (H5::Exception &err)
+    {
+        group = new H5::Group(file->createGroup(groupName));
+    }
+}
+
 } // namespace KiloSim
