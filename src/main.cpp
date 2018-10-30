@@ -191,99 +191,6 @@ void log_str(std::string filename, std::string str)
     }
 }
 
-double convergence_ratio(uint8_t feature)
-{
-    // Find the percentage of kilobots in convergence about belief for given feature
-    int count_converge_up = 0;
-    int count_converge_down = 0;
-    //#pragma parallel for
-    for (auto &robot : robots)
-    {
-        if (robot.pattern_belief[feature] > 127)
-        {
-            count_converge_up++;
-        }
-        else if (robot.pattern_belief[feature] < 127)
-        {
-            count_converge_down++;
-        }
-    }
-    double convergence = double(max(count_converge_up, count_converge_down)) / robots.size();
-    return convergence;
-}
-
-double *decision_ratio(uint8_t feature, double *decision_rate)
-{
-    // Find the percentage of kilobots that have DECIDED on the feature
-    int count_decide_up = 0;
-    int count_decide_down = 0;
-    for (auto &robot : robots)
-    {
-        if (robot.decision[feature] == 255)
-        {
-            count_decide_up += 1;
-        }
-        else if (robot.decision[feature] == 0)
-        {
-            count_decide_down += 1;
-        }
-    }
-    int num_robots = robots.size();
-    decision_rate[0] = (double)count_decide_down / num_robots;
-    decision_rate[1] = (double)count_decide_up / num_robots;
-    return decision_rate;
-}
-
-int num_detecting(uint8_t feature)
-{
-    // Count the number of robots detecting the feature
-    int count = 0;
-    for (auto &robot : robots)
-    {
-        if (robot.detect_which_feature == feature)
-        {
-            count += 1;
-        }
-    }
-    return count;
-}
-
-double mean_belief(uint8_t feature)
-{
-    // Get the mean belief across features
-    int sum_belief = 0;
-    for (auto &robot : robots)
-    {
-        sum_belief += robot.pattern_belief[feature];
-    }
-    double avg = (double)sum_belief / 255 / robots.size();
-    return avg;
-}
-
-double mean_estimate(uint8_t feature)
-{
-    // Get the mean feature estimate (from own observations
-    int sum_estimate = 0;
-    int num_use_robots = 0;
-    for (auto &robot : robots)
-    {
-        if (robot.detect_which_feature == feature && robot.feature_estimate != 127)
-        {
-            sum_estimate += robot.feature_estimate;
-            num_use_robots++;
-        }
-    }
-    double avg = (double)sum_estimate / 255 / num_use_robots;
-    if (std::isnan(avg))
-    {
-        return 0;
-    }
-    else
-    {
-        return avg;
-    }
-}
-
 double *compute_next_step(double *new_pos, double dt)
 {
     // Compute the next positions of the robots according to their current positions and motor commands
@@ -391,10 +298,10 @@ int find_collisions(double *new_pos, int self_id, int time)
 
 bool run_simulation_step()
 {
-    static int lastrun = 0;
-    lastrun++;
+    static int tick = 0;
+    tick++;
 
-    total_secs = lastrun / SECOND;
+    total_secs = tick / SECOND;
     double dt = 1.0 / SECOND; // Time change for speed determination
 
     int secs = total_secs % 60;
@@ -426,7 +333,7 @@ bool run_simulation_step()
 
         // COMMUNICATION
         // Only communicate at tick rate achievable by kilobots (simulate CSMA/CD)
-        if (lastrun % comm_rate == 0)
+        if (tick % comm_rate == 0)
         {
             seed = (rand() % shuffles) * num_robots;
 #pragma omp for
@@ -469,7 +376,7 @@ bool run_simulation_step()
             double new_y = new_pos[r_id * 3 + 1];
             double new_theta = new_pos[r_id * 3 + 2];
 
-            int collision_type = find_collisions(new_pos, r_id, lastrun);
+            int collision_type = find_collisions(new_pos, r_id, tick);
 
             if (collision_type == 0)
             { // No collision
@@ -502,48 +409,7 @@ bool run_simulation_step()
     static int lastsec = -1;
     bool result = false;
 
-    // Save convergence data
-    // Log data only every 1 second (every 32 ticks)
-    if (lastrun % SECOND == 0)
-    {
-        std::ostringstream os;
-        os << float(lastrun) / SECOND << "\t"
-           << convergence_ratio(0) << "\t" << convergence_ratio(1) << "\t" << convergence_ratio(2) << "\t"
-           << mean_estimate(0) << "\t" << mean_estimate(1) << "\t" << mean_estimate(2) << "\t"
-           << mean_belief(0) << "\t" << mean_belief(1) << "\t" << mean_belief(2) << "\t"
-           << num_detecting(0) << "\t" << num_detecting(1) << "\t" << num_detecting(2) << "\n";
-        log_buffer = os.str();
-        log_str(log_filename, log_buffer);
-
-        // Save decision-making data
-        std::ostringstream os1;
-        decision_ratio(0, decide0);
-        decision_ratio(1, decide1);
-        decision_ratio(2, decide2);
-        os1 << (float)lastrun / SECOND << "\t" << decide0[0] << "\t" << decide0[1] << "\t"
-            << decide1[0] << "\t" << decide1[1] << "\t"
-            << decide2[0] << "\t" << decide2[1] << "\n";
-        log_buffer = os1.str();
-        log_str(decision_filename, log_buffer);
-    }
-
-    if (lastrun % (120 * SECOND) == 0)
-    {
-        printf("\n[%.1f min]\n", (float)lastrun / SECOND / 60);
-        printf("DECIDE DOWN:   (%f, %f, %f)\n", decide0[0], decide1[0], decide2[0]);
-        printf("DECIDE UP:     (%f, %f, %f)\n", decide0[1], decide1[1], decide2[1]);
-        if (belief_update_strategy == 0)
-        {
-            printf("MEAN ESTIMATE: (%f, %f, %f)\n", mean_estimate(0), mean_estimate(1), mean_estimate(2));
-        }
-        else
-        {
-            printf("MEAN BELIEF:   (%f, %f, %f)\n", mean_belief(0), mean_belief(1), mean_belief(2));
-        }
-        printf("NUM DETECTING: (%d,\t  %d,\t    %d)\n", num_detecting(0), num_detecting(1), num_detecting(2));
-    }
-
-    return lastrun % draw_delay == 0;
+    return tick % draw_delay == 0;
 }
 
 void drawFilledCircle(GLfloat x, GLfloat y, GLfloat radius)
@@ -766,353 +632,8 @@ void on_idle(void)
     glutPostRedisplay();
 }
 
-void setup_positions()
-{
-    int k = 0;
-    int columns = (int)sqrt((num_robots * arena_width / arena_height));
-    int rows = (int)(num_robots / columns);
-    if (num_robots % columns)
-        rows++;
-    int horizontal_separation = arena_width / (columns + 1);
-    int vertical_separation = (int)arena_height / (rows + 1);
-    for (int i = 0; i < num_robots; i++)
-    {
-        int c = i % columns + 1;
-        int r = i / columns + 1;
-        int hr = rand() % (horizontal_separation / 2) + horizontal_separation / 4;
-        int x = c * horizontal_separation; // + hr;
-        int vr = rand() % (vertical_separation / 2) + vertical_separation / 4;
-        int y = r * vertical_separation; // + vr;
-        robots[k] = new MyKilobot();
-        double theta = rand() * 2 * PI / RAND_MAX;
-        robots[k].robot_init(x, y, theta);
-        track_id = robots[k].id;
-        k++;
-    }
-}
-
-void parse_params(int argc, char **argv)
-{
-    // Parse input parameters and mutate appropriate global variables
-    std::vector<double> temp_initial_distribution;
-    std::vector<int> temp_use_features;
-    bool initial_distribution_specified = false;
-    bool use_features_specified = false;
-    for (int i = 0; i < argc - 1; i++)
-    {
-        if (strcmp(argv[i], "--robots") == 0)
-        {
-            num_robots = stoi(argv[i + 1]);
-        }
-        if (strcmp(argv[i], "--log") == 0)
-        {
-            log_debug_info = argv[i + 1][0] == 'y';
-        }
-        if (strcmp(argv[i], "--draw") == 0)
-        {
-            showscene = argv[i + 1][0] == 'y';
-        }
-        if (strcmp(argv[i], "--width") == 0)
-        {
-            arena_width = stoi(argv[i + 1]);
-            rect_c_t arena_bounds = {{edge_width, edge_width}, (float)(arena_width - 2 * edge_width), (float)(arena_height - 2 * edge_width), {0, 0, 0}};
-        }
-        if (strcmp(argv[i], "--height") == 0)
-        {
-            arena_height = stoi(argv[i + 1]);
-            arena_bounds = {{edge_width, edge_width}, (float)(arena_width - 2 * edge_width), (float)(arena_height - 2 * edge_width), {0, 0, 0}};
-        }
-        if (strcmp(argv[i], "--time") == 0)
-        {
-            timelimit = stoi(argv[i + 1]);
-        }
-        if (strcmp(argv[i], "--logdir") == 0)
-        {
-            log_file_dir = argv[i + 1];
-        }
-        if (strcmp(argv[i], "--logname") == 0)
-        {
-            log_filename_base = argv[i + 1];
-        }
-        if (strcmp(argv[i], "--decision_logname") == 0)
-        {
-            decision_filename = argv[i + 1];
-        }
-        if (strcmp(argv[i], "--dissemination_dur") == 0)
-        {
-            dissemination_duration_constant = (uint32_t)(stoi(argv[i + 1]) * SECOND);
-        }
-        if (strcmp(argv[i], "--observation_dur") == 0)
-        {
-            mean_explore_duration = (uint32_t)(stoi(argv[i + 1]) * SECOND);
-        }
-        if (strcmp(argv[i], "--seed") == 0)
-        {
-            seed = (uint)stoi(argv[i + 1]);
-        }
-        if (strcmp(argv[i], "--rects_files") == 0)
-        {
-            rects_filename_base = argv[i + 1];
-        }
-        if (strcmp(argv[i], "--circles_files") == 0)
-        {
-            circles_filename_base = argv[i + 1];
-        }
-        if (strcmp(argv[i], "--circles_radius") == 0)
-        {
-            circles_radius = stoi(argv[i + 1]);
-        }
-        if (strcmp(argv[i], "--polys_files") == 0)
-        {
-            polys_filename_base = argv[i + 1];
-        }
-        if (strcmp(argv[i], "--trial") == 0)
-        {
-            trial_num = stoi(argv[i + 1]);
-        }
-        if (strcmp(argv[i], "--features") == 0)
-        {
-            temp_use_features = parse_use_features(argv[i + 1]);
-            use_features_specified = true;
-        }
-        if (strcmp(argv[i], "--initial_distribution") == 0)
-        {
-            temp_initial_distribution = parse_initial_distribution(argv[i + 1]);
-            initial_distribution_specified = true;
-        }
-        if (strcmp(argv[i], "--rows") == 0)
-        {
-            arena_rows = stoi(argv[i + 1]);
-        }
-        if (strcmp(argv[i], "-r") == 0)
-        {
-            color_fill_ratio[0] = stof(argv[i + 1]);
-        }
-        if (strcmp(argv[i], "-g") == 0)
-        {
-            color_fill_ratio[1] = stof(argv[i + 1]);
-        }
-        if (strcmp(argv[i], "-b") == 0)
-        {
-            color_fill_ratio[2] = stof(argv[i + 1]);
-        }
-        if (strcmp(argv[i], "--use_confidence") == 0)
-        {
-            use_confidence = argv[i + 1][0] == 'y';
-        }
-        if (strcmp(argv[i], "--allow_retransmit") == 0)
-        {
-            allow_retransmit = argv[i + 1][0] == 'y';
-        }
-        if (strcmp(argv[i], "--belief_update_strategy") == 0)
-        {
-            if (strcmp(argv[i + 1], "none") == 0)
-            {
-                belief_update_strategy = 0;
-            }
-            else if (strcmp(argv[i + 1], "DMMD") == 0)
-            {
-                belief_update_strategy = 1;
-            }
-            else if (strcmp(argv[i + 1], "DMVD") == 0)
-            {
-                belief_update_strategy = 2;
-            }
-            else
-            {
-                throw std::invalid_argument("belief_update_strategy must be none, DMMD, or DMVD");
-            }
-        }
-        if (strcmp(argv[i], "--which_feature_set") == 0)
-        {
-            if (strcmp(argv[i + 1], "mono") == 0)
-            {
-                which_feature_set = 0;
-            }
-            else if (strcmp(argv[i + 1], "color") == 0)
-            {
-                which_feature_set = 1;
-            }
-            else
-            {
-                throw std::invalid_argument("which_feature_set must be mono or color");
-            }
-        }
-        if (strcmp(argv[i], "--comm_rate") == 0)
-        {
-            comm_rate = (uint8_t)stoi(argv[i + 1]);
-        }
-        if (strcmp(argv[i], "--exp_observation") == 0)
-        {
-            exp_observation = argv[i + 1][0] == 'y';
-        }
-        if (strcmp(argv[i], "--exp_dissemination") == 0)
-        {
-            exp_dissemination = argv[i + 1][0] == 'y';
-        }
-        if (strcmp(argv[i], "--comm_dist") == 0)
-        {
-            comm_dist = stof(argv[i + 1]);
-        }
-        if (strcmp(argv[i], "--neighbor_dur") == 0)
-        {
-            neighbor_info_array_timeout = (uint32_t)stoi(argv[i + 1]) * SECOND;
-        }
-        if (strcmp(argv[i], "--num_threads") == 0)
-        {
-            num_threads = stoi(argv[i + 1]);
-        }
-        // Diffusion parameters
-        if (strcmp(argv[i], "--diffusion_constant") == 0)
-        {
-            diffusion_constant = stof(argv[i + 1]);
-        }
-        if (strcmp(argv[i], "--diffusion_decision_thresh") == 0)
-        {
-            diffusion_decision_thresh = stof(argv[i + 1]);
-        }
-        if (strcmp(argv[i], "--diffusion_decision_time") == 0)
-        {
-            diffusion_decision_time = (uint32_t)stoi(argv[i + 1]) * SECOND;
-        }
-        if (strcmp(argv[i], "--dynamic_allocation") == 0)
-        {
-            dynamic_allocation = argv[i + 1][0] == 'y';
-        }
-        if (strcmp(argv[i], "--feature_switch_when") == 0)
-        {
-            if (strcmp(argv[i + 1], "decision") == 0)
-            {
-                feature_switch_when = 0;
-            }
-            else if (strcmp(argv[i + 1], "observation") == 0)
-            {
-                feature_switch_when = 1;
-            }
-            else
-            {
-                throw std::invalid_argument("feature_switch_when must be decision or observation");
-            }
-        }
-        if (strcmp(argv[i], "--feature_switch_to") == 0)
-        {
-            if (strcmp(argv[i + 1], "hardest") == 0)
-            {
-                feature_switch_to = 0;
-            }
-            else if (strcmp(argv[i + 1], "easiest") == 0)
-            {
-                feature_switch_to = 1;
-            }
-            else if (strcmp(argv[i + 1], "random") == 0)
-            {
-                feature_switch_to = 2;
-            }
-            else
-            {
-                throw std::invalid_argument("feature_switch_to must be decision or observation");
-            }
-        }
-    }
-
-    // Verify/coordinate values of use_features and initial_distribution
-    if (use_features_specified)
-    {
-        use_features_valid(temp_use_features);
-        use_features = temp_use_features;
-    }
-    if (initial_distribution_specified)
-    {
-        initial_distribution_valid(temp_initial_distribution);
-        initial_distribution = temp_initial_distribution;
-    }
-    else
-    {
-        // If initial_distribution parameter not used, split evenly between used features
-        int num_use_features = 0;
-        for (int i = 0; i < use_features.size(); i++)
-        {
-            num_use_features += 1;
-        }
-        for (int i = 0; i < initial_distribution.size(); i++)
-        {
-            if (std::find(use_features.begin(), use_features.end(), i) != use_features.end())
-            {
-                initial_distribution[i] = 1.0 / num_use_features;
-            }
-            else
-            {
-                initial_distribution[i] = 0;
-            }
-        }
-    }
-    // actually set values for initial_distribution and use_features
-    // change initialization (robot.cpp) to only use i values of use_features
-}
-
-void save_params()
-{
-    std::string params_header, params_vals;
-    params_header += "num_robots\t";
-    params_vals += std::to_string(num_robots) + "\t";
-    params_header += "dissemination_dur\t";
-    params_vals += std::to_string(dissemination_duration_constant / SECOND) + "\t";
-    params_header += "observation_dur\t";
-    params_vals += std::to_string(mean_explore_duration / SECOND) + "\t";
-    params_header += "num_rows\t";
-    params_vals += std::to_string(arena_rows) + "\t";
-    params_header += "arena_size\t";
-    params_vals += std::to_string(arena_width) + "\t";
-    params_header += "fill_0\t";
-    params_vals += std::to_string(color_fill_ratio[0]) + "\t";
-    params_header += "fill_1\t";
-    params_vals += std::to_string(color_fill_ratio[1]) + "\t";
-    params_header += "fill_2\t";
-    params_vals += std::to_string(color_fill_ratio[2]) + "\t";
-    params_header += "comm_range\t";
-    params_vals += std::to_string(comm_dist) + "\t";
-    params_header += "exp_observation\t";
-    params_vals += std::to_string(exp_observation) + "\t";
-    params_header += "exp_dissemination\t";
-    params_vals += std::to_string(exp_dissemination) + "\t";
-    params_header += "use_confidence\t";
-    params_vals += std::to_string(use_confidence) + "\t";
-    params_header += "allow_retransmit\t";
-    params_vals += std::to_string(allow_retransmit) + "\t";
-    params_header += "belief_update_strategy\t";
-    params_vals += std::to_string(belief_update_strategy) + "\t";
-    params_header += "comm_rate\t";
-    params_vals += std::to_string(comm_rate) + "\t";
-    params_header += "neighbor_dur\t";
-    params_vals += std::to_string(neighbor_info_array_timeout / SECOND) + "\t";
-    params_header += "diffusion_constant\t";
-    params_vals += std::to_string(diffusion_constant) + "\t";
-    params_header += "diffusion_decision_thresh\t";
-    params_vals += std::to_string(diffusion_decision_thresh) + "\t";
-    params_header += "diffusion_decision_time\t";
-    params_vals += std::to_string((float)diffusion_decision_time / SECOND) + "\t";
-    params_header += "dynamic_allocation\t";
-    params_vals += std::to_string(dynamic_allocation) + "\t";
-    params_header += "which_feature_set\t";
-    params_vals += std::to_string(which_feature_set) + "\t";
-    params_header += "circles_radius\t";
-    params_vals += std::to_string(circles_radius) + "\t";
-    params_header += "feature_switch_when\t";
-    params_vals += std::to_string(feature_switch_when) + "\t";
-    params_header += "feature_switch_to\t";
-    params_vals += std::to_string(feature_switch_to) + "\t";
-    FILE *params_log = fopen(params_filename.c_str(), "a");
-    fprintf(params_log, "%s\n", params_header.c_str());
-    fprintf(params_log, "%s\n", params_vals.c_str());
-    fclose(params_log);
-}
-
 int main(int argc, char **argv)
 {
-
-    // Main routine.
-    parse_params(argc, argv);
-
     // OpenMP settings
     if (num_threads != 0)
     {
@@ -1205,29 +726,6 @@ int main(int argc, char **argv)
         t = (unsigned int)time(NULL);
     }
 
-    if (log_debug_info)
-    {
-        // Save parameters to file
-        save_params();
-
-        // LOG ONCE AT START OF SIMULATION
-        // Put header line into decisions log file
-        std::string decision_header = "time\tdecide_0_down\tdecide_0_up\tdecide_1_down\tdecide_1_up\tdecide_2_down\tdecide_2_up";
-        FILE *decision_log = fopen(decision_filename.c_str(), "a");
-        fprintf(decision_log, "%s\n", decision_header.c_str());
-        fclose(decision_log);
-        // Header for default log file
-        std::string log_header = "time\tconverge_0\tconverge_1\tconverge_2\tmean_estimate_0\tmean_estimate_1\tmean_estimate_2\tmean_belief_0\tmean_belief_1\tmean_belief_2\tdetect_0\tdetect_1\tdetect_2";
-        FILE *log = fopen(log_filename.c_str(), "a");
-        fprintf(log, "%s\n", log_header.c_str());
-        fclose(log);
-        // Header for communications log
-        std::string comm_header = "time\tid\tfeatures\tnum_neighbors";
-        FILE *comm_log = fopen(comm_log_filename.c_str(), "a");
-        fprintf(comm_log, "%s\n", comm_header.c_str());
-        fclose(comm_log);
-    }
-
     srand(t);
 
     //set the simulation time to 0
@@ -1238,13 +736,9 @@ int main(int argc, char **argv)
     view_x = arena_width;
     view_y = arena_height;
 
-    // Place robots
-    setup_positions();
-
     setup();
 
     //do some open gl stuff
-
     for (int i = 0; i < radius; i++)
     {
         ch[i] = sqrt(radius * radius - i * i);

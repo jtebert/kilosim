@@ -17,7 +17,14 @@ namespace KiloSim
 {
 class World
 {
+protected:
+  // Number of ticks in the world (like kiloticks)
+  uint32_t tick = 0;
+
 public:
+  // How many ticks per second in simulation
+  // TODO: Set default
+  const uint16_t tickRate;
   // Height of the arena in mm
   const double arenaWidth;
   // Width of the arena in mm
@@ -70,6 +77,8 @@ public:
   // Use the logger to save the current state of the World. Fails if Logger hasn't
   // been added
   void logState();
+  // Get the current time (in seconds) of the simulation
+  double getTime();
 };
 } // namespace KiloSim
 
