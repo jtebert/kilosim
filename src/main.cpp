@@ -39,7 +39,7 @@ double decide0[2] = {0, 0};
 double decide1[2] = {0, 0};
 double decide2[2] = {0, 0};
 
-std::vector<Robot> robots;
+std::vector<Robot *> robots;
 int *order;
 
 int delay = delay_init;
@@ -179,18 +179,6 @@ void use_features_valid(std::vector<int> use_feat)
     }
 }
 
-void log_str(std::string filename, std::string str)
-{
-    // I don't get what the other log function is doing.
-    // This will just save the input string to the filename
-    if (log_debug_info)
-    {
-        log_file = fopen(filename.c_str(), "a");
-        fprintf(log_file, "%s", str.c_str());
-        fclose(log_file);
-    }
-}
-
 double *compute_next_step(double *new_pos, double dt)
 {
     // Compute the next positions of the robots according to their current positions and motor commands
@@ -202,26 +190,26 @@ double *compute_next_step(double *new_pos, double dt)
     for (auto &r : robots)
     {
 
-        double theta = r.pos[2];
-        double x = r.pos[0];
-        double y = r.pos[1];
+        double theta = r->pos[2];
+        double x = r->pos[0];
+        double y = r->pos[1];
         double temp_x = x;
 
         double temp_y = y;
         double temp_cos, temp_sin, phi;
-        switch (r.motor_command)
+        switch (r->motor_command)
         {
         case 1:
         { // forward
             //theta += r->motor_error * dt;
-            double speed = r.forward_speed * dt;
-            temp_x = speed * cos(theta) + r.pos[0];
-            temp_y = speed * sin(theta) + r.pos[1];
+            double speed = r->forward_speed * dt;
+            temp_x = speed * cos(theta) + r->pos[0];
+            temp_y = speed * sin(theta) + r->pos[1];
             break;
         }
         case 2:
         { // CW rotation
-            phi = -r.turn_speed * dt;
+            phi = -r->turn_speed * dt;
             theta += phi;
             temp_cos = radius * cos(theta + 4 * PI / 3);
             temp_sin = radius * sin(theta + 4 * PI / 3);
@@ -231,7 +219,7 @@ double *compute_next_step(double *new_pos, double dt)
         }
         case 3:
         { // CCW rotation
-            phi = r.turn_speed * dt;
+            phi = r->turn_speed * dt;
             theta += phi;
             temp_cos = radius * cos(theta + 2 * PI / 3);
             temp_sin = radius * sin(theta + 2 * PI / 3);
@@ -321,13 +309,13 @@ bool run_simulation_step()
 
 //run a step of most or all robot controllers
 #pragma omp for schedule(static)
-        for (i = 0; i < num_robots; i++)
+        for (auto &r : robots)
         {
             //printf("%d\n", i);
             //run controller this time step with p_control_execute probability
             if ((rand()) < (int)(p_control_execute * RAND_MAX))
             {
-                robots[i].robot_controller();
+                r->robot_controller();
             }
         }
 
@@ -341,21 +329,21 @@ bool run_simulation_step()
             {
                 // Loop over all transmitting robots
                 int tx_id = order[seed + t];
-                Robot &tx_r = robots[tx_id];
-                void *msg = tx_r.get_message();
+                Robot *tx_r = robots[tx_id];
+                void *msg = tx_r->get_message();
                 if (msg)
                 {
                     for (int rx_id = 0; rx_id < num_robots; rx_id++)
                     {
                         // Loop over receivers if transmitting robot is sending a message
-                        Robot &rx_r = robots[rx_id];
+                        Robot *rx_r = robots[rx_id];
                         if (tx_id != rx_id)
                         {
                             // Check communication range in both directions (due to potentially noisy communication range)
-                            double dist = tx_r.distance(tx_r.pos[0], tx_r.pos[1], rx_r.pos[0], rx_r.pos[1]);
-                            if (tx_r.comm_out_criteria(dist) && rx_r.comm_in_criteria(dist, msg))
+                            double dist = tx_r->distance(tx_r->pos[0], tx_r->pos[1], rx_r->pos[0], rx_r->pos[1]);
+                            if (tx_r->comm_out_criteria(dist) && rx_r->comm_in_criteria(dist, msg))
                             {
-                                rx_r.received();
+                                rx_r->received();
                             }
                         }
                     }
@@ -371,7 +359,7 @@ bool run_simulation_step()
 #pragma omp for
         for (int r_id = 0; r_id < num_robots; r_id++)
         {
-            Robot &r = robots[r_id];
+            Robot *r = robots[r_id];
             double new_x = new_pos[r_id * 3];
             double new_y = new_pos[r_id * 3 + 1];
             double new_theta = new_pos[r_id * 3 + 2];
@@ -380,28 +368,28 @@ bool run_simulation_step()
 
             if (collision_type == 0)
             { // No collision
-                r.pos[0] = new_x;
-                r.pos[1] = new_y;
-                r.collision_timer = 0;
+                r->pos[0] = new_x;
+                r->pos[1] = new_y;
+                r->collision_timer = 0;
             }
             else if (collision_type == 1)
             { // Hitting another kilobot
-                if (r.collision_turn_dir == 0)
+                if (r->collision_turn_dir == 0)
                 {
-                    new_theta = r.pos[2] - r.turn_speed * dt; // left/CCW
+                    new_theta = r->pos[2] - r->turn_speed * dt; // left/CCW
                 }
                 else
                 {
-                    new_theta = r.pos[2] + r.turn_speed * dt; // right/CW
+                    new_theta = r->pos[2] + r->turn_speed * dt; // right/CW
                 }
-                if (r.collision_timer > r.max_collision_timer)
+                if (r->collision_timer > r->max_collision_timer)
                 { // Change turn dir
-                    r.collision_turn_dir = (r.collision_turn_dir + 1) % 2;
-                    r.collision_timer = 0;
+                    r->collision_turn_dir = (r->collision_turn_dir + 1) % 2;
+                    r->collision_timer = 0;
                 }
-                r.collision_timer++;
+                r->collision_timer++;
             }
-            r.pos[2] = wrap_angle(new_theta);
+            r->pos[2] = wrap_angle(new_theta);
             // If a bot is touching the wall (collision_type == 2), update angle but not position
         }
     }
@@ -504,27 +492,27 @@ void draw_scene(void)
         glEnable(GL_LINE_SMOOTH);
         glLineWidth(1.0);
 
-        for (int j = 0; j < num_robots; j++)
+        for (auto &r : robots)
         {
             // Draw robots in different shapes depending on feature to detect
-            glColor4f((GLfloat)robots[j].color[0], (GLfloat)robots[j].color[1], (GLfloat)robots[j].color[2], 1.0);
-            if (robots[j].detect_which_feature == 0)
+            glColor4f((GLfloat)r->color[0], (GLfloat)r->color[1], (GLfloat)r->color[2], 1.0);
+            if (r->detect_which_feature == 0)
             {
-                drawFilledCircle((GLfloat)robots[j].pos[0], (GLfloat)robots[j].pos[1], radius);
+                drawFilledCircle((GLfloat)r->pos[0], (GLfloat)r->pos[1], radius);
             }
-            else if (robots[j].detect_which_feature == 1)
+            else if (r->detect_which_feature == 1)
             {
-                drawFilledTriangle((GLfloat)robots[j].pos[0], (GLfloat)robots[j].pos[1], radius * 1.3, robots[j].pos[2]);
+                drawFilledTriangle((GLfloat)r->pos[0], (GLfloat)r->pos[1], radius * 1.3, r->pos[2]);
             }
-            else if (robots[j].detect_which_feature == 2)
+            else if (r->detect_which_feature == 2)
             {
-                drawFilledSquare((GLfloat)robots[j].pos[0], (GLfloat)robots[j].pos[1], radius * 1.3, robots[j].pos[2]);
+                drawFilledSquare((GLfloat)r->pos[0], (GLfloat)r->pos[1], radius * 1.3, r->pos[2]);
             }
             // Draw lines for bearing
             glBegin(GL_LINES);
             glColor4f(0.2, 0.2, 0.2, 1.0);
-            glVertex2f((GLfloat)robots[j].pos[0], (GLfloat)robots[j].pos[1]);
-            glVertex2f((GLfloat)(robots[j].pos[0] + cos(robots[j].pos[2]) * radius), (GLfloat)(robots[j].pos[1] + sin(robots[j].pos[2]) * radius));
+            glVertex2f((GLfloat)r->pos[0], (GLfloat)r->pos[1]);
+            glVertex2f((GLfloat)(r->pos[0] + cos(r->pos[2]) * radius), (GLfloat)(r->pos[1] + sin(r->pos[2]) * radius));
             glEnd();
         }
 

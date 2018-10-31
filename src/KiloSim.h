@@ -10,6 +10,7 @@
 
 #include <set>
 #include <string>
+#include <iterator>
 #include "robot.h"
 #include "logger.h"
 
@@ -17,22 +18,6 @@ namespace KiloSim
 {
 class World
 {
-
-protected:
-  std::set<Robot *> robots;
-
-public:
-  // How many ticks per second in simulation
-  // TODO: Set default
-  uint16_t tickRate = 30;
-  // Current tick of the system (starts at 0)
-  uint32_t tick = 0;
-  // Height of the arena in mm
-  const double arenaWidth;
-  // Width of the arena in mm
-  const double arenaHeight;
-  // Whether or not to display the scene
-  bool showScene;
 
   // 2D image pattern for light
   struct LightPattern
@@ -47,16 +32,48 @@ public:
     //LightPattern(uint16_t width, uint16_t height, const uint32_t &data);
   };
 
-  // Background light pattern image (as a 2D vector)
-  LightPattern lightPattern;
+  struct RobotPose
+  {
+    // x, y, and theta (rotation) of a robot
+    double x;
+    double y;
+    double theta;
+    RobotPose(double x, double y, double theta);
+    RobotPose();
+  };
 
-  KiloSim::Logger *logger = nullptr;
+protected:
+  // Set of (unique) Robots in the world
+  std::set<Robot *> m_robots;
+  // How many ticks per second in simulation
+  // TODO: Set default
+  uint16_t m_tickRate = 30;
+  // Current tick of the system (starts at 0)
+  uint32_t m_tick = 0;
+  // Duration (seconds) of a tick
+  double m_tickDeltaT = 1.0 / m_tickRate;
+  // Height of the arena in mm
+  const double m_arenaWidth;
+  // Width of the arena in mm
+  const double m_arenaHeight;
+  // Whether or not to display the scene
+  bool m_showScene = false;
+
+  // Background light pattern image (as a 2D vector)
+  LightPattern m_lightPattern;
+  KiloSim::Logger *m_logger = nullptr;
+
+public:
+  typedef std::set<Robot>::iterator RobotsIterator;
+  typedef std::shared_ptr<std::vector<RobotPose>> PosesPtr;
 
 protected:
   // Compute the next positions of the robots from positions and motor commands
-  double *computeNextStep(double *newPos, double dt);
+  std::shared_ptr<std::vector<RobotPose>> computeNextStep(double dt);
   // Check to see if motion causes robots to collide
-  int findCollisions(double *newPos, int selfID, int time);
+  bool findCollisions(PosesPtr newPos, int selfID, int time);
+  // Wrap an angle to in [0, 2*pi)
+  double wrapAngle(double angle);
   // Draw the scene
   void drawScene();
 
@@ -68,6 +85,8 @@ public:
   // Destructor, destroy all objects
   virtual ~World();
 
+  // Run a step of the simulator
+  void step();
   // Return whether there is a light pattern
   bool hasLightPattern();
   // Set the light pattern for the world ground surface
@@ -81,6 +100,13 @@ public:
   // Use the logger to save the current state of the World. Fails if Logger hasn't
   // been added
   void logState();
+  // Get/set the tick rate
+  void setTickRate(uint16_t newTickRate);
+  uint16_t getTickRate();
+  // Get the current tick of the simulation (only set by simulator)
+  uint32_t getTick();
+  // Get the current computed time in seconds (from tick and tickRate)
+  double getTime();
 };
 } // namespace KiloSim
 

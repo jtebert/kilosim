@@ -102,7 +102,7 @@ void Logger::logParam(std::string name, double val)
         valType = H5::PredType::NATIVE_H_BOOL;
         break;
     }*/
-    std::cout << val << std::endl;
+    //std::cout << val << std::endl;
     std::string dsetName = paramsGroupName + "/" + name;
 
     H5::DataSet *dataset = new H5::DataSet(h5fileP->createDataSet(
@@ -111,7 +111,6 @@ void Logger::logParam(std::string name, double val)
         *dataspace,
         val));
 
-    std::cout << "Created dataset" << std::endl;
     delete dataset;
     delete dataspace;
 }

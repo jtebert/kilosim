@@ -27,13 +27,27 @@ int main(int argc, char *argv[])
     logger->logParams({{"test", 1.5}});
 
     // Create robot(s)
+    // KiloSim::Robot *robot = new MyKilobot(...);
 
     // Create world
     KiloSim::World *world = new KiloSim::World(1200.0, 1200.0);
     world->addLogger(logger);
     // world->addRobot(robot);
 
-    world->logState();
+    double sim_duration = 15; // Seconds
+    while (world->getTime() < sim_duration)
+    {
+        // Run a simulation step
+        // This automatically increments the tick
+        world->step();
 
+        if ((world->getTick() % (2 * world->getTickRate())) == 0)
+        {
+            // Log the state of the world every 2 seconds
+            // This works because the tickRate (ticks/sec) must be an integer
+            std::cout << world->getTime() << std::endl;
+            world->logState();
+        }
+    }
     std::cout << "Finished" << std::endl;
 }
