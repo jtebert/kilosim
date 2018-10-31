@@ -8,7 +8,7 @@
 #ifndef __KILOSIM_H
 #define __KILOSIM_H
 
-#include <vector>
+#include <set>
 #include <string>
 #include "robot.h"
 #include "logger.h"
@@ -19,7 +19,7 @@ class World
 {
 
 protected:
-  std::vector<Robot> robots;
+  std::set<Robot *> robots;
 
 public:
   // How many ticks per second in simulation
@@ -73,9 +73,9 @@ public:
   // Set the light pattern for the world ground surface
   void setLightPattern(std::string lightImg);
   // Add a robot to the world. If the robot is already in the world, do nothing
-  void addRobot(Robot &robot);
+  void addRobot(Robot *robot);
   // Remove a robot from the world and destroy it. If not in the world, do nothing
-  void removeRobot(Robot &robot);
+  void removeRobot(Robot *robot);
   // Add a Logger object to the World to handle data management
   void addLogger(Logger *lgr);
   // Use the logger to save the current state of the World. Fails if Logger hasn't

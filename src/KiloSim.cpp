@@ -30,14 +30,14 @@ void World::setLightPattern(std::string lightImg)
     // TODO: Implement setLightPattern
 }
 
-void World::addRobot(Robot &robot)
+void World::addRobot(Robot *robot)
 {
-    // TODO: Implement addRobot
+    robots.insert(robot);
 }
 
-void World::removeRobot(Robot &robot)
+void World::removeRobot(Robot *robot)
 {
-    // TODO: Implement removeRobot
+    robots.erase(robot);
 }
 
 void World::addLogger(Logger *lgr)
@@ -47,7 +47,14 @@ void World::addLogger(Logger *lgr)
 
 void World::logState()
 {
-    logger->logState((double)tick / tickRate, robots);
+    if (logger != nullptr)
+    {
+        logger->logState((double)tick / tickRate, robots);
+    }
+    else
+    {
+        printf("YOU SUCK\n");
+    }
 }
 
 double *World::computeNextStep(double *newPos, double dt)
