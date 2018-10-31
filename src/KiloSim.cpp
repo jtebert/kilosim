@@ -6,8 +6,7 @@
 
 namespace KiloSim
 {
-World::World(double arenaWidth, double arenaHeight) : arenaWidth(arenaWidth),
-                                                      arenaHeight(arenaHeight)
+World::World(double arenaWidth, double arenaHeight) : arenaWidth(arenaWidth), arenaHeight(arenaHeight)
 {
     // TODO: Implement constructor without lightImg
 }
@@ -16,7 +15,7 @@ World::World(double arenaWidth, double arenaHeight, std::string lightImg) : aren
     // TODO: Implement constructor with lightImg
 }
 
-~World()
+World::~World()
 {
     // TODO: Implement World destructor (any destructors, zB)
 }
@@ -41,19 +40,14 @@ void World::removeRobot(Robot &robot)
     // TODO: Implement removeRobot
 }
 
-void addLogger(Logger &lgr)
+void World::addLogger(Logger *lgr)
 {
     logger = lgr;
 }
 
-void logState()
+void World::logState()
 {
-    logger.logState(self.tick);
-}
-
-double getTime()
-{
-    return self.tick * self.tickRate;
+    logger->logState((double)tick / tickRate, robots);
 }
 
 double *World::computeNextStep(double *newPos, double dt)
@@ -66,7 +60,7 @@ int World::findCollisions(double *newPos, int selfID, int time)
     // TODO: implement findCollisions (and switch from pointers)
 }
 
-int World::drawScene()
+void World::drawScene()
 {
     // TODO: Implement drawScene
 }

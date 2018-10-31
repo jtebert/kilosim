@@ -17,14 +17,16 @@ namespace KiloSim
 {
 class World
 {
+
 protected:
-  // Number of ticks in the world (like kiloticks)
-  uint32_t tick = 0;
+  std::vector<Robot> robots;
 
 public:
   // How many ticks per second in simulation
   // TODO: Set default
-  const uint16_t tickRate;
+  uint16_t tickRate = 30;
+  // Current tick of the system (starts at 0)
+  uint32_t tick = 0;
   // Height of the arena in mm
   const double arenaWidth;
   // Width of the arena in mm
@@ -35,18 +37,20 @@ public:
   // 2D image pattern for light
   struct LightPattern
   {
-    // Width of the light image
-    unsigned width;
-    // Height of the light image
-    unsigned height;
+    // Width of the light image (pixels)
+    uint16_t width;
+    // Height of the light image (pixels)
+    uint16_t height;
     // Data of the light pattern (8-bit brayscale 0-255)
     std::vector<uint8_t> data;
+    // Build a pattern from an existing reference
+    //LightPattern(uint16_t width, uint16_t height, const uint32_t &data);
   };
 
   // Background light pattern image (as a 2D vector)
   LightPattern lightPattern;
 
-  KiloSim::Logger logger;
+  KiloSim::Logger *logger = nullptr;
 
 protected:
   // Compute the next positions of the robots from positions and motor commands
@@ -73,12 +77,10 @@ public:
   // Remove a robot from the world and destroy it. If not in the world, do nothing
   void removeRobot(Robot &robot);
   // Add a Logger object to the World to handle data management
-  void addLogger(Logger &lgr);
+  void addLogger(Logger *lgr);
   // Use the logger to save the current state of the World. Fails if Logger hasn't
   // been added
   void logState();
-  // Get the current time (in seconds) of the simulation
-  double getTime();
 };
 } // namespace KiloSim
 

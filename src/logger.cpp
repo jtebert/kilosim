@@ -9,6 +9,7 @@
 
 namespace KiloSim
 {
+
 Logger::Logger(std::string fileID, int trialNum) : fileID(fileID),
                                                    trialNum(trialNum)
 {
@@ -65,6 +66,7 @@ void Logger::addAggregator(std::string aggName, aggregatorFunc aggFunc)
 void Logger::logState(double timeSec, std::vector<Robot> &robots)
 {
     // https://thispointer.com/how-to-iterate-over-an-unordered_map-in-c11/
+
     for (std::pair<std::string, aggregatorFunc> agg : aggregators)
     {
         // Not sure about passing the pointer/reference here?
