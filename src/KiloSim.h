@@ -52,24 +52,32 @@ protected:
   uint32_t m_tick = 0;
   // Duration (seconds) of a tick
   double m_tickDeltaT = 1.0 / m_tickRate;
+  // Number of ticks between messages (eg, 3 means 10 messages per second)
+  uint m_commRate = 3;
   // Height of the arena in mm
   const double m_arenaWidth;
   // Width of the arena in mm
   const double m_arenaHeight;
   // Whether or not to display the scene
   bool m_showScene = false;
+  // probability of a controller executing its time step
+  const double m_pControlExecute = .99;
 
   // Background light pattern image (as a 2D vector)
   LightPattern m_lightPattern;
   KiloSim::Logger *m_logger = nullptr;
 
 public:
-  typedef std::vector<Robot>::iterator RobotsIterator;
+  typedef std::vector<Robot *>::iterator RobotsIterator;
   typedef std::shared_ptr<std::vector<RobotPose>> PosesPtr;
 
 protected:
+  // Run the controllers (kilolib) for all robots
+  void runControllers();
+  // Send messages between robots
+  void communicate();
   // Compute the next positions of the robots from positions and motor commands
-  PosesPtr computeNextStep(double dt);
+  PosesPtr computeNextStep();
   // Check to see if motion causes robots to collide
   std::shared_ptr<std::vector<uint8_t>> findCollisions(PosesPtr newPos);
   // Move the robots based on new positions and collisions

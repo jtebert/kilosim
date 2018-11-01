@@ -30,11 +30,14 @@ class Robot
 	uint8_t pattern_belief[NUM_FEATURES] = {127, 127, 127};
 	uint8_t decision[3] = {127, 127, 127};
 	uint16_t id;
-	double pos[3];				   //x,y,theta position in real world, don't use these in controller, that's cheating!!
-	double motor_error;			   //value of how motors differ from ideal, don't use these, that's cheating!!
-	double comm_range = comm_dist; //communication range between robots
-	double color[3];			   //robot color output, values 0-1
-	uint8_t detect_which_feature;  // Index of which pattern feature to detect
+	//x, y, theta position in real world, don't use these in controller, that's cheating!!
+	double pos[3];
+	//value of how motors differ from ideal, don't use these, that's cheating!!
+	double motor_error;
+	// communication range between robots (mm)
+	double comm_range = comm_dist;
+	// RGB LED display color, values 0-1
+	double color[3];
 
 	// TEMPORARY: Make variables accessible in main loop for debugging purposes
 	uint8_t curr_level;
@@ -61,23 +64,23 @@ class Robot
 
 	double dest[3] = {-1, -1, -1};
 
-	//must implement an robot initialization
+	// Must implement an robot initialization
 	void robot_init(double, double, double);
 	virtual void init() = 0;
 
-	//robots internal timer
+	// Robot's internal timer
 	int timer;
 
-	//must implement the controller
+	// Must implement the controller
 	void robot_controller();
 	virtual void controller() = 0;
 
 	virtual void sensing(int, int[], int[], int[], int[]) = 0;
 
-	//flag set to 1 when robot wants to transmit
+	// Flag set to 1 when robot wants to transmit
 	int tx_request;
 
-	//flag set to 1 when new message received
+	// Flag set to 1 when new message received
 	int incoming_message_flag;
 
 	virtual void *get_message() = 0;
@@ -92,7 +95,7 @@ class Robot
 	virtual double comm_out_criteria(double dist) = 0;
 	virtual bool comm_in_criteria(double dist, void *cd) = 0;
 
-	//useful
+	// Useful
 	static double distance(double x1, double y1, double x2, double y2)
 	{
 		double x = x1 - x2;
@@ -138,7 +141,7 @@ class Robot
 		return pseudogaus_rand[timer % GAUSS];
 	}
 
-	static double tetha_diff(double t1, double t2)
+	static double theta_diff(double t1, double t2)
 	{
 		double diff = t1 - t2;
 		if (diff < -PI)

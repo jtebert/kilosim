@@ -23,9 +23,7 @@ World::~World()
 World::RobotPose::RobotPose() : x(0.0), y(0.0), theta(0.0) {}
 World::RobotPose::RobotPose(double x, double y, double theta) : x(x),
                                                                 y(y),
-                                                                theta(theta)
-{
-}
+                                                                theta(theta) {}
 
 void World::step()
 {
@@ -33,11 +31,13 @@ void World::step()
     // should sort of come from main.cpp run_simulation_step()
 
     // Apply robot controller for all robots
+    runControllers();
 
     // Communication between all robot pairs
+    communicate();
 
     // Compute potential movement for all robots
-    PosesPtr newPoses = computeNextStep(m_tickDeltaT);
+    PosesPtr newPoses = computeNextStep();
 
     // Check for collisions between all robot pairs
     std::shared_ptr<std::vector<uint8_t>> collisions = findCollisions(newPoses);
@@ -87,7 +87,53 @@ void World::logState()
     }
 }
 
-World::PosesPtr World::computeNextStep(double dt)
+void World::runControllers()
+{
+    // TODO: Parallelize
+    for (auto &r : m_robots)
+    {
+        if ((rand()) < (int)(m_pControlExecute * RAND_MAX))
+        {
+            r->robot_controller();
+        }
+    }
+}
+
+void World::communicate()
+{
+    // TODO: Parallelize
+    // TODO: Is the shuffling necessary? (I killed it)
+
+    if (m_tick % m_commRate == 0)
+    {
+        //#pragma omp for
+        for (auto &tx_r : m_robots)
+        {
+            // Loop over all transmitting robots
+            void *msg = tx_r->get_message();
+            if (msg)
+            {
+                for (auto &rx_r : m_robots)
+                {
+                    // Loop over receivers if transmitting robot is sending a message
+                    if (rx_r != tx_r)
+                    {
+                        // Check communication range in both directions
+                        // (due to potentially noisy communication range)
+                        double dist = tx_r->distance(tx_r->pos[0], tx_r->pos[1], rx_r->pos[0], rx_r->pos[1]);
+                        if (tx_r->comm_out_criteria(dist) &&
+                            rx_r->comm_in_criteria(dist, msg))
+                        {
+                            rx_r->received();
+                        }
+                    }
+                }
+            }
+        }
+    }
+} // namespace KiloSim
+
+World::PosesPtr World::computeNextStep()
 {
     // TODO: Implement computeNextStep (and maybe change from pointers)
     // TODO: Parallelize... eventually
@@ -97,9 +143,8 @@ World::PosesPtr World::computeNextStep(double dt)
     newPos.resize(m_robots.size());
 
     int i = 0;
-    for (std::vector<Robot *>::iterator ri = m_robots.begin(); ri != m_robots.end(); ++ri)
+    for (auto &r : m_robots)
     {
-        Robot *r = *ri;
         double x = r->pos[0];
         double y = r->pos[1];
         double theta = r->pos[2];
@@ -109,14 +154,14 @@ World::PosesPtr World::computeNextStep(double dt)
         {
         case 1:
         { // forward
-            double speed = r->forward_speed * dt;
+            double speed = r->forward_speed * m_tickDeltaT;
             tmp_x = speed * cos(theta) + x;
             tmp_y = speed * sin(theta) + y;
             break;
         }
         case 2:
         { // CW rotation (around back right leg)
-            phi = -r->turn_speed * dt;
+            phi = -r->turn_speed * m_tickDeltaT;
             theta += phi;
             tmp_cos = radius * cos(theta + 4 * PI / 3);
             tmp_sin = radius * sin(theta + 4 * PI / 3);
@@ -126,7 +171,7 @@ World::PosesPtr World::computeNextStep(double dt)
         }
         case 3:
         { // CCW rotation (around back left leg)
-            phi = r->turn_speed * dt;
+            phi = r->turn_speed * m_tickDeltaT;
             theta += phi;
             tmp_cos = radius * cos(theta + 2 * PI / 3);
             tmp_sin = radius * sin(theta + 2 * PI / 3);
