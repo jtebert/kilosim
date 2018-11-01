@@ -47,6 +47,8 @@ void World::step()
 
     // Increment time
     m_tick++;
+
+    //printf("World::step complete (%d)\n", m_tick);
 }
 
 bool World::hasLightPattern()
@@ -67,7 +69,7 @@ void World::addRobot(Robot *robot)
 void World::removeRobot(Robot *robot)
 {
     // TODO: Implement this
-    printf("This did nothing");
+    printf("This does nothing right now");
 }
 
 void World::addLogger(Logger *logger)
@@ -83,9 +85,9 @@ void World::logState()
     }
     else
     {
-        printf("YOU SUCK\n");
+        printf("FAIL WARNING: No logger added to World. Use addLogger(...)\n");
     }
-}
+} // namespace KiloSim
 
 void World::runControllers()
 {
@@ -180,7 +182,6 @@ World::PosesPtr World::computeNextStep()
             break;
         }
         }
-        std::cout << tmp_x << std::endl;
         newPos[i] = RobotPose(tmp_x, tmp_y, wrapAngle(theta));
         i++;
     }

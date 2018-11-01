@@ -76,106 +76,28 @@ double wrap_angle(double angle)
     return angle;
 }
 
-std::vector<double> parse_initial_distribution(std::string str)
+void setup_positions()
 {
-    // Parse the input string into new values for initial_distribution of robots
-    std::vector<double> v;
-    std::string temp{""};
-    for (char c : str)
+    int k = 0;
+    int columns = (int)sqrt((num_robots * arena_width / arena_height));
+    int rows = (int)(num_robots / columns);
+    if (num_robots % columns)
+        rows++;
+    int horizontal_separation = arena_width / (columns + 1);
+    int vertical_separation = (int)arena_height / (rows + 1);
+    for (int i = 0; i < num_robots; i++)
     {
-        if (c != '-')
-        {
-            temp += c;
-        }
-        else
-        {
-            double num = std::stof(temp);
-            v.push_back(num);
-            temp = "";
-        }
-    }
-    double num = std::stof(temp);
-    v.push_back(num);
-    // TEMP
-    for (int i = 0; i < 3; i++)
-    {
-        printf("%d: %f\n", i, v[i]);
-    }
-    return v;
-}
-
-void initial_distribution_valid(std::vector<double> init_dist)
-{
-    // Check that all the features are valid
-    bool flag = false;
-    if (init_dist.size() != use_features.size())
-    {
-        flag = true;
-    }
-    double dist_sum = 0;
-    for (int i = 0; i < init_dist.size(); i++)
-    {
-        if (std::find(use_features.begin(), use_features.end(), i) != use_features.end())
-        {
-            dist_sum += init_dist[i];
-        }
-    }
-    if (dist_sum < 1)
-    {
-        flag = true;
-    }
-    else if (dist_sum > 1)
-    {
-        printf("WARNING: Initial distribution values add to more than 1.\n");
-    }
-    if (flag)
-    {
-        printf("ERROR: Initial distribution of agents for used features must sum to (at least) 1\n");
-        exit(1);
-    }
-}
-
-std::vector<int> parse_use_features(std::string str)
-{
-    std::vector<int> v;
-    std::string temp{""};
-    for (char c : str)
-    {
-        if (c != '-')
-        {
-            temp += c;
-        }
-        else
-        {
-            int num = std::stoi(temp);
-            v.push_back(num);
-            temp = "";
-        }
-    }
-    int num = std::stoi(temp);
-    v.push_back(num);
-    return v;
-}
-
-void use_features_valid(std::vector<int> use_feat)
-{
-    // Check that all the features are valid
-    bool flag = false;
-    if (use_feat.size() == 0)
-    {
-        flag = true;
-    }
-    for (int i = 0; i < use_feat.size(); i++)
-    {
-        if (use_feat[i] >= num_features)
-        {
-            flag = true;
-        }
-    }
-    if (flag)
-    {
-        printf("ERROR: All features IDs used must be 0-%d\n", num_features - 1);
-        exit(1);
+        int c = i % columns + 1;
+        int r = i / columns + 1;
+        int hr = rand() % (horizontal_separation / 2) + horizontal_separation / 4;
+        int x = c * horizontal_separation; // + hr;
+        int vr = rand() % (vertical_separation / 2) + vertical_separation / 4;
+        int y = r * vertical_separation; // + vr;
+        robots[k] = new MyKilobot();
+        double theta = rand() * 2 * PI / RAND_MAX;
+        robots[k]->robot_init(x, y, theta);
+        track_id = robots[k]->id;
+        k++;
     }
 }
 
@@ -657,45 +579,6 @@ int main(int argc, char **argv)
                                      std::to_string(trial_num) + ".txt";
         std::cout << "Using polygons:\t" << polys_filename << std::endl;
         polygons = gen_color_polys(polys_filename);
-    }
-
-    if (log_debug_info)
-    {
-        // Create directory for logging if it doesn't already exist
-        struct stat info;
-        if (stat(log_file_dir.c_str(), &info) != 0)
-        {
-            const int dir_err = mkdir(log_file_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-            if (-1 == dir_err)
-            {
-                printf("Error creating directory!\n");
-                exit(1);
-            }
-        }
-        log_filename = log_file_dir + "/" + log_filename_base + std::to_string(trial_num) + ".log";
-        decision_filename = log_file_dir + "/" + decision_filename_base + std::to_string(trial_num) + ".log";
-        comm_log_filename = log_file_dir + "/" + comm_filename_base + std::to_string(trial_num) + ".log";
-        params_filename = log_file_dir + "/" + params_filename_base + std::to_string(trial_num) + ".log";
-        std::cout << log_filename << std::endl;
-        // Check if file exists and warn before overwrite
-        if (stat(log_filename.c_str(), &info) == 0)
-        {
-            std::string is_overwrite;
-            std::cout << "This log file already exists. Do you want to overwrite it? (y/N) ";
-            std::cin >> is_overwrite;
-            if (strcmp(is_overwrite.c_str(), "y") == 0)
-            {
-                remove(log_filename.c_str());
-                remove(decision_filename.c_str());
-                remove(comm_log_filename.c_str());
-                remove(params_filename.c_str());
-            }
-            else
-            {
-                std::cout << "File not overwritten. Exiting" << std::endl;
-                exit(1);
-            }
-        }
     }
 
     // DEBUGGING

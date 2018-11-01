@@ -35,20 +35,13 @@ Logger::Logger(std::string fileID, int trialNum) : fileID(fileID),
 
     // Create a packet table dataset for the timeseries
     timeDsetName = trialGroupName + "/time";
-    FL_PacketTable timeTable(h5fileP->getId(), (char *)timeDsetName.c_str(), H5T_NATIVE_FLOAT, 1);
-    if (!timeTable.IsValid())
+    FL_PacketTable *timePacketTable = new FL_PacketTable(
+        h5fileP->getId(), (char *)timeDsetName.c_str(), H5T_NATIVE_DOUBLE, 1);
+    if (!timePacketTable->IsValid())
     {
         fprintf(stderr, "WARNING: Failed to create time series");
     }
-    /* Append five packets to the packet table, one at a time */
-    herr_t err;
-    for (int x = 0; x < 5; x++)
-    {
-        float y = x;
-        err = timeTable.AppendPacket(&y);
-        if (err < 0)
-            fprintf(stderr, "Error adding record.");
-    }
+    timeTable = H5PacketTablePtr(timePacketTable);
 }
 
 Logger::~Logger(void)
@@ -67,9 +60,15 @@ void Logger::logState(double timeSec, std::vector<Robot *> &robots)
 {
     // https://thispointer.com/how-to-iterate-over-an-unordered_map-in-c11/
 
+    // Add the current time to the time series
+    printf("Logger::logState\n");
+    herr_t err = timeTable->AppendPacket(&timeSec);
+    if (err < 0)
+        fprintf(stderr, "WARNING: Failed to append to time series");
+
     for (std::pair<std::string, aggregatorFunc> agg : aggregators)
     {
-        // Not sure about passing the pointer/reference here?
+        // Not sure about passing the pointer / reference here ?
         logAggregator(agg.first, agg.second, robots);
         // TODO: Create a packet table for each aggregator
     }
@@ -87,29 +86,24 @@ void Logger::logParam(std::string name, double val)
 {
     // Create a dataset in the 'params' group with the given value
     // Example: https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5group.cpp
-    H5::DataSpace *dataspace = new H5::DataSpace(H5S_SCALAR);
-    // Get the matching parameter type to save
-    /*PredType &valType;
-    switch ((typeid(val)))
-    {
-    case typeid(int):
-        valType = H5::PredType::NATIVE_INT;
-        break;
-    case typeid(float):
-        valType = H5::PredType::NATIVE_FLOAT;
-        break;
-    case typeid(bool):
-        valType = H5::PredType::NATIVE_H_BOOL;
-        break;
-    }*/
-    //std::cout << val << std::endl;
+    // https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5tutr_crtgrpd.cpp
+
     std::string dsetName = paramsGroupName + "/" + name;
 
-    H5::DataSet *dataset = new H5::DataSet(h5fileP->createDataSet(
-        dsetName.c_str(),
-        H5::PredType::NATIVE_DOUBLE,
-        *dataspace,
-        val));
+    // Save as array (saves something but truncates decimal values)
+    // double data_arr[1];
+    // data_arr[0] = val;
+    // hsize_t dims[1];
+    // dims[0] = 1;
+    // H5::DataSpace *dataspace = new H5::DataSpace(1, dims);
+    // H5::DataSet *dataset = new H5::DataSet(
+    //     h5fileP->createDataSet(dsetName, H5::PredType::NATIVE_DOUBLE, *dataspace));
+    // dataset->write(data_arr, H5::PredType::NATIVE_DOUBLE);
+
+    // Save scalar...
+    H5::DataSpace *dataspace = new H5::DataSpace();
+    H5::DataSet *dataset = new H5::DataSet(h5fileP->createDataSet(dsetName, H5::PredType::NATIVE_DOUBLE, *dataspace));
+    dataset->write(&val, H5::PredType::NATIVE_DOUBLE);
 
     delete dataset;
     delete dataspace;

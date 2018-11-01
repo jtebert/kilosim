@@ -30,6 +30,7 @@ public:
   // a typedef for our managed H5File pointer
   typedef std::shared_ptr<H5::H5File> H5FilePtr;
   typedef std::shared_ptr<H5::Group> H5GroupPtr;
+  typedef std::shared_ptr<FL_PacketTable> H5PacketTablePtr;
   typedef std::unordered_map<std::string, double> Params;
 
 protected:
@@ -48,6 +49,7 @@ protected:
   H5GroupPtr paramsGroup;
   // HDF5 dataset name for time series (packet table)
   std::string timeDsetName;
+  H5PacketTablePtr timeTable;
 
 public:
   // Construct a Logger that logs within the given HDF5 file and group trialNum

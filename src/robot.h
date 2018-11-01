@@ -35,7 +35,7 @@ class Robot
 	//value of how motors differ from ideal, don't use these, that's cheating!!
 	double motor_error;
 	// communication range between robots (mm)
-	double comm_range = comm_dist;
+	double comm_range = 6 * 16;
 	// RGB LED display color, values 0-1
 	double color[3];
 
