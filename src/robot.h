@@ -39,19 +39,9 @@ class Robot
 	// RGB LED display color, values 0-1
 	double color[3];
 
-	// TEMPORARY: Make variables accessible in main loop for debugging purposes
-	uint8_t curr_level;
 	uint8_t collision_turn_dir;
 	uint32_t collision_timer;
 	uint32_t max_collision_timer;
-	bool is_retransmit;
-
-	// Pull the arena width/height from main to the class. I don't know if this
-	// is actually the proper way to pull this information.
-	//printf("%d\n", arena_width);
-	//int arena_height = arena_height;
-	//int arena_width = arena_width;
-	//printf("%d\n", arena_width);
 
 	//robot commanded motion 1=forward, 2=cw rotation, 3=ccw rotation, 4=stop
 	int motor_command;

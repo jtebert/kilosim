@@ -22,7 +22,7 @@ struct message_t
 	unsigned char crc;
 };
 
-class kilobot : public Robot
+class Kilobot : public Robot
 {
   public:
 	bool left_ready = false;

@@ -5,7 +5,7 @@
 #include "kilolib.h"
 #include <iostream>
 
-class MyKilobot : public kilobot
+class MyKilobot : public Kilobot
 {
 
 // Variables
