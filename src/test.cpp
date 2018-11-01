@@ -43,13 +43,13 @@ int main(int argc, char *argv[])
         // This automatically increments the tick
         world->step();
 
-        // if ((world->getTick() % (2 * world->getTickRate())) == 0)
-        // {
-        // Log the state of the world every 2 seconds
-        // This works because the tickRate (ticks/sec) must be an integer
-        std::cout << "TEST " << world->getTime() << std::endl;
-        world->logState();
-        // }
+        if ((world->getTick() % (2 * world->getTickRate())) == 0)
+        {
+            // Log the state of the world every 2 seconds
+            // This works because the tickRate (ticks/sec) must be an integer
+            std::cout << "Time: " << world->getTime() << " s" << std::endl;
+            world->logState();
+        }
     }
     std::cout << "Finished" << std::endl;
 }

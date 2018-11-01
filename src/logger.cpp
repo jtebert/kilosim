@@ -61,7 +61,6 @@ void Logger::logState(double timeSec, std::vector<Robot *> &robots)
     // https://thispointer.com/how-to-iterate-over-an-unordered_map-in-c11/
 
     // Add the current time to the time series
-    printf("Logger::logState\n");
     herr_t err = timeTable->AppendPacket(&timeSec);
     if (err < 0)
         fprintf(stderr, "WARNING: Failed to append to time series");
@@ -76,7 +75,7 @@ void Logger::logState(double timeSec, std::vector<Robot *> &robots)
 
 void Logger::logParams(Params paramPairs)
 {
-    for (std::pair<std::string, int> paramPair : paramPairs)
+    for (std::pair<std::string, double> paramPair : paramPairs)
     {
         logParam(paramPair.first, paramPair.second);
     }
