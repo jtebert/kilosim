@@ -53,7 +53,6 @@ protected:
 
 public:
   // Construct a Logger that logs within the given HDF5 file and group trialNum
-  Logger();
   // File will be created if it doesn't exist
   Logger(std::string fileID, int trialNum);
   // Destructor: closes the file when it goes out of scope

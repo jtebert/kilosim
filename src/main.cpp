@@ -418,18 +418,18 @@ void draw_scene(void)
         {
             // Draw robots in different shapes depending on feature to detect
             glColor4f((GLfloat)r->color[0], (GLfloat)r->color[1], (GLfloat)r->color[2], 1.0);
-            if (r->detect_which_feature == 0)
-            {
-                drawFilledCircle((GLfloat)r->pos[0], (GLfloat)r->pos[1], radius);
-            }
-            else if (r->detect_which_feature == 1)
-            {
-                drawFilledTriangle((GLfloat)r->pos[0], (GLfloat)r->pos[1], radius * 1.3, r->pos[2]);
-            }
-            else if (r->detect_which_feature == 2)
-            {
-                drawFilledSquare((GLfloat)r->pos[0], (GLfloat)r->pos[1], radius * 1.3, r->pos[2]);
-            }
+            // if (r->detect_which_feature == 0)
+            // {
+            drawFilledCircle((GLfloat)r->pos[0], (GLfloat)r->pos[1], radius);
+            // }
+            // else if (r->detect_which_feature == 1)
+            // {
+            //     drawFilledTriangle((GLfloat)r->pos[0], (GLfloat)r->pos[1], radius * 1.3, r->pos[2]);
+            // }
+            // else if (r->detect_which_feature == 2)
+            // {
+            //     drawFilledSquare((GLfloat)r->pos[0], (GLfloat)r->pos[1], radius * 1.3, r->pos[2]);
+            // }
             // Draw lines for bearing
             glBegin(GL_LINES);
             glColor4f(0.2, 0.2, 0.2, 1.0);

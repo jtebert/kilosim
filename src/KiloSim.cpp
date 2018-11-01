@@ -321,4 +321,14 @@ double World::getTime()
     return (double)m_tick / m_tickRate;
 }
 
+std::vector<Robot *> &World::getRobots()
+{
+    return m_robots;
+}
+std::vector<double> World::getDimensions()
+{
+    std::vector<double> dimensions{m_arenaWidth, m_arenaHeight};
+    return dimensions;
+}
+
 } // namespace KiloSim

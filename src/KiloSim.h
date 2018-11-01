@@ -58,8 +58,6 @@ protected:
   const double m_arenaWidth;
   // Width of the arena in mm
   const double m_arenaHeight;
-  // Whether or not to display the scene
-  bool m_showScene = false;
   // probability of a controller executing its time step
   const double m_pControlExecute = .99;
 
@@ -117,6 +115,10 @@ public:
   uint32_t getTick();
   // Get the current computed time in seconds (from tick and tickRate)
   double getTime();
+  // Return a pointer to the robots in the world
+  std::vector<Robot *> &getRobots();
+  // Get the dimensions of the world (in mm)
+  std::vector<double> getDimensions();
 };
 } // namespace KiloSim
 
