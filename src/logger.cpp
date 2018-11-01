@@ -63,7 +63,7 @@ void Logger::addAggregator(std::string aggName, aggregatorFunc aggFunc)
     // TODO: Create a packet table and save it
 }
 
-void Logger::logState(double timeSec, std::set<Robot *> &robots)
+void Logger::logState(double timeSec, std::vector<Robot *> &robots)
 {
     // https://thispointer.com/how-to-iterate-over-an-unordered_map-in-c11/
 
@@ -115,7 +115,7 @@ void Logger::logParam(std::string name, double val)
     delete dataspace;
 }
 
-void Logger::logAggregator(std::string aggName, aggregatorFunc aggFunc, std::set<Robot *> &robots)
+void Logger::logAggregator(std::string aggName, aggregatorFunc aggFunc, std::vector<Robot *> &robots)
 {
     // Call the aggregator function on the robots
     std::vector<double> aggVal = (*aggFunc)(robots);

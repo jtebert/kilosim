@@ -26,7 +26,7 @@ class Logger
 public:
   // Function that collects outputs from a robot into a single vector (row)
   // A pointer to a function from Robot pointers to a vector of doubles
-  typedef std::vector<double> (*aggregatorFunc)(std::set<Robot *> &robots);
+  typedef std::vector<double> (*aggregatorFunc)(std::vector<Robot *> &robots);
   // a typedef for our managed H5File pointer
   typedef std::shared_ptr<H5::H5File> H5FilePtr;
   typedef std::shared_ptr<H5::Group> H5GroupPtr;
@@ -59,7 +59,7 @@ public:
   // Add an aggregator function that will be run on logState
   void addAggregator(std::string aggName, aggregatorFunc aggFunc);
   // Log the aggregators at the given time mapped over all the given robots
-  void logState(double timeSec, std::set<Robot *> &robots);
+  void logState(double timeSec, std::vector<Robot *> &robots);
   // Log all of the given parameters
   void logParams(Params paramPairs);
 
@@ -67,7 +67,7 @@ protected:
   // Log a single parameter name and value
   void logParam(std::string name, double val);
   // Log data for this specific aggregator
-  void logAggregator(std::string aggName, aggregatorFunc aggFunc, std::set<Robot *> &robots);
+  void logAggregator(std::string aggName, aggregatorFunc aggFunc, std::vector<Robot *> &robots);
   // Create or open an HDF5 file
   H5FilePtr createOrOpenFile(const std::string &fname);
   // Create or open a group in an HDF5 file

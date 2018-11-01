@@ -3,7 +3,7 @@
 
 uint8_t num_features = 3;
 
-std::vector<double> mean_beliefs(std::set<Robot *> &robots)
+std::vector<double> mean_beliefs(std::vector<Robot *> &robots)
 {
     // Get the mean belief for all features
     std::vector<double> means(num_features, 0.0);

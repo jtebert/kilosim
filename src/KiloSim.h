@@ -44,7 +44,7 @@ class World
 
 protected:
   // Set of (unique) Robots in the world
-  std::set<Robot *> m_robots;
+  std::vector<Robot *> m_robots;
   // How many ticks per second in simulation
   // TODO: Set default
   uint16_t m_tickRate = 30;
@@ -64,14 +64,16 @@ protected:
   KiloSim::Logger *m_logger = nullptr;
 
 public:
-  typedef std::set<Robot>::iterator RobotsIterator;
+  typedef std::vector<Robot>::iterator RobotsIterator;
   typedef std::shared_ptr<std::vector<RobotPose>> PosesPtr;
 
 protected:
   // Compute the next positions of the robots from positions and motor commands
-  std::shared_ptr<std::vector<RobotPose>> computeNextStep(double dt);
+  PosesPtr computeNextStep(double dt);
   // Check to see if motion causes robots to collide
-  bool findCollisions(PosesPtr newPos, int selfID, int time);
+  std::shared_ptr<std::vector<uint8_t>> findCollisions(PosesPtr newPos);
+  // Move the robots based on new positions and collisions
+  void moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<uint8_t>> collisions);
   // Wrap an angle to in [0, 2*pi)
   double wrapAngle(double angle);
   // Draw the scene

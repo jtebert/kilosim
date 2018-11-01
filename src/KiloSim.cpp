@@ -40,8 +40,10 @@ void World::step()
     PosesPtr newPoses = computeNextStep(m_tickDeltaT);
 
     // Check for collisions between all robot pairs
+    std::shared_ptr<std::vector<uint8_t>> collisions = findCollisions(newPoses);
     // And execute move if no collision
     // or turn if collision
+    moveRobots(newPoses, collisions);
 
     // Increment time
     m_tick++;
@@ -59,12 +61,13 @@ void World::setLightPattern(std::string lightImg)
 
 void World::addRobot(Robot *robot)
 {
-    m_robots.insert(robot);
+    m_robots.push_back(robot);
 }
 
 void World::removeRobot(Robot *robot)
 {
-    m_robots.erase(robot);
+    // TODO: Implement this
+    printf("This did nothing");
 }
 
 void World::addLogger(Logger *logger)
@@ -94,7 +97,7 @@ World::PosesPtr World::computeNextStep(double dt)
     newPos.resize(m_robots.size());
 
     int i = 0;
-    for (std::set<Robot *>::iterator ri = m_robots.begin(); ri != m_robots.end(); ++ri)
+    for (std::vector<Robot *>::iterator ri = m_robots.begin(); ri != m_robots.end(); ++ri)
     {
         Robot *r = *ri;
         double x = r->pos[0];
@@ -139,40 +142,95 @@ World::PosesPtr World::computeNextStep(double dt)
     return std::make_shared<std::vector<RobotPose>>(newPos);
 }
 
-bool World::findCollisions(PosesPtr newPos, int selfID, int time)
+std::shared_ptr<std::vector<uint8_t>> World::findCollisions(PosesPtr newPos)
 {
-    // TODO: implement findCollisions (and switch from pointers)
-    // TODO: Can make this go 2x faster by only checking if selfID < otherID and copying over
+    // TODO: Parallelize
+
     // Check to see if motion causes robots to collide with their updated positions
-    RobotPose selfPos = (*newPos)[selfID];
-    RobotPose otherPos;
-    double dist_x, dist_y, distance;
 
-    // Check for collision with wall
-    if (selfPos.x <= radius || selfPos.x >= m_arenaWidth - radius || selfPos.y <= radius || selfPos.y >= m_arenaHeight - radius)
+    // 0 = no collision; 1 = collision w/ robot; 2 = collision w/ wall
+
+    // Initialize the collisions to be returned
+    std::vector<uint8_t> collisions(m_robots.size(), 0);
+    double r_x, r_y, distance;
+
+    for (uint r = 0; r < m_robots.size(); ++r)
     {
-        return 2;
-    }
-    bool isCollided = false;
-
-    for (int otherID = 0; otherID < m_robots.size(); otherID++)
-    {
-        if (otherID != selfID)
-        { // Don't compare to self
-            otherPos = (*newPos)[otherID];
-            // Get distance to other robots
-            dist_x = selfPos.x - otherPos.x;
-            dist_y = selfPos.y - otherPos.y;
-            distance = sqrt(pow(dist_x, 2) + pow(dist_y, 2));
-
-            // Check if new positions are intersecting
-            if (distance < 2 * radius)
+        r_x = (*newPos)[r].x;
+        r_y = (*newPos)[r].y;
+        // Check for collisions with walls
+        if (r_x <= radius || r_x >= m_arenaWidth - radius || r_y <= radius || r_y >= m_arenaHeight - radius)
+        {
+            // There's a collision with the wall. Don't even bother to check
+            // for collisions with other robots
+            collisions[r] = 2;
+            break;
+        }
+        for (uint c = 0; c < m_robots.size(); ++c)
+        {
+            // Check for collisions with other robots
+            // Don't do repeat checks, unless the one you're checking against
+            // had a wall collision (and therefore didn't check for robot collisions)
+            if (r < c || collisions[c] == 2)
             {
-                return true;
+                distance = sqrt(pow(r_x - (*newPos)[c].x, 2) +
+                                pow(r_y - (*newPos)[c].y, 2));
+                if (distance < 2 * radius)
+                {
+                    collisions[r] = 1;
+                }
+            }
+            else if (r < c)
+            {
+                // Collisions are symmetric
+                collisions[r] = collisions[c];
             }
         }
     }
-    return false;
+    return std::make_shared<std::vector<uint8_t>>(collisions);
+}
+
+void World::moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<uint8_t>> collisions)
+{
+    // TODO: Parallelize
+
+    double new_theta;
+
+    for (int ri = 0; ri < m_robots.size(); ++ri)
+    {
+        Robot *r = m_robots[ri];
+        new_theta = (*newPos)[ri].theta;
+        switch ((*collisions)[ri])
+        {
+        case 0:
+        { // No collisions
+            r->pos[0] = (*newPos)[ri].x;
+            r->pos[1] = (*newPos)[ri].y;
+            r->collision_timer = 0;
+            break;
+        }
+        case 1:
+        { // Collision with another robot
+            if (r->collision_turn_dir == 0)
+            {
+                new_theta = r->pos[2] - r->turn_speed * m_tickDeltaT; // left/CCW
+            }
+            else
+            {
+                new_theta = r->pos[2] + r->turn_speed * m_tickDeltaT; // right/CW
+            }
+            if (r->collision_timer > r->max_collision_timer)
+            { // Change turn dir
+                r->collision_turn_dir = (r->collision_turn_dir + 1) % 2;
+                r->collision_timer = 0;
+            }
+            r->collision_timer++;
+            break;
+        }
+            // If a bot is touching the wall (collision_type == 2), update angle but not position
+            r->pos[2] = wrapAngle(new_theta);
+        }
+    }
 }
 
 double World::wrapAngle(double angle)
