@@ -77,9 +77,9 @@ protected:
   // Compute the next positions of the robots from positions and motor commands
   PosesPtr computeNextStep();
   // Check to see if motion causes robots to collide
-  std::shared_ptr<std::vector<uint8_t>> findCollisions(PosesPtr newPos);
+  std::shared_ptr<std::vector<int16_t>> findCollisions(PosesPtr newPos);
   // Move the robots based on new positions and collisions
-  void moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<uint8_t>> collisions);
+  void moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<int16_t>> collisions);
   // Wrap an angle to in [0, 2*pi)
   double wrapAngle(double angle);
   // Draw the scene

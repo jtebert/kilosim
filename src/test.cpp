@@ -35,21 +35,21 @@ int main(int argc, char *argv[])
     world->addLogger(logger);
 
     // Create robot(s)
-    int numRobots = 10;
+    int numRobots = 300;
     std::vector<Robot *> robots;
     robots.resize(numRobots);
     for (int n = 0; n < numRobots; n++)
     {
         // std::cout << n * 50 + 20 << std::endl;
         robots[n] = new MyKilobot();
-        robots[n]->robot_init(n * 50 + 75, 600, PI * n / 2);
+        robots[n]->robot_init(n * 80 + 75, 600, PI * n / 2);
         world->addRobot(robots[n]);
     }
 
     // Create viewer to visualize the world
-    KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
+    // KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
 
-    double sim_duration = 150; // Seconds
+    double sim_duration = 1500; // Seconds
     while (world->getTime() < sim_duration)
     {
         // Run a simulation step
@@ -57,11 +57,11 @@ int main(int argc, char *argv[])
         world->step();
 
         // Draw the world
-        viewer->draw();
+        // viewer->draw();
 
-        printf("%f, %f, (%f)\n", robots[0]->pos[0], robots[0]->pos[1], robots[0]->pos[2]);
+        // printf("%f, %f, (%f)\n", robots[0]->pos[0], robots[0]->pos[1], robots[0]->pos[2]);
 
-        if ((world->getTick() % (1 * world->getTickRate())) == 0)
+        if ((world->getTick() % (30 * world->getTickRate())) == 0)
         {
             // Log the state of the world every 2 seconds
             // This works because the tickRate (ticks/sec) must be an integer
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
         }
 
         // DEBUG: Delay to see drawing (us)
-        usleep(10000);
+        // usleep(10000);
     }
     std::cout << "Finished" << std::endl;
 }

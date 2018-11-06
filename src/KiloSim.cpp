@@ -40,7 +40,7 @@ void World::step()
     PosesPtr newPoses = computeNextStep();
 
     // Check for collisions between all robot pairs
-    std::shared_ptr<std::vector<uint8_t>> collisions = findCollisions(newPoses);
+    std::shared_ptr<std::vector<int16_t>> collisions = findCollisions(newPoses);
 
     // And execute move if no collision
     // or turn if collision
@@ -191,16 +191,18 @@ World::PosesPtr World::computeNextStep()
     return std::make_shared<std::vector<RobotPose>>(newPos);
 }
 
-std::shared_ptr<std::vector<uint8_t>> World::findCollisions(PosesPtr newPos)
+std::shared_ptr<std::vector<int16_t>> World::findCollisions(PosesPtr newPos)
 {
     // TODO: Parallelize
 
     // Check to see if motion causes robots to collide with their updated positions
 
-    // 0 = no collision; 1 = collision w/ robot; 2 = collision w/ wall
+    // 0 = no collision
+    // -1 = collision w/ wall
+    // other positive # = collision w/ robot of that ind;
 
     // Initialize the collisions to be returned
-    std::vector<uint8_t> collisions(m_robots.size(), 0);
+    std::vector<int16_t> collisions(m_robots.size(), 0);
     double r_x, r_y, distance;
 
     for (int r = 0; r < m_robots.size(); r++)
@@ -210,40 +212,35 @@ std::shared_ptr<std::vector<uint8_t>> World::findCollisions(PosesPtr newPos)
         // Check for collisions with walls
         if (r_x <= RADIUS || r_x >= m_arenaWidth - RADIUS || r_y <= RADIUS || r_y >= m_arenaHeight - RADIUS)
         {
-            // There's a collision with the wall. Don't even bother to check
-            // for collisions with other robots
-            collisions[r] = 2;
+            // There's a collision with the wall.
+            // Don't even bother to check for collisions with other robots
+            collisions[r] = -1;
         }
         else
         {
-            for (uint c = 0; c < m_robots.size(); ++c)
+            for (int c = 0; c < m_robots.size(); ++c)
             {
                 // Check for collisions with other robots
                 // Don't do repeat checks, unless the one you're checking against
                 // had a wall collision (and therefore didn't check for robot collisions)
-                if (r < c || collisions[c] == 2)
+                if (r != c)
                 {
                     distance = sqrt(pow(r_x - (*newPos)[c].x, 2) +
                                     pow(r_y - (*newPos)[c].y, 2));
                     if (distance < 2 * RADIUS)
                     {
-                        printf("Collision: r %d -> c %d\n", r, c);
-                        collisions[r] = 1;
+                        collisions[r] = 1; // r is colliding with c
+                        // Don't need to worry about more than 1 collision
+                        break;
                     }
-                }
-                else if (r > c)
-                {
-                    printf("Symmetric: r %d -> c %d  [%d]\n", r, c, collisions[c]);
-                    // Collisions are symmetric
-                    collisions[r] = collisions[c];
                 }
             }
         }
     }
-    return std::make_shared<std::vector<uint8_t>>(collisions);
+    return std::make_shared<std::vector<int16_t>>(collisions);
 }
 
-void World::moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<uint8_t>> collisions)
+void World::moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<int16_t>> collisions)
 {
     // TODO: Parallelize
 

@@ -59,7 +59,7 @@ class MyKilobot : public Kilobot
         transmit_msg.crc = message_crc(&transmit_msg);
         set_color(RGB(1, 0, 1));
         set_motion(FORWARD);
-        next_check_dur = 9999;
+        next_check_dur = 0;
     }
 
     void loop()
