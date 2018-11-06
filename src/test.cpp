@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     world->addLogger(logger);
 
     // Create robot(s)
-    int numRobots = 300;
+    int numRobots = 10;
     std::vector<Robot *> robots;
     robots.resize(numRobots);
     for (int n = 0; n < numRobots; n++)
@@ -47,9 +47,9 @@ int main(int argc, char *argv[])
     }
 
     // Create viewer to visualize the world
-    // KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
+    KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
 
-    double sim_duration = 1500; // Seconds
+    double sim_duration = 300; // Seconds
     while (world->getTime() < sim_duration)
     {
         // Run a simulation step
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
         world->step();
 
         // Draw the world
-        // viewer->draw();
+        viewer->draw();
 
         // printf("%f, %f, (%f)\n", robots[0]->pos[0], robots[0]->pos[1], robots[0]->pos[2]);
 

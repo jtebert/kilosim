@@ -16,11 +16,11 @@ Viewer::Viewer(World *world) : m_world(world)
     std::vector<double> worldDim = world->getDimensions();
     m_scale = m_windowHeight / worldDim[1];
 
-    //m_settings.antialiasingLevel = 32;
-
+    m_settings.antialiasingLevel = 32;
     m_window.create(sf::VideoMode(m_windowWidth, m_windowHeight), "KiloSim", sf::Style::Default, m_settings);
-    m_background.setSize(sf::Vector2f(m_windowWidth, m_windowHeight));
+    m_window.setFramerateLimit(144);
 
+    m_background.setSize(sf::Vector2f(m_windowWidth, m_windowHeight));
     if (!m_lightPattern.loadFromFile("test-bg.png"))
     {
         printf("Texture error\n");
@@ -38,10 +38,6 @@ Viewer::Viewer(World *world) : m_world(world)
     line.setFillColor(sf::Color::Black);
     line.setPosition(RADIUS * m_scale, RADIUS * m_scale - 1);
     m_robotTexture.draw(line);
-    // sf::Vertex line[] = {
-    //     sf::Vertex(sf::Vector2f(RADIUS * m_scale, RADIUS * m_scale)),
-    //     sf::Vertex(sf::Vector2f(RADIUS * 2 * m_scale, RADIUS * m_scale))};
-    // m_robotTexture.draw(line, 2, sf::Lines);
 }
 
 void Viewer::draw()
