@@ -7,43 +7,46 @@
     Created 2018-11 by Julia Ebert
 */
 
-#include <GL/glew.h>
-#include <GL/freeglut.h>
 #include "viewer.h"
 
 namespace KiloSim
 {
 Viewer::Viewer(World *world) : m_world(world)
 {
-    int argc = 1;
-    char *argv[1] = {(char *)""};
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-    glutInitWindowSize(windowWidth, windowHeight);
-    glutInitWindowPosition(0, 0);
+    float m_windowWidth = 600;
+    float m_windowHeight = 800;
+    std::vector<double> worldDim = world->getDimensions();
+    m_scale = m_windowHeight / worldDim[1];
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0f, 1000, 1000, 0.0f, 0.0f, 1.0f);
-    glClearColor(1.0, 1.0, 1.0, 0.0);
-    glutCreateWindow("Kilobot Simulator");
+    m_window.create(sf::VideoMode(m_windowWidth, m_windowHeight), "KiloSim");
+    m_background.setSize(sf::Vector2f(m_windowWidth, m_windowHeight));
 
-    // TODO: Figure out how to do this not with a main loop and using class methods as functions
-    // glutDisplayFunc(draw);
-    //glutReshapeFunc(resize_window);
-    //glutIdleFunc(on_idle);
-    // glutKeyboardFunc(key_input);
-    // glutMainLoop();
+    if (!m_lightPattern.loadFromFile("test-bg.png"))
+    {
+        printf("Texture error\n");
+    }
+
+    m_background.setTexture(&m_lightPattern);
 }
 
 void Viewer::draw()
 {
-    // Background
-    glColor3f(.15, .15, .15);
-    std::vector<double> dimensions = m_world->getDimensions();
-    glRectd(0, 0, dimensions[0], dimensions[1]);
+    if (m_window.isOpen())
+    {
+        sf::Event event;
+        while (m_window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+            {
+                m_window.close();
+            }
+        }
+    }
 
-    // TODO: Draw world's lightPattern
+    m_window.clear();
+
+    // Draw world's lightPattern
+    m_window.draw(m_background);
 
     // TODO: Implement this
     for (auto &r : m_world->getRobots())
@@ -52,16 +55,20 @@ void Viewer::draw()
         // r->draw();
     }
 
-    glFlush();
-    glutSwapBuffers();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    m_window.display();
 }
 
-void Viewer::drawRobot(Robot *robot)
+void Viewer::drawRobot(Robot *r)
 {
     // TODO : Implement this
     // Maybe move this to robot.h (each robot responsible for determining its
     // own representation)
+    sf::CircleShape shape(32 * m_scale);
+    shape.setFillColor(sf::Color(r->color[0] * 255, r->color[1] * 255, r->color[2] * 255));
+    m_window.draw(shape);
+    // sf::Sprite sprite;
+    // sprite.setColor(sf::Color(r->color[0], r->color[1], r->color[2]));
+    // m_window.draw(sprite);
 }
 
 void Viewer::drawLightPattern()
