@@ -227,11 +227,13 @@ std::shared_ptr<std::vector<uint8_t>> World::findCollisions(PosesPtr newPos)
                                     pow(r_y - (*newPos)[c].y, 2));
                     if (distance < 2 * RADIUS)
                     {
+                        printf("Collision: r %d -> c %d\n", r, c);
                         collisions[r] = 1;
                     }
                 }
-                else if (r < c)
+                else if (r > c)
                 {
+                    printf("Symmetric: r %d -> c %d  [%d]\n", r, c, collisions[c]);
                     // Collisions are symmetric
                     collisions[r] = collisions[c];
                 }

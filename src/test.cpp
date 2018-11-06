@@ -35,14 +35,14 @@ int main(int argc, char *argv[])
     world->addLogger(logger);
 
     // Create robot(s)
-    int numRobots = 1;
+    int numRobots = 10;
     std::vector<Robot *> robots;
     robots.resize(numRobots);
     for (int n = 0; n < numRobots; n++)
     {
         // std::cout << n * 50 + 20 << std::endl;
         robots[n] = new MyKilobot();
-        robots[n]->robot_init(n * 100 + 75, 600, PI / 2);
+        robots[n]->robot_init(n * 50 + 75, 600, PI * n / 2);
         world->addRobot(robots[n]);
     }
 
