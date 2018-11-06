@@ -31,11 +31,11 @@ int main(int argc, char *argv[])
     logger->logParams({{"test", 100.25}});
 
     // Create world
-    KiloSim::World *world = new KiloSim::World(1200.0, 1200.0);
+    KiloSim::World *world = new KiloSim::World(2400.0, 2400.0);
     world->addLogger(logger);
 
     // Create robot(s)
-    int numRobots = 3;
+    int numRobots = 10;
     std::vector<Robot *> robots;
     robots.resize(numRobots);
     for (int n = 0; n < numRobots; n++)
@@ -61,13 +61,6 @@ int main(int argc, char *argv[])
 
         // Draw the world
         viewer->draw();
-
-        // printf("\n\nTICK %d\n", world->getTick());
-        // for (auto &robot : robots)
-        // {
-        //     // printf("%f, %f, %f\n", robot->color[0], robot->color[1], robot->color[2]);
-        //     printf("%f, %f (%f)\n", robot->pos[0], robot->pos[1], robot->pos[2]);
-        // }
 
         if ((world->getTick() % (1 * world->getTickRate())) == 0)
         {

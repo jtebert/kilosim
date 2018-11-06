@@ -151,9 +151,8 @@ World::PosesPtr World::computeNextStep()
         double theta = r->pos[2];
         double tmp_x = x;
         double tmp_y = y;
-        double phi = -r->turn_speed * m_tickDeltaT;
 
-        double tmp_cos, tmp_sin;
+        double tmp_cos, tmp_sin, phi;
         switch (r->motor_command)
         {
         case 1:
@@ -165,6 +164,7 @@ World::PosesPtr World::computeNextStep()
         }
         case 2:
         { // CW rotation (around back right leg)
+            double phi = -r->turn_speed * m_tickDeltaT;
             theta += phi;
             tmp_cos = RADIUS * cos(theta + 4 * PI / 3);
             tmp_sin = RADIUS * sin(theta + 4 * PI / 3);
@@ -174,6 +174,7 @@ World::PosesPtr World::computeNextStep()
         }
         case 3:
         { // CCW rotation (around back left leg)
+            double phi = r->turn_speed * m_tickDeltaT;
             theta += phi;
             tmp_cos = RADIUS * cos(theta + 2 * PI / 3);
             tmp_sin = RADIUS * sin(theta + 2 * PI / 3);

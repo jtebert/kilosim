@@ -31,6 +31,8 @@ protected:
   float m_scale;
   // Texture used for drawing all the robots
   sf::RenderTexture m_robotTexture;
+  // Settings for SFML
+  sf::ContextSettings m_settings;
 
 public:
   // Create a viewer with the pointer to the given world

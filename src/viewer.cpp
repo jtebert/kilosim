@@ -13,12 +13,14 @@ namespace KiloSim
 {
 Viewer::Viewer(World *world) : m_world(world)
 {
-    float m_windowWidth = 800;
-    float m_windowHeight = 800;
+    float m_windowWidth = 1200;
+    float m_windowHeight = 1200;
     std::vector<double> worldDim = world->getDimensions();
     m_scale = m_windowHeight / worldDim[1];
 
-    m_window.create(sf::VideoMode(m_windowWidth, m_windowHeight), "KiloSim");
+    //m_settings.antialiasingLevel = 32;
+
+    m_window.create(sf::VideoMode(m_windowWidth, m_windowHeight), "KiloSim", sf::Style::Default, m_settings);
     m_background.setSize(sf::Vector2f(m_windowWidth, m_windowHeight));
 
     if (!m_lightPattern.loadFromFile("test-bg.png"))
@@ -102,14 +104,7 @@ void Viewer::drawTime()
     char buff[100];
     snprintf(buff, sizeof(buff), "%.2d:%.2d:%.2d", hour, minute, second);
     std::string timeStr = buff;
-
     m_window.setTitle(timeStr);
-
-    // sf::Text text;
-    // text.setString("Hello, world");
-    // text.setCharacterSize(24);
-    // text.setFillColor(sf::Color::Red);
-    // m_window.draw(text);
 }
 
 void Viewer::drawLightPattern()

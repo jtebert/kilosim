@@ -66,9 +66,7 @@ class MyKilobot : public Kilobot
         // Example dispersion algorithm
         if (kilo_ticks > last_checked + next_check_dur)
         {
-            printf("CHANGE\n");
             next_check_dur = ((rand_hard() % 4) + 1) * 32;
-            printf("NEXT CHANGE: %d\n", next_check_dur);
             last_checked = kilo_ticks;
             random_number = rand_hard();
             dice = (random_number % 4);
