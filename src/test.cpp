@@ -31,23 +31,20 @@ int main(int argc, char *argv[])
     logger->logParams({{"test", 100.25}});
 
     // Create world
-    KiloSim::World *world = new KiloSim::World(2400.0, 2400.0);
+    KiloSim::World *world = new KiloSim::World(1200.0, 1200.0);
     world->addLogger(logger);
 
     // Create robot(s)
-    int numRobots = 10;
+    int numRobots = 1;
     std::vector<Robot *> robots;
     robots.resize(numRobots);
     for (int n = 0; n < numRobots; n++)
     {
         // std::cout << n * 50 + 20 << std::endl;
         robots[n] = new MyKilobot();
-        robots[n]->robot_init(n * 50 + 25, 20, PI / 2 * n);
+        robots[n]->robot_init(n * 100 + 75, 600, PI / 2);
         world->addRobot(robots[n]);
-        // printf("%f, %f (%f)\n", robots[n]->pos[0], robots[n]->pos[1], robots[n]->pos[2]);
     }
-    // Robot *robot = new MyKilobot();
-    // robot->robot_init(50.0, 50.0, 2.0);
 
     // Create viewer to visualize the world
     KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
@@ -61,6 +58,8 @@ int main(int argc, char *argv[])
 
         // Draw the world
         viewer->draw();
+
+        printf("%f, %f, (%f)\n", robots[0]->pos[0], robots[0]->pos[1], robots[0]->pos[2]);
 
         if ((world->getTick() % (1 * world->getTickRate())) == 0)
         {

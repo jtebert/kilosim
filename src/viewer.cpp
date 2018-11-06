@@ -13,8 +13,6 @@ namespace KiloSim
 {
 Viewer::Viewer(World *world) : m_world(world)
 {
-    float m_windowWidth = 1200;
-    float m_windowHeight = 1200;
     std::vector<double> worldDim = world->getDimensions();
     m_scale = m_windowHeight / worldDim[1];
 
@@ -36,9 +34,9 @@ Viewer::Viewer(World *world) : m_world(world)
     sf::CircleShape shape(RADIUS * m_scale);
     m_robotTexture.draw(shape);
 
-    sf::RectangleShape line(sf::Vector2f(2, RADIUS * m_scale));
+    sf::RectangleShape line(sf::Vector2f(RADIUS * m_scale, 2));
     line.setFillColor(sf::Color::Black);
-    line.setPosition(RADIUS * m_scale - 1, 0);
+    line.setPosition(RADIUS * m_scale, RADIUS * m_scale - 1);
     m_robotTexture.draw(line);
     // sf::Vertex line[] = {
     //     sf::Vertex(sf::Vector2f(RADIUS * m_scale, RADIUS * m_scale)),
@@ -86,8 +84,8 @@ void Viewer::drawRobot(Robot *r)
     sprite.setOrigin(RADIUS * m_scale, RADIUS * m_scale);
     sprite.setTexture(m_robotTexture.getTexture());
     sprite.setColor(sf::Color(r->color[0] * 255, r->color[1] * 255, r->color[2] * 255));
-    sprite.setPosition(sf::Vector2f(r->pos[0] * m_scale, r->pos[1] * m_scale));
-    sprite.setRotation(r->pos[2] * 180 / PI - 90);
+    sprite.setPosition(sf::Vector2f(r->pos[0] * m_scale, m_windowHeight - (r->pos[1] * m_scale)));
+    sprite.setRotation(r->pos[2] * -180 / PI);
 
     m_window.draw(sprite);
 }

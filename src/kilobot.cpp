@@ -58,6 +58,7 @@ class MyKilobot : public Kilobot
         transmit_msg.data[0] = 0;
         transmit_msg.crc = message_crc(&transmit_msg);
         set_color(RGB(1, 0, 1));
+        set_motion(LEFT);
         next_check_dur = 0;
     }
 

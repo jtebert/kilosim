@@ -144,46 +144,48 @@ World::PosesPtr World::computeNextStep()
     newPos.resize(m_robots.size());
 
     int i = 0;
+    float dt = m_tickDeltaT;
     for (auto &r : m_robots)
     {
+        double theta = r->pos[2];
         double x = r->pos[0];
         double y = r->pos[1];
-        double theta = r->pos[2];
-        double tmp_x = x;
-        double tmp_y = y;
-
-        double tmp_cos, tmp_sin, phi;
+        double temp_x = x;
+        ;
+        double temp_y = y;
+        double temp_cos, temp_sin, phi;
         switch (r->motor_command)
         {
         case 1:
         { // forward
-            double speed = r->forward_speed * m_tickDeltaT;
-            tmp_x = speed * cos(theta) + x;
-            tmp_y = speed * sin(theta) + y;
+            //theta += r->motor_error * dt;
+            double speed = r->forward_speed * dt;
+            temp_x = speed * cos(theta) + r->pos[0];
+            temp_y = speed * sin(theta) + r->pos[1];
             break;
         }
         case 2:
-        { // CW rotation (around back right leg)
-            double phi = -r->turn_speed * m_tickDeltaT;
+        { // CW rotation
+            phi = -r->turn_speed * dt;
             theta += phi;
-            tmp_cos = RADIUS * cos(theta + 4 * PI / 3);
-            tmp_sin = RADIUS * sin(theta + 4 * PI / 3);
-            tmp_x = x + tmp_cos - tmp_cos * cos(phi) + tmp_sin * sin(phi);
-            tmp_y = y + tmp_sin - tmp_cos * sin(phi) - tmp_sin * cos(phi);
+            temp_cos = RADIUS * cos(theta + 4 * PI / 3);
+            temp_sin = RADIUS * sin(theta + 4 * PI / 3);
+            temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
+            temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
             break;
         }
         case 3:
-        { // CCW rotation (around back left leg)
-            double phi = r->turn_speed * m_tickDeltaT;
+        { // CCW rotation
+            phi = r->turn_speed * dt;
             theta += phi;
-            tmp_cos = RADIUS * cos(theta + 2 * PI / 3);
-            tmp_sin = RADIUS * sin(theta + 2 * PI / 3);
-            tmp_x = x + tmp_cos - tmp_cos * cos(phi) + tmp_sin * sin(phi);
-            tmp_y = y + tmp_sin - tmp_cos * sin(phi) - tmp_sin * cos(phi);
+            temp_cos = RADIUS * cos(theta + 2 * PI / 3);
+            temp_sin = RADIUS * sin(theta + 2 * PI / 3);
+            temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
+            temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
             break;
         }
         }
-        newPos[i] = RobotPose(tmp_x, tmp_y, wrapAngle(theta));
+        newPos[i] = RobotPose(temp_x, temp_y, wrapAngle(theta));
         i++;
     }
     return std::make_shared<std::vector<RobotPose>>(newPos);
@@ -243,13 +245,13 @@ void World::moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<uint8_t>> co
 {
     // TODO: Parallelize
 
-    double new_theta;
+    double newTheta;
 
     for (int ri = 0; ri < m_robots.size(); ++ri)
     {
         Robot *r = m_robots[ri];
 
-        new_theta = (*newPos)[ri].theta;
+        newTheta = (*newPos)[ri].theta;
         switch ((*collisions)[ri])
         {
         case 0:
@@ -263,11 +265,11 @@ void World::moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<uint8_t>> co
         { // Collision with another robot
             if (r->collision_turn_dir == 0)
             {
-                new_theta = r->pos[2] - r->turn_speed * m_tickDeltaT; // left/CCW
+                newTheta = r->pos[2] - r->turn_speed * m_tickDeltaT; // left/CCW
             }
             else
             {
-                new_theta = r->pos[2] + r->turn_speed * m_tickDeltaT; // right/CW
+                newTheta = r->pos[2] + r->turn_speed * m_tickDeltaT; // right/CW
             }
             if (r->collision_timer > r->max_collision_timer)
             { // Change turn dir
@@ -279,7 +281,7 @@ void World::moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<uint8_t>> co
         }
         }
         // If a bot is touching the wall (collision_type == 2), update angle but not position
-        r->pos[2] = wrapAngle(new_theta);
+        r->pos[2] = wrapAngle(newTheta);
     }
 }
 
