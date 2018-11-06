@@ -21,6 +21,7 @@ class MyKilobot : public Kilobot
     int random_number = 0;
     int dice = 0;
     int curr_motion = 0;
+    uint32_t next_check_dur;
 
     void set_motion(int new_motion)
     {
@@ -57,44 +58,39 @@ class MyKilobot : public Kilobot
         transmit_msg.data[0] = 0;
         transmit_msg.crc = message_crc(&transmit_msg);
         set_color(RGB(1, 0, 1));
+        next_check_dur = 0;
     }
 
     void loop()
     {
         // Example dispersion algorithm
-        if (kilo_ticks > last_checked + 32)
+        if (kilo_ticks > last_checked + next_check_dur)
         {
+            printf("CHANGE\n");
+            next_check_dur = ((rand_hard() % 4) + 1) * 32;
+            printf("NEXT CHANGE: %d\n", next_check_dur);
             last_checked = kilo_ticks;
-            if (new_message == 1)
-            {
-                new_message = 0;
-                random_number = rand_hard();
-                dice = (random_number % 4);
+            random_number = rand_hard();
+            dice = (random_number % 4);
 
-                if (dice <= 1)
-                {
-                    set_color(RGB(0, 1, 0));
-                    set_motion(FORWARD);
-                }
-                else if (dice == 2)
-                {
-                    set_color(RGB(1, 0, 0));
-                    set_motion(LEFT);
-                }
-                else if (dice == 3)
-                {
-                    set_color(RGB(0, 0, 1));
-                    set_motion(RIGHT);
-                }
-                else
-                { // Should only happen if there's a problem/mistake
-                    set_color(RGB(0, 1, 1));
-                    set_motion(STOP);
-                }
+            if (dice <= 1)
+            {
+                set_color(RGB(0, 1, 0));
+                set_motion(FORWARD);
+            }
+            else if (dice == 2)
+            {
+                set_color(RGB(1, 0, 0));
+                set_motion(LEFT);
+            }
+            else if (dice == 3)
+            {
+                set_color(RGB(0, 0, 1));
+                set_motion(RIGHT);
             }
             else
-            { // No message = white light
-                set_color(RGB(1, 1, 1));
+            { // Should only happen if there's a problem/mistake
+                set_color(RGB(0, 1, 1));
                 set_motion(STOP);
             }
         }

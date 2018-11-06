@@ -41,14 +41,13 @@ void World::step()
 
     // Check for collisions between all robot pairs
     std::shared_ptr<std::vector<uint8_t>> collisions = findCollisions(newPoses);
+
     // And execute move if no collision
     // or turn if collision
     moveRobots(newPoses, collisions);
 
     // Increment time
     m_tick++;
-
-    //printf("World::step complete (%d)\n", m_tick);
 }
 
 bool World::hasLightPattern()
@@ -150,8 +149,11 @@ World::PosesPtr World::computeNextStep()
         double x = r->pos[0];
         double y = r->pos[1];
         double theta = r->pos[2];
-        double tmp_x, tmp_y;
-        double tmp_cos, tmp_sin, phi;
+        double tmp_x = x;
+        double tmp_y = y;
+        double phi = -r->turn_speed * m_tickDeltaT;
+
+        double tmp_cos, tmp_sin;
         switch (r->motor_command)
         {
         case 1:
@@ -163,20 +165,18 @@ World::PosesPtr World::computeNextStep()
         }
         case 2:
         { // CW rotation (around back right leg)
-            phi = -r->turn_speed * m_tickDeltaT;
             theta += phi;
-            tmp_cos = radius * cos(theta + 4 * PI / 3);
-            tmp_sin = radius * sin(theta + 4 * PI / 3);
+            tmp_cos = RADIUS * cos(theta + 4 * PI / 3);
+            tmp_sin = RADIUS * sin(theta + 4 * PI / 3);
             tmp_x = x + tmp_cos - tmp_cos * cos(phi) + tmp_sin * sin(phi);
             tmp_y = y + tmp_sin - tmp_cos * sin(phi) - tmp_sin * cos(phi);
             break;
         }
         case 3:
         { // CCW rotation (around back left leg)
-            phi = r->turn_speed * m_tickDeltaT;
             theta += phi;
-            tmp_cos = radius * cos(theta + 2 * PI / 3);
-            tmp_sin = radius * sin(theta + 2 * PI / 3);
+            tmp_cos = RADIUS * cos(theta + 2 * PI / 3);
+            tmp_sin = RADIUS * sin(theta + 2 * PI / 3);
             tmp_x = x + tmp_cos - tmp_cos * cos(phi) + tmp_sin * sin(phi);
             tmp_y = y + tmp_sin - tmp_cos * sin(phi) - tmp_sin * cos(phi);
             break;
@@ -200,36 +200,38 @@ std::shared_ptr<std::vector<uint8_t>> World::findCollisions(PosesPtr newPos)
     std::vector<uint8_t> collisions(m_robots.size(), 0);
     double r_x, r_y, distance;
 
-    for (uint r = 0; r < m_robots.size(); ++r)
+    for (int r = 0; r < m_robots.size(); r++)
     {
         r_x = (*newPos)[r].x;
         r_y = (*newPos)[r].y;
         // Check for collisions with walls
-        if (r_x <= radius || r_x >= m_arenaWidth - radius || r_y <= radius || r_y >= m_arenaHeight - radius)
+        if (r_x <= RADIUS || r_x >= m_arenaWidth - RADIUS || r_y <= RADIUS || r_y >= m_arenaHeight - RADIUS)
         {
             // There's a collision with the wall. Don't even bother to check
             // for collisions with other robots
             collisions[r] = 2;
-            break;
         }
-        for (uint c = 0; c < m_robots.size(); ++c)
+        else
         {
-            // Check for collisions with other robots
-            // Don't do repeat checks, unless the one you're checking against
-            // had a wall collision (and therefore didn't check for robot collisions)
-            if (r < c || collisions[c] == 2)
+            for (uint c = 0; c < m_robots.size(); ++c)
             {
-                distance = sqrt(pow(r_x - (*newPos)[c].x, 2) +
-                                pow(r_y - (*newPos)[c].y, 2));
-                if (distance < 2 * radius)
+                // Check for collisions with other robots
+                // Don't do repeat checks, unless the one you're checking against
+                // had a wall collision (and therefore didn't check for robot collisions)
+                if (r < c || collisions[c] == 2)
                 {
-                    collisions[r] = 1;
+                    distance = sqrt(pow(r_x - (*newPos)[c].x, 2) +
+                                    pow(r_y - (*newPos)[c].y, 2));
+                    if (distance < 2 * RADIUS)
+                    {
+                        collisions[r] = 1;
+                    }
                 }
-            }
-            else if (r < c)
-            {
-                // Collisions are symmetric
-                collisions[r] = collisions[c];
+                else if (r < c)
+                {
+                    // Collisions are symmetric
+                    collisions[r] = collisions[c];
+                }
             }
         }
     }
@@ -245,6 +247,7 @@ void World::moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<uint8_t>> co
     for (int ri = 0; ri < m_robots.size(); ++ri)
     {
         Robot *r = m_robots[ri];
+
         new_theta = (*newPos)[ri].theta;
         switch ((*collisions)[ri])
         {
@@ -273,9 +276,9 @@ void World::moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<uint8_t>> co
             r->collision_timer++;
             break;
         }
-            // If a bot is touching the wall (collision_type == 2), update angle but not position
-            r->pos[2] = wrapAngle(new_theta);
         }
+        // If a bot is touching the wall (collision_type == 2), update angle but not position
+        r->pos[2] = wrapAngle(new_theta);
     }
 }
 

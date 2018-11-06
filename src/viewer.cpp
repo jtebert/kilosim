@@ -13,7 +13,7 @@ namespace KiloSim
 {
 Viewer::Viewer(World *world) : m_world(world)
 {
-    float m_windowWidth = 600;
+    float m_windowWidth = 800;
     float m_windowHeight = 800;
     std::vector<double> worldDim = world->getDimensions();
     m_scale = m_windowHeight / worldDim[1];
@@ -27,6 +27,21 @@ Viewer::Viewer(World *world) : m_world(world)
     }
 
     m_background.setTexture(&m_lightPattern);
+
+    // Create the texture for the Kilobot robots once
+    if (!m_robotTexture.create(RADIUS * 2 * m_scale, RADIUS * 2 * m_scale))
+        printf("Failed to make robot texture\n");
+    sf::CircleShape shape(RADIUS * m_scale);
+    m_robotTexture.draw(shape);
+
+    sf::RectangleShape line(sf::Vector2f(2, RADIUS * m_scale));
+    line.setFillColor(sf::Color::Black);
+    line.setPosition(RADIUS * m_scale - 1, 0);
+    m_robotTexture.draw(line);
+    // sf::Vertex line[] = {
+    //     sf::Vertex(sf::Vector2f(RADIUS * m_scale, RADIUS * m_scale)),
+    //     sf::Vertex(sf::Vector2f(RADIUS * 2 * m_scale, RADIUS * m_scale))};
+    // m_robotTexture.draw(line, 2, sf::Lines);
 }
 
 void Viewer::draw()
@@ -47,6 +62,7 @@ void Viewer::draw()
 
     // Draw world's lightPattern
     m_window.draw(m_background);
+    drawTime();
 
     // TODO: Implement this
     for (auto &r : m_world->getRobots())
@@ -63,12 +79,37 @@ void Viewer::drawRobot(Robot *r)
     // TODO : Implement this
     // Maybe move this to robot.h (each robot responsible for determining its
     // own representation)
-    sf::CircleShape shape(32 * m_scale);
-    shape.setFillColor(sf::Color(r->color[0] * 255, r->color[1] * 255, r->color[2] * 255));
-    m_window.draw(shape);
-    // sf::Sprite sprite;
-    // sprite.setColor(sf::Color(r->color[0], r->color[1], r->color[2]));
-    // m_window.draw(sprite);
+
+    sf::Sprite sprite;
+    sprite.setOrigin(RADIUS * m_scale, RADIUS * m_scale);
+    sprite.setTexture(m_robotTexture.getTexture());
+    sprite.setColor(sf::Color(r->color[0] * 255, r->color[1] * 255, r->color[2] * 255));
+    sprite.setPosition(sf::Vector2f(r->pos[0] * m_scale, r->pos[1] * m_scale));
+    sprite.setRotation(r->pos[2] * 180 / PI - 90);
+
+    m_window.draw(sprite);
+}
+
+void Viewer::drawTime()
+{
+    int t = m_world->getTime();
+    int hour = t / 3600;
+    t = t % 3600;
+    int minute = t / 60;
+    t = t % 60;
+    int second = t;
+
+    char buff[100];
+    snprintf(buff, sizeof(buff), "%.2d:%.2d:%.2d", hour, minute, second);
+    std::string timeStr = buff;
+
+    m_window.setTitle(timeStr);
+
+    // sf::Text text;
+    // text.setString("Hello, world");
+    // text.setCharacterSize(24);
+    // text.setFillColor(sf::Color::Red);
+    // m_window.draw(text);
 }
 
 void Viewer::drawLightPattern()

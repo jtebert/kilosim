@@ -29,6 +29,8 @@ protected:
   sf::RectangleShape m_background;
   // Scaling ratio between world and window coordinates
   float m_scale;
+  // Texture used for drawing all the robots
+  sf::RenderTexture m_robotTexture;
 
 public:
   // Create a viewer with the pointer to the given world
@@ -39,6 +41,8 @@ public:
 protected:
   // Draw a single robot onto the scene
   void drawRobot(Robot *robot);
+  // Draw the current world time as text in the arena
+  void drawTime();
   // Draw the world's background image
   void drawLightPattern();
 };

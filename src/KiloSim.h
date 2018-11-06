@@ -47,7 +47,7 @@ protected:
   std::vector<Robot *> m_robots;
   // How many ticks per second in simulation
   // TODO: Set default
-  uint16_t m_tickRate = 30;
+  uint16_t m_tickRate = 32;
   // Current tick of the system (starts at 0)
   uint32_t m_tick = 0;
   // Duration (seconds) of a tick

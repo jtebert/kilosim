@@ -30,14 +30,24 @@ int main(int argc, char *argv[])
     logger->addAggregator("mean_belief", mean_beliefs);
     logger->logParams({{"test", 100.25}});
 
-    // Create robot(s)
-    Robot *robot = new MyKilobot();
-    robot->robot_init(50.0, 50.0, 2.0);
-
     // Create world
     KiloSim::World *world = new KiloSim::World(1200.0, 1200.0);
     world->addLogger(logger);
-    world->addRobot(robot);
+
+    // Create robot(s)
+    int numRobots = 3;
+    std::vector<Robot *> robots;
+    robots.resize(numRobots);
+    for (int n = 0; n < numRobots; n++)
+    {
+        // std::cout << n * 50 + 20 << std::endl;
+        robots[n] = new MyKilobot();
+        robots[n]->robot_init(n * 50 + 25, 20, PI / 2 * n);
+        world->addRobot(robots[n]);
+        // printf("%f, %f (%f)\n", robots[n]->pos[0], robots[n]->pos[1], robots[n]->pos[2]);
+    }
+    // Robot *robot = new MyKilobot();
+    // robot->robot_init(50.0, 50.0, 2.0);
 
     // Create viewer to visualize the world
     KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
@@ -52,19 +62,23 @@ int main(int argc, char *argv[])
         // Draw the world
         viewer->draw();
 
-        if ((world->getTick() % (20 * world->getTickRate())) == 0)
+        // printf("\n\nTICK %d\n", world->getTick());
+        // for (auto &robot : robots)
+        // {
+        //     // printf("%f, %f, %f\n", robot->color[0], robot->color[1], robot->color[2]);
+        //     printf("%f, %f (%f)\n", robot->pos[0], robot->pos[1], robot->pos[2]);
+        // }
+
+        if ((world->getTick() % (1 * world->getTickRate())) == 0)
         {
             // Log the state of the world every 2 seconds
             // This works because the tickRate (ticks/sec) must be an integer
             std::cout << "Time: " << world->getTime() << " s" << std::endl;
             world->logState();
-
-            printf("%f, %f, %f\n", robot->color[0], robot->color[1], robot->color[2]);
-            printf("%f, %f (%f)\n", robot->pos[0], robot->pos[1], robot->pos[2]);
         }
 
-        // DEBUG: Delay to see drawing
-        usleep(1000);
+        // DEBUG: Delay to see drawing (us)
+        usleep(10000);
     }
     std::cout << "Finished" << std::endl;
 }

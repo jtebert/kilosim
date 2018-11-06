@@ -195,8 +195,8 @@ class Kilobot : public Robot
 		// Get point at front/nose of robot
 		point_t p;
 		double t = pos[2];
-		p.x = pos[0] + radius * 1 * cos(t);
-		p.y = pos[1] + radius * 1 * sin(t);
+		p.x = pos[0] + RADIUS * 1 * cos(t);
+		p.y = pos[1] + RADIUS * 1 * sin(t);
 		//p.x = pos[0];
 		//p.y = pos[1];
 		// Check if in arena boundaries. If not, return grey
