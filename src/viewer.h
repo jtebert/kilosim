@@ -20,20 +20,20 @@ class Viewer
 {
 protected:
   // Dimensions of the display (in pixels)
-  float m_windowWidth = 1080;
-  float m_windowHeight = 1080;
+  float m_window_width = 1080;
+  float m_window_height = 1080;
   // Pointer to the World that this viewer draws
   World *m_world;
   // SFML window in which the world will be drawn
   sf::RenderWindow m_window;
   // SFML texture containing the image used for background
-  sf::Texture m_lightPattern;
+  sf::Texture m_light_pattern;
   // The background rectangle shape itself
   sf::RectangleShape m_background;
   // Scaling ratio between world and window coordinates
   float m_scale;
   // Texture used for drawing all the robots
-  sf::RenderTexture m_robotTexture;
+  sf::RenderTexture m_robot_texture;
   // Settings for SFML
   sf::ContextSettings m_settings;
 
@@ -45,11 +45,11 @@ public:
 
 protected:
   // Draw a single robot onto the scene
-  void drawRobot(Robot *robot);
+  void draw_robot(Robot *robot);
   // Draw the current world time as text in the arena
-  void drawTime();
+  void draw_time();
   // Draw the world's background image
-  void drawLightPattern();
+  void draw_light_pattern();
 };
 } // namespace KiloSim
 

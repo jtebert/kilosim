@@ -15,11 +15,11 @@ int main(int argc, char *argv[])
     // Create a robot
     MyKilobot testKilobot = new MyKilobot();
     // TODO: Configuring this robot with parameters
-    world.addRobot(testKilobot);
+    world.add_robot(testKilobot);
 
     // Create a logger
-    int trialNum = 1;
-    KiloSim::Logger logger("/log/file/name.h5", trialNum);
+    int trial_num = 1;
+    KiloSim::Logger logger("/log/file/name.h5", trial_num);
     logger.addAggregate('mean', 'decision');
     logger.addAggregate('count number detecting');
 
@@ -27,10 +27,10 @@ int main(int argc, char *argv[])
     // This should probably come from config files (YAML?)
     // https://stackoverflow.com/questions/39883433/create-argc-argv-in-the-code
     std::vector<std::string> paramsToLog = {"--dir", "/some_path"};
-    logger.logParams(paramsToLog);
+    logger.log_params(paramsToLog);
 
     // TODO: Add/set up logger connected to world
-    world.addLogger(logger);
+    world.add_logger(logger);
     world.logWorldParams(); // Save general parameters like dimensions
 
     unsigned int sim_duration = 60 * 60; // Trial duration in minutes
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         // Log the state every 2 seconds
         if ((tick % (2 * world.tickRate)) == 0)
         {
-            world.logState();
+            world.log_state();
         }
 
         tick++;

@@ -55,14 +55,14 @@ protected:
   // Number of ticks between messages (eg, 3 means 10 messages per second)
   uint m_commRate = 3;
   // Height of the arena in mm
-  const double m_arenaWidth;
+  const double m_arena_width;
   // Width of the arena in mm
-  const double m_arenaHeight;
+  const double m_arena_height;
   // probability of a controller executing its time step
   const double m_pControlExecute = .99;
 
   // Background light pattern image (as a 2D vector)
-  LightPattern m_lightPattern;
+  LightPattern m_light_pattern;
   KiloSim::Logger *m_logger = nullptr;
 
 public:
@@ -71,54 +71,52 @@ public:
 
 protected:
   // Run the controllers (kilolib) for all robots
-  void runControllers();
+  void run_controllers();
   // Send messages between robots
   void communicate();
   // Compute the next positions of the robots from positions and motor commands
-  PosesPtr computeNextStep();
+  PosesPtr compute_next_step();
   // Check to see if motion causes robots to collide
-  std::shared_ptr<std::vector<int16_t>> findCollisions(PosesPtr newPos);
+  std::shared_ptr<std::vector<int16_t>> find_collisions(PosesPtr newPos);
   // Move the robots based on new positions and collisions
-  void moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<int16_t>> collisions);
+  void move_robots(PosesPtr newPos, std::shared_ptr<std::vector<int16_t>> collisions);
   // Wrap an angle to in [0, 2*pi)
-  double wrapAngle(double angle);
-  // Draw the scene
-  void drawScene();
+  double wrap_angle(double angle);
 
 public:
   // Construct a world of a fixed size with the background light pattern
-  World(double arenaWidth, double arenaHeight, std::string lightImg);
+  World(double arena_width, double arena_height, std::string lightImg);
   // Construct a world with no background/light pattern
-  World(double arenaWidth, double arenaHeight);
+  World(double arena_width, double arena_height);
   // Destructor, destroy all objects
   virtual ~World();
 
   // Run a step of the simulator
   void step();
   // Return whether there is a light pattern
-  bool hasLightPattern();
+  bool has_light_pattern();
   // Set the light pattern for the world ground surface
-  void setLightPattern(std::string lightImg);
+  void set_light_pattern(std::string lightImg);
   // Add a robot to the world. If the robot is already in the world, do nothing
-  void addRobot(Robot *robot);
+  void add_robot(Robot *robot);
   // Remove a robot from the world and destroy it. If not in the world, do nothing
-  void removeRobot(Robot *robot);
+  void remove_robot(Robot *robot);
   // Add a Logger object to the World to handle data management
-  void addLogger(Logger *lgr);
+  void add_logger(Logger *lgr);
   // Use the logger to save the current state of the World. Fails if Logger hasn't
   // been added
-  void logState();
+  void log_state();
   // Get/set the tick rate
-  void setTickRate(uint16_t newTickRate);
-  uint16_t getTickRate();
+  void set_tick_rate(uint16_t newTickRate);
+  uint16_t get_tick_rate();
   // Get the current tick of the simulation (only set by simulator)
-  uint32_t getTick();
+  uint32_t get_tick();
   // Get the current computed time in seconds (from tick and tickRate)
-  double getTime();
+  double get_time();
   // Return a pointer to the robots in the world
-  std::vector<Robot *> &getRobots();
+  std::vector<Robot *> &get_robots();
   // Get the dimensions of the world (in mm)
-  std::vector<double> getDimensions();
+  std::vector<double> get_dimensions();
 };
 } // namespace KiloSim
 

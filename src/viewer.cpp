@@ -13,31 +13,31 @@ namespace KiloSim
 {
 Viewer::Viewer(World *world) : m_world(world)
 {
-    std::vector<double> worldDim = world->getDimensions();
-    m_scale = m_windowHeight / worldDim[1];
+    std::vector<double> worldDim = world->get_dimensions();
+    m_scale = m_window_height / worldDim[1];
 
     m_settings.antialiasingLevel = 32;
-    m_window.create(sf::VideoMode(m_windowWidth, m_windowHeight), "KiloSim", sf::Style::Default, m_settings);
+    m_window.create(sf::VideoMode(m_window_width, m_window_height), "KiloSim", sf::Style::Default, m_settings);
     m_window.setFramerateLimit(144);
 
-    m_background.setSize(sf::Vector2f(m_windowWidth, m_windowHeight));
-    if (!m_lightPattern.loadFromFile("test-bg.png"))
+    m_background.setSize(sf::Vector2f(m_window_width, m_window_height));
+    if (!m_light_pattern.loadFromFile("test-bg.png"))
     {
         printf("Texture error\n");
     }
 
-    m_background.setTexture(&m_lightPattern);
+    m_background.setTexture(&m_light_pattern);
 
     // Create the texture for the Kilobot robots once
-    if (!m_robotTexture.create(RADIUS * 2 * m_scale, RADIUS * 2 * m_scale))
+    if (!m_robot_texture.create(RADIUS * 2 * m_scale, RADIUS * 2 * m_scale))
         printf("Failed to make robot texture\n");
     sf::CircleShape shape(RADIUS * m_scale);
-    m_robotTexture.draw(shape);
+    m_robot_texture.draw(shape);
 
     sf::RectangleShape line(sf::Vector2f(RADIUS * m_scale, 2));
     line.setFillColor(sf::Color::Black);
     line.setPosition(RADIUS * m_scale, RADIUS * m_scale - 1);
-    m_robotTexture.draw(line);
+    m_robot_texture.draw(line);
 }
 
 void Viewer::draw()
@@ -58,19 +58,19 @@ void Viewer::draw()
 
     // Draw world's lightPattern
     m_window.draw(m_background);
-    drawTime();
+    draw_time();
 
     // TODO: Implement this
-    for (auto &r : m_world->getRobots())
+    for (auto &r : m_world->get_robots())
     {
-        drawRobot(r);
+        draw_robot(r);
         // r->draw();
     }
 
     m_window.display();
 }
 
-void Viewer::drawRobot(Robot *r)
+void Viewer::draw_robot(Robot *r)
 {
     // TODO : Implement this
     // Maybe move this to robot.h (each robot responsible for determining its
@@ -78,17 +78,17 @@ void Viewer::drawRobot(Robot *r)
 
     sf::Sprite sprite;
     sprite.setOrigin(RADIUS * m_scale, RADIUS * m_scale);
-    sprite.setTexture(m_robotTexture.getTexture());
+    sprite.setTexture(m_robot_texture.getTexture());
     sprite.setColor(sf::Color(r->color[0] * 255, r->color[1] * 255, r->color[2] * 255));
-    sprite.setPosition(sf::Vector2f(r->pos[0] * m_scale, m_windowHeight - (r->pos[1] * m_scale)));
+    sprite.setPosition(sf::Vector2f(r->pos[0] * m_scale, m_window_height - (r->pos[1] * m_scale)));
     sprite.setRotation(r->pos[2] * -180 / PI);
 
     m_window.draw(sprite);
 }
 
-void Viewer::drawTime()
+void Viewer::draw_time()
 {
-    int t = m_world->getTime();
+    int t = m_world->get_time();
     int hour = t / 3600;
     t = t % 3600;
     int minute = t / 60;
@@ -101,8 +101,8 @@ void Viewer::drawTime()
     m_window.setTitle(timeStr);
 }
 
-void Viewer::drawLightPattern()
+void Viewer::draw_light_pattern()
 {
-    // TODO: Implement drawLightPattern()
+    // TODO: Implement draw_light_pattern()
 }
 } // namespace KiloSim

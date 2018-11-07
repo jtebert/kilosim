@@ -27,12 +27,12 @@ int main(int argc, char *argv[])
 {
     // Create logger
     KiloSim::Logger *logger = new KiloSim::Logger("test.h5", 1);
-    logger->addAggregator("mean_belief", mean_beliefs);
-    logger->logParams({{"test", 100.25}});
+    logger->add_aggregator("mean_belief", mean_beliefs);
+    logger->log_params({{"test", 100.25}});
 
     // Create world
     KiloSim::World *world = new KiloSim::World(1200.0, 1200.0);
-    world->addLogger(logger);
+    world->add_logger(logger);
 
     // Create robot(s)
     int numRobots = 10;
@@ -43,14 +43,14 @@ int main(int argc, char *argv[])
         // std::cout << n * 50 + 20 << std::endl;
         robots[n] = new MyKilobot();
         robots[n]->robot_init(n * 80 + 75, 600, PI * n / 2);
-        world->addRobot(robots[n]);
+        world->add_robot(robots[n]);
     }
 
     // Create viewer to visualize the world
     KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
 
     double sim_duration = 300; // Seconds
-    while (world->getTime() < sim_duration)
+    while (world->get_time() < sim_duration)
     {
         // Run a simulation step
         // This automatically increments the tick
@@ -61,12 +61,12 @@ int main(int argc, char *argv[])
 
         // printf("%f, %f, (%f)\n", robots[0]->pos[0], robots[0]->pos[1], robots[0]->pos[2]);
 
-        if ((world->getTick() % (30 * world->getTickRate())) == 0)
+        if ((world->get_tick() % (30 * world->get_tick_rate())) == 0)
         {
             // Log the state of the world every 2 seconds
             // This works because the tickRate (ticks/sec) must be an integer
-            std::cout << "Time: " << world->getTime() << " s" << std::endl;
-            world->logState();
+            std::cout << "Time: " << world->get_time() << " s" << std::endl;
+            world->log_state();
         }
 
         // DEBUG: Delay to see drawing (us)

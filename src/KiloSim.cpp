@@ -6,11 +6,11 @@
 
 namespace KiloSim
 {
-World::World(double arenaWidth, double arenaHeight) : m_arenaWidth(arenaWidth), m_arenaHeight(arenaHeight)
+World::World(double arena_width, double arena_height) : m_arena_width(arena_width), m_arena_height(arena_height)
 {
     // TODO: Implement constructor without lightImg
 }
-World::World(double arenaWidth, double arenaHeight, std::string lightImg) : m_arenaWidth(arenaWidth), m_arenaHeight(arenaHeight)
+World::World(double arena_width, double arena_height, std::string lightImg) : m_arena_width(arena_width), m_arena_height(arena_height)
 {
     // TODO: Implement constructor with lightImg
 }
@@ -27,68 +27,65 @@ World::RobotPose::RobotPose(double x, double y, double theta) : x(x),
 
 void World::step()
 {
-    // TODO: Implement world.step
-    // should sort of come from main.cpp run_simulation_step()
-
     // Apply robot controller for all robots
-    runControllers();
+    run_controllers();
 
     // Communication between all robot pairs
     communicate();
 
     // Compute potential movement for all robots
-    PosesPtr newPoses = computeNextStep();
+    PosesPtr newPoses = compute_next_step();
 
     // Check for collisions between all robot pairs
-    std::shared_ptr<std::vector<int16_t>> collisions = findCollisions(newPoses);
+    std::shared_ptr<std::vector<int16_t>> collisions = find_collisions(newPoses);
 
     // And execute move if no collision
     // or turn if collision
-    moveRobots(newPoses, collisions);
+    move_robots(newPoses, collisions);
 
     // Increment time
     m_tick++;
 }
 
-bool World::hasLightPattern()
+bool World::has_light_pattern()
 {
-    return !m_lightPattern.data.empty();
+    return !m_light_pattern.data.empty();
 }
 
-void World::setLightPattern(std::string lightImg)
+void World::set_light_pattern(std::string lightImg)
 {
-    // TODO: Implement setLightPattern
+    // TODO: Implement set_light_pattern
 }
 
-void World::addRobot(Robot *robot)
+void World::add_robot(Robot *robot)
 {
     m_robots.push_back(robot);
 }
 
-void World::removeRobot(Robot *robot)
+void World::remove_robot(Robot *robot)
 {
     // TODO: Implement this
     printf("This does nothing right now");
 }
 
-void World::addLogger(Logger *logger)
+void World::add_logger(Logger *logger)
 {
     m_logger = logger;
 }
 
-void World::logState()
+void World::log_state()
 {
     if (m_logger != nullptr)
     {
-        m_logger->logState(getTime(), m_robots);
+        m_logger->log_state(get_time(), m_robots);
     }
     else
     {
-        printf("FAIL WARNING: No logger added to World. Use addLogger(...)\n");
+        printf("FAIL WARNING: No logger added to World. Use add_logger(...)\n");
     }
 } // namespace KiloSim
 
-void World::runControllers()
+void World::run_controllers()
 {
     // TODO: Parallelize
     for (auto &r : m_robots)
@@ -134,9 +131,9 @@ void World::communicate()
     }
 } // namespace KiloSim
 
-World::PosesPtr World::computeNextStep()
+World::PosesPtr World::compute_next_step()
 {
-    // TODO: Implement computeNextStep (and maybe change from pointers)
+    // TODO: Implement compute_next_step (and maybe change from pointers)
     // TODO: Parallelize... eventually
 
     // Initialize the new positions to be returned
@@ -185,13 +182,13 @@ World::PosesPtr World::computeNextStep()
             break;
         }
         }
-        newPos[i] = RobotPose(temp_x, temp_y, wrapAngle(theta));
+        newPos[i] = RobotPose(temp_x, temp_y, wrap_angle(theta));
         i++;
     }
     return std::make_shared<std::vector<RobotPose>>(newPos);
 }
 
-std::shared_ptr<std::vector<int16_t>> World::findCollisions(PosesPtr newPos)
+std::shared_ptr<std::vector<int16_t>> World::find_collisions(PosesPtr newPos)
 {
     // TODO: Parallelize
 
@@ -210,7 +207,7 @@ std::shared_ptr<std::vector<int16_t>> World::findCollisions(PosesPtr newPos)
         r_x = (*newPos)[r].x;
         r_y = (*newPos)[r].y;
         // Check for collisions with walls
-        if (r_x <= RADIUS || r_x >= m_arenaWidth - RADIUS || r_y <= RADIUS || r_y >= m_arenaHeight - RADIUS)
+        if (r_x <= RADIUS || r_x >= m_arena_width - RADIUS || r_y <= RADIUS || r_y >= m_arena_height - RADIUS)
         {
             // There's a collision with the wall.
             // Don't even bother to check for collisions with other robots
@@ -240,7 +237,7 @@ std::shared_ptr<std::vector<int16_t>> World::findCollisions(PosesPtr newPos)
     return std::make_shared<std::vector<int16_t>>(collisions);
 }
 
-void World::moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<int16_t>> collisions)
+void World::move_robots(PosesPtr newPos, std::shared_ptr<std::vector<int16_t>> collisions)
 {
     // TODO: Parallelize
 
@@ -280,11 +277,11 @@ void World::moveRobots(PosesPtr newPos, std::shared_ptr<std::vector<int16_t>> co
         }
         }
         // If a bot is touching the wall (collision_type == 2), update angle but not position
-        r->pos[2] = wrapAngle(newTheta);
+        r->pos[2] = wrap_angle(newTheta);
     }
 }
 
-double World::wrapAngle(double angle)
+double World::wrap_angle(double angle)
 {
     // Guarantee that angle will be from 0 to 2*pi
     // While loop is fastest option when angles are close to correct range
@@ -300,39 +297,34 @@ double World::wrapAngle(double angle)
     return angle;
 }
 
-void World::drawScene()
-{
-    // TODO: Implement drawScene
-}
-
-void World::setTickRate(uint16_t tickRate)
+void World::set_tick_rate(uint16_t tickRate)
 {
     m_tickRate = tickRate;
     m_tickDeltaT = 1.0 / m_tickRate;
 }
 
-uint16_t World::getTickRate()
+uint16_t World::get_tick_rate()
 {
     return m_tickRate;
 }
 
-uint32_t World::getTick()
+uint32_t World::get_tick()
 {
     return m_tick;
 }
 
-double World::getTime()
+double World::get_time()
 {
     return (double)m_tick / m_tickRate;
 }
 
-std::vector<Robot *> &World::getRobots()
+std::vector<Robot *> &World::get_robots()
 {
     return m_robots;
 }
-std::vector<double> World::getDimensions()
+std::vector<double> World::get_dimensions()
 {
-    std::vector<double> dimensions{m_arenaWidth, m_arenaHeight};
+    std::vector<double> dimensions{m_arena_width, m_arena_height};
     return dimensions;
 }
 

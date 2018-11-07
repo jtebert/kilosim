@@ -35,44 +35,44 @@ public:
 
 protected:
   // HDF5 file where the data lives
-  std::string fileID;
+  std::string m_file_id;
   // Trial number specifying group where the data lives
-  int trialNum;
+  int trial_num;
   // Names and functions of aggregators
   std::unordered_map<std::string, aggregatorFunc> aggregators;
   // TODO: Save pointer to open file, trial group, parameter group, and aggregator packet tables
-  H5FilePtr h5fileP;
+  H5FilePtr m_h5_file;
   // HDF5 group name for trial. e.g., /trial_0
-  std::string trialGroupName;
+  std::string m_trial_group_name;
   // HDF5 group name for trial parameters. e.g., /trial_0/params
-  std::string paramsGroupName;
-  H5GroupPtr paramsGroup;
+  std::string m_params_group_name;
+  H5GroupPtr m_params_group;
   // HDF5 dataset name for time series (packet table)
-  std::string timeDsetName;
-  H5PacketTablePtr timeTable;
+  std::string m_time_dset_name;
+  H5PacketTablePtr m_time_table;
 
 public:
-  // Construct a Logger that logs within the given HDF5 file and group trialNum
+  // Construct a Logger that logs within the given HDF5 file and group trial_num
   // File will be created if it doesn't exist
-  Logger(std::string fileID, int trialNum);
+  Logger(std::string file_id, int trial_num);
   // Destructor: closes the file when it goes out of scope
   ~Logger();
-  // Add an aggregator function that will be run on logState
-  void addAggregator(std::string aggName, aggregatorFunc aggFunc);
+  // Add an aggregator function that will be run on log_state
+  void add_aggregator(std::string aggName, aggregatorFunc aggFunc);
   // Log the aggregators at the given time mapped over all the given robots
-  void logState(double timeSec, std::vector<Robot *> &robots);
+  void log_state(double timeSec, std::vector<Robot *> &robots);
   // Log all of the given parameters
-  void logParams(Params paramPairs);
+  void log_params(Params paramPairs);
 
 protected:
   // Log a single parameter name and value
-  void logParam(std::string name, double val);
+  void log_param(std::string name, double val);
   // Log data for this specific aggregator
-  void logAggregator(std::string aggName, aggregatorFunc aggFunc, std::vector<Robot *> &robots);
+  void log_aggregator(std::string aggName, aggregatorFunc aggFunc, std::vector<Robot *> &robots);
   // Create or open an HDF5 file
-  H5FilePtr createOrOpenFile(const std::string &fname);
+  H5FilePtr create_or_open_file(const std::string &fname);
   // Create or open a group in an HDF5 file
-  H5GroupPtr createOrOpenGroup(H5FilePtr file, std::string &groupName);
+  H5GroupPtr create_or_open_group(H5FilePtr file, std::string &groupName);
 };
 } // namespace KiloSim
 

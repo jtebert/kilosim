@@ -6,6 +6,8 @@ Experiment scripts: [kilobot-simulator-experiments](https://github.com/jtebert/k
 
 Analysis code: [kilobot-simulator-analysis](https://github.com/jtebert/kilobot-simulator-analysis)
 
+---
+
 ## Compiling
 
 **TODO: This needs a proper make/cmake file instead of my hacky bash scripts**
@@ -61,7 +63,7 @@ where `t` is the number of time steps when data was logged, and `aggregator_1` a
 
 Example use of an aggregator:
 
-**TODO: Double-check API and add logParams() to example**
+**TODO: Double-check API and add log_params() to example**
 
 ```C++
 #include "KiloSim.h"
@@ -86,15 +88,15 @@ KiloSim::World *world = new KiloSim::World();
 KiloSim::Logger *logger = new KiloSim::Logger("logFilename.h5", 1);
 // The values output by meanAmbientLightFunc will be saved in a dataset
 // named meanAmbientLight
-logger->addAggregator("meanAmbientLight", meanAmbientLightFunc);
+logger->add_aggregator("meanAmbientLight", meanAmbientLightFunc);
 
-world->addLogger(logger);
+world->add_logger(logger);
 
 int tick = 0;
 while (tick < 100) {
     world->step();
     // Save the outputs of all of the aggregator functions in the world's logger
-    world->logState();
+    world->log_state();
     tick++;
 }
 ```
