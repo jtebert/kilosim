@@ -11,10 +11,11 @@
 
 namespace KiloSim
 {
-Viewer::Viewer(World *world) : m_world(world)
+Viewer::Viewer(World *world, int window_width) : m_world(world), m_window_width(window_width)
 {
-    std::vector<double> worldDim = world->get_dimensions();
-    m_scale = m_window_height / worldDim[1];
+    std::vector<double> world_dim = world->get_dimensions();
+    m_scale = m_window_width / world_dim[0];
+    m_window_height = world_dim[1] * m_scale;
 
     m_settings.antialiasingLevel = 32;
     m_window.create(sf::VideoMode(m_window_width, m_window_height), "KiloSim", sf::Style::Default, m_settings);

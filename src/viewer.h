@@ -20,8 +20,8 @@ class Viewer
 {
 protected:
   // Dimensions of the display (in pixels)
-  float m_window_width = 1080;
-  float m_window_height = 1080;
+  int m_window_width;
+  int m_window_height;
   // Pointer to the World that this viewer draws
   World *m_world;
   // SFML window in which the world will be drawn
@@ -39,7 +39,7 @@ protected:
 
 public:
   // Create a viewer with the pointer to the given world
-  Viewer(World *world);
+  Viewer(World *world, int window_width = 1080);
   // Draw everything in the world at the current state
   void draw();
 
