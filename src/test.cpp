@@ -26,12 +26,7 @@ std::vector<double> mean_beliefs(std::vector<Robot *> &robots)
 int main(int argc, char *argv[])
 {
     // Create world
-    KiloSim::World *world = new KiloSim::World(1200.0, 1200.0);
-
-    // Create logger
-    KiloSim::Logger *logger = new KiloSim::Logger(world, "test.h5", 1);
-    logger->add_aggregator("mean_belief", mean_beliefs);
-    logger->log_params({{"test", 100.25}});
+    KiloSim::World *world = new KiloSim::World(1200.0, 1200.0, "test-bg.png");
 
     // Create robot(s)
     int numRobots = 10;
@@ -44,6 +39,11 @@ int main(int argc, char *argv[])
         robots[n]->robot_init(n * 80 + 75, 600, PI * n / 2);
         world->add_robot(robots[n]);
     }
+
+    // Create logger
+    KiloSim::Logger *logger = new KiloSim::Logger(world, "test.h5", 1);
+    logger->add_aggregator("mean_belief", mean_beliefs);
+    logger->log_params({{"test", 100.25}});
 
     // Create viewer to visualize the world
     KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
@@ -58,18 +58,15 @@ int main(int argc, char *argv[])
         // Draw the world
         viewer->draw();
 
-        // printf("%f, %f, (%f)\n", robots[0]->pos[0], robots[0]->pos[1], robots[0]->pos[2]);
+        // std::cout << world->get_light(1100, 1000) << std::endl;
 
         if ((world->get_tick() % (30 * world->get_tick_rate())) == 0)
         {
-            // Log the state of the world every 2 seconds
+            // Log the state of the world every 30 seconds
             // This works because the tickRate (ticks/sec) must be an integer
             std::cout << "Time: " << world->get_time() << " s" << std::endl;
             logger->log_state();
         }
-
-        // DEBUG: Delay to see drawing (us)
-        // usleep(10000);
     }
-    std::cout << "Finished" << std::endl;
+    std::cout << "Finished simulation" << std::endl;
 }

@@ -12,26 +12,13 @@
 #include <string>
 #include <iterator>
 #include <memory>
+#include <SFML/Graphics.hpp>
 #include "robot.h"
 
 namespace KiloSim
 {
 class World
 {
-
-  // 2D image pattern for light
-  struct LightPattern
-  {
-    // Width of the light image (pixels)
-    uint16_t width;
-    // Height of the light image (pixels)
-    uint16_t height;
-    // Data of the light pattern (8-bit brayscale 0-255)
-    std::vector<uint8_t> data;
-    // Build a pattern from an existing reference
-    //LightPattern(uint16_t width, uint16_t height, const uint32_t &data);
-  };
-
   struct RobotPose
   {
     // x, y, and theta (rotation) of a robot
@@ -62,7 +49,7 @@ protected:
   const double m_pControlExecute = .99;
 
   // Background light pattern image (as a 2D vector)
-  LightPattern m_light_pattern;
+  sf::Image m_light_pattern;
 
 public:
   typedef std::vector<Robot *>::iterator RobotsIterator;
@@ -94,8 +81,13 @@ public:
   void step();
   // Return whether there is a light pattern
   bool has_light_pattern();
+  // Return a reference to the current light in the world
+  sf::Image &get_light_pattern();
   // Set the light pattern for the world ground surface
   void set_light_pattern(std::string lightImg);
+  // Get the 10-bit color at the given coordinates in World space
+  // (NOT in image coordinates. (0,0) is bottom left)
+  uint16_t get_light(float x, float y);
   // Add a robot to the world. If the robot is already in the world, do nothing
   void add_robot(Robot *robot);
   // Remove a robot from the world and destroy it. If not in the world, do nothing

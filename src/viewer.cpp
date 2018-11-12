@@ -18,16 +18,13 @@ Viewer::Viewer(World *world, int window_width) : m_world(world), m_window_width(
     m_window_height = world_dim[1] * m_scale;
 
     m_settings.antialiasingLevel = 32;
-    m_window.create(sf::VideoMode(m_window_width, m_window_height), "KiloSim", sf::Style::Default, m_settings);
+    m_window.create(sf::VideoMode(m_window_width, m_window_height),
+                    "KiloSim", sf::Style::Default, m_settings);
     m_window.setFramerateLimit(144);
 
     m_background.setSize(sf::Vector2f(m_window_width, m_window_height));
-    if (!m_light_pattern.loadFromFile("test-bg.png"))
-    {
-        printf("Texture error\n");
-    }
-
-    m_background.setTexture(&m_light_pattern);
+    m_bg_texture.loadFromImage(world->get_light_pattern());
+    m_background.setTexture(&m_bg_texture);
 
     // Create the texture for the Kilobot robots once
     if (!m_robot_texture.create(RADIUS * 2 * m_scale, RADIUS * 2 * m_scale))

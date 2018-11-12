@@ -13,6 +13,7 @@
 #include "KiloSim.h"
 #include "robot.h"
 #include <SFML/Graphics.hpp>
+#include <memory>
 
 namespace KiloSim
 {
@@ -26,8 +27,8 @@ protected:
   World *m_world;
   // SFML window in which the world will be drawn
   sf::RenderWindow m_window;
-  // SFML texture containing the image used for background
-  sf::Texture m_light_pattern;
+  // Texture of the World image
+  sf::Texture m_bg_texture;
   // The background rectangle shape itself
   sf::RectangleShape m_background;
   // Scaling ratio between world and window coordinates
