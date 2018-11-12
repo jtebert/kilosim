@@ -11,8 +11,8 @@
 #include <set>
 #include <string>
 #include <iterator>
+#include <memory>
 #include "robot.h"
-#include "logger.h"
 
 namespace KiloSim
 {
@@ -63,7 +63,6 @@ protected:
 
   // Background light pattern image (as a 2D vector)
   LightPattern m_light_pattern;
-  KiloSim::Logger *m_logger = nullptr;
 
 public:
   typedef std::vector<Robot *>::iterator RobotsIterator;
@@ -101,11 +100,6 @@ public:
   void add_robot(Robot *robot);
   // Remove a robot from the world and destroy it. If not in the world, do nothing
   void remove_robot(Robot *robot);
-  // Add a Logger object to the World to handle data management
-  void add_logger(Logger *lgr);
-  // Use the logger to save the current state of the World. Fails if Logger hasn't
-  // been added
-  void log_state();
   // Get/set the tick rate
   void set_tick_rate(uint16_t newTickRate);
   uint16_t get_tick_rate();

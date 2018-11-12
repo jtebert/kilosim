@@ -10,8 +10,9 @@
 namespace KiloSim
 {
 
-Logger::Logger(std::string file_id, int trial_num) : m_file_id(file_id),
-                                                     m_trial_num(trial_num)
+Logger::Logger(World *world, std::string file_id, int trial_num) : m_file_id(file_id),
+                                                                   m_trial_num(trial_num),
+                                                                   m_world(world)
 {
     // Create the HDF5 file if it doesn't already exist
     m_h5_file = create_or_open_file(file_id);
@@ -56,19 +57,20 @@ void Logger::add_aggregator(std::string aggName, aggregatorFunc aggFunc)
     // TODO: Create a packet table and save it
 }
 
-void Logger::log_state(double timeSec, std::vector<Robot *> &robots)
+void Logger::log_state()
 {
     // https://thispointer.com/how-to-iterate-over-an-unordered_map-in-c11/
 
     // Add the current time to the time series
-    herr_t err = m_time_table->AppendPacket(&timeSec);
+    double t = m_world->get_time();
+    herr_t err = m_time_table->AppendPacket(&t);
     if (err < 0)
         fprintf(stderr, "WARNING: Failed to append to time series");
 
     for (std::pair<std::string, aggregatorFunc> agg : aggregators)
     {
         // Not sure about passing the pointer / reference here ?
-        log_aggregator(agg.first, agg.second, robots);
+        log_aggregator(agg.first, agg.second);
         // TODO: Create a packet table for each aggregator
     }
 }
@@ -108,10 +110,10 @@ void Logger::log_param(std::string name, double val)
     delete dataspace;
 }
 
-void Logger::log_aggregator(std::string aggName, aggregatorFunc aggFunc, std::vector<Robot *> &robots)
+void Logger::log_aggregator(std::string aggName, aggregatorFunc aggFunc)
 {
     // Call the aggregator function on the robots
-    std::vector<double> aggVal = (*aggFunc)(robots);
+    std::vector<double> aggVal = (*aggFunc)(m_world->get_robots());
     // TODO: append to the packet table (should be created by add_aggregator)
 }
 

@@ -13,10 +13,10 @@
 #include "H5PacketTable.h"
 #include "H5Cpp.h"
 #include "robot.h"
+#include "KiloSim.h"
 #include <unordered_map>
 #include <string>
 #include <memory>
-#include <set>
 #include <vector>
 
 namespace KiloSim
@@ -34,10 +34,12 @@ public:
   typedef std::unordered_map<std::string, double> Params;
 
 protected:
+  // Pointer to KiloSim World that this Logger tracks
+  World *m_world;
   // HDF5 file where the data lives
   std::string m_file_id;
   // Trial number specifying group where the data lives
-  int trial_num;
+  int m_trial_num;
   // Names and functions of aggregators
   std::unordered_map<std::string, aggregatorFunc> aggregators;
   // TODO: Save pointer to open file, trial group, parameter group, and aggregator packet tables
@@ -54,13 +56,13 @@ protected:
 public:
   // Construct a Logger that logs within the given HDF5 file and group trial_num
   // File will be created if it doesn't exist
-  Logger(std::string file_id, int trial_num);
+  Logger(World *world, std::string file_id, int trial_num);
   // Destructor: closes the file when it goes out of scope
   ~Logger();
   // Add an aggregator function that will be run on log_state
   void add_aggregator(std::string aggName, aggregatorFunc aggFunc);
-  // Log the aggregators at the given time mapped over all the given robots
-  void log_state(double timeSec, std::vector<Robot *> &robots);
+  // Log the aggregators at the given time mapped over all the given robots in the World
+  void log_state();
   // Log all of the given parameters
   void log_params(Params paramPairs);
 
@@ -68,7 +70,7 @@ protected:
   // Log a single parameter name and value
   void log_param(std::string name, double val);
   // Log data for this specific aggregator
-  void log_aggregator(std::string aggName, aggregatorFunc aggFunc, std::vector<Robot *> &robots);
+  void log_aggregator(std::string aggName, aggregatorFunc aggFunc);
   // Create or open an HDF5 file
   H5FilePtr create_or_open_file(const std::string &fname);
   // Create or open a group in an HDF5 file

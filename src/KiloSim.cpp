@@ -68,23 +68,6 @@ void World::remove_robot(Robot *robot)
     printf("This does nothing right now");
 }
 
-void World::add_logger(Logger *logger)
-{
-    m_logger = logger;
-}
-
-void World::log_state()
-{
-    if (m_logger != nullptr)
-    {
-        m_logger->log_state(get_time(), m_robots);
-    }
-    else
-    {
-        printf("FAIL WARNING: No logger added to World. Use add_logger(...)\n");
-    }
-} // namespace KiloSim
-
 void World::run_controllers()
 {
     // TODO: Parallelize

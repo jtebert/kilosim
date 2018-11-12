@@ -25,14 +25,13 @@ std::vector<double> mean_beliefs(std::vector<Robot *> &robots)
 
 int main(int argc, char *argv[])
 {
-    // Create logger
-    KiloSim::Logger *logger = new KiloSim::Logger("test.h5", 1);
-    logger->add_aggregator("mean_belief", mean_beliefs);
-    logger->log_params({{"test", 100.25}});
-
     // Create world
     KiloSim::World *world = new KiloSim::World(1200.0, 1200.0);
-    world->add_logger(logger);
+
+    // Create logger
+    KiloSim::Logger *logger = new KiloSim::Logger(world, "test.h5", 1);
+    logger->add_aggregator("mean_belief", mean_beliefs);
+    logger->log_params({{"test", 100.25}});
 
     // Create robot(s)
     int numRobots = 10;
@@ -66,7 +65,7 @@ int main(int argc, char *argv[])
             // Log the state of the world every 2 seconds
             // This works because the tickRate (ticks/sec) must be an integer
             std::cout << "Time: " << world->get_time() << " s" << std::endl;
-            world->log_state();
+            logger->log_state();
         }
 
         // DEBUG: Delay to see drawing (us)
