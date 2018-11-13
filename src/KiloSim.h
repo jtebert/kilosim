@@ -92,8 +92,7 @@ public:
   void add_robot(Robot *robot);
   // Remove a robot from the world and destroy it. If not in the world, do nothing
   void remove_robot(Robot *robot);
-  // Get/set the tick rate
-  void set_tick_rate(uint16_t newTickRate);
+  // Get the tick rate (should be 32)
   uint16_t get_tick_rate();
   // Get the current tick of the simulation (only set by simulator)
   uint32_t get_tick();

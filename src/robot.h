@@ -4,7 +4,6 @@
 
 #include <iostream>
 #include <math.h>
-#include "vars.h"
 
 const double motion_error_std = .02;
 const double PI = 3.14159265358979324;
@@ -17,6 +16,8 @@ const uint8_t X = 0;
 const uint8_t Y = 1;
 const uint8_t T = 2;
 
+#define SECOND 32
+
 struct rgb
 {
 	double red, green, blue;
@@ -25,10 +26,6 @@ struct rgb
 class Robot
 {
   public:
-#define NUM_FEATURES 3
-	uint8_t feature_estimate = 127;
-	uint8_t pattern_belief[NUM_FEATURES] = {127, 127, 127};
-	uint8_t decision[3] = {127, 127, 127};
 	uint16_t id;
 	//x, y, theta position in real world, don't use these in controller, that's cheating!!
 	double pos[3];
@@ -51,8 +48,6 @@ class Robot
 		color[1] = c.green;
 		color[2] = c.blue;
 	}
-
-	double dest[3] = {-1, -1, -1};
 
 	// Must implement an robot initialization
 	void robot_init(double, double, double);

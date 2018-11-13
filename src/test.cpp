@@ -7,7 +7,7 @@
 
 uint8_t num_features = 3;
 
-std::vector<double> mean_beliefs(std::vector<Robot *> &robots)
+std::vector<double> mean_red(std::vector<Robot *> &robots)
 {
     // Get the mean belief for all features
     std::vector<double> means(num_features, 0.0);
@@ -16,7 +16,7 @@ std::vector<double> mean_beliefs(std::vector<Robot *> &robots)
         int sum_belief = 0;
         for (auto &robot : robots)
         {
-            sum_belief += robot->pattern_belief[feature];
+            sum_belief += robot->color[0];
         }
         means[feature] = (double)sum_belief / 255 / robots.size();
     }
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
     // Create logger
     KiloSim::Logger *logger = new KiloSim::Logger(world, "test.h5", 1);
-    logger->add_aggregator("mean_belief", mean_beliefs);
+    logger->add_aggregator("mean_red_led", mean_red);
     logger->log_params({{"test", 100.25}});
 
     // Create viewer to visualize the world

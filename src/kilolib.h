@@ -6,7 +6,6 @@
 #include <math.h>
 #include <omp.h>
 #include "robot.h"
-#include "vars.h"
 
 const uint8_t ir = 1;
 const uint8_t NORMAL = 1;
@@ -182,85 +181,6 @@ class Kilobot : public Robot
 			return (unsigned char)*d;
 		else
 			return 255;
-	}
-
-	std::vector<uint16_t> get_ambientlight()
-	{
-		// Use shapes to determine light seen by kilobot
-		// Light sampling function
-		uint16_t num_samples = 0;
-		int32_t sum = 0;
-
-		// FOR SIMULATOR:
-		// Get point at front/nose of robot
-		point_t p;
-		double t = pos[2];
-		p.x = pos[0] + RADIUS * 1 * cos(t);
-		p.y = pos[1] + RADIUS * 1 * sin(t);
-		//p.x = pos[0];
-		//p.y = pos[1];
-		// Check if in arena boundaries. If not, return grey
-		//if (!point_in_polygon(p, arena_bounds)) {
-		if (!point_in_rect(p, arena_bounds))
-		{
-			// out of arena = GRAY
-			return {500, 500, 500};
-		}
-		else
-		{
-			bool abort = false;
-			std::vector<uint16_t> colors;
-			// Check if in any polygon
-			for (int i = 0; i < polygons.size(); i++)
-			{
-				if (!abort)
-				{
-					polygon_c_t poly = polygons[i];
-					if (point_in_polygon(p, poly))
-					{
-						colors = {uint16_t(poly.color[0] * 1024),
-								  uint16_t(poly.color[1] * 1024),
-								  uint16_t(poly.color[2] * 1024)};
-						abort = true;
-					}
-				}
-			}
-			// Check if in any circle
-			for (int i = 0; i < circles.size(); i++)
-			{
-				if (!abort)
-				{
-					circle_c_t circ = circles[i];
-					if (point_in_circle(p, circ))
-					{
-						colors = {uint16_t(circ.color[0] * 1024),
-								  uint16_t(circ.color[1] * 1024),
-								  uint16_t(circ.color[2] * 1024)};
-						abort = true;
-					}
-				}
-			}
-			// Check if in any rectangle
-			for (int i = 0; i < rects.size(); i++)
-			{
-				if (!abort)
-				{
-					rect_c_t rect = rects[i];
-					if (point_in_rect(p, rect))
-					{
-						colors = {uint16_t(rect.color[0] * 1024),
-								  uint16_t(rect.color[1] * 1024),
-								  uint16_t(rect.color[2] * 1024)};
-						abort = true;
-					}
-				}
-			}
-			if (abort)
-			{
-				return colors;
-			}
-			return {0, 0, 0};
-		}
 	}
 
 	void sensing(int features, int type[], int x[], int y[], int value[]) {}

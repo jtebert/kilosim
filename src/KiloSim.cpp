@@ -296,21 +296,15 @@ double World::wrap_angle(double angle)
     // Guarantee that angle will be from 0 to 2*pi
     // While loop is fastest option when angles are close to correct range
     // TODO: Should this actually not be in the World class?
-    while (angle > TWO_PI)
+    while (angle > 2 * M_PI)
     {
-        angle -= TWO_PI;
+        angle -= 2 * M_PI;
     }
     while (angle < 0)
     {
-        angle += TWO_PI;
+        angle += 2 * M_PI;
     }
     return angle;
-}
-
-void World::set_tick_rate(uint16_t tickRate)
-{
-    m_tick_rate = tickRate;
-    m_tick_delta_t = 1.0 / m_tick_rate;
 }
 
 uint16_t World::get_tick_rate()

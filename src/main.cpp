@@ -16,7 +16,6 @@
 #include <chrono>
 #include <thread>
 #include <sys/stat.h>
-#include "vars.h"
 
 using namespace std;
 

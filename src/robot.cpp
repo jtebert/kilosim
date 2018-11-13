@@ -2,7 +2,6 @@
 #include <iostream>
 #include <numeric>
 #include "robot.h"
-#include "vars.h"
 
 void Robot::robot_controller()
 {
