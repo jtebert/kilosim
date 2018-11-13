@@ -10,6 +10,12 @@ Analysis code: [kilobot-simulator-analysis](https://github.com/jtebert/kilobot-s
 
 ## Compiling
 
+#### Dependencies
+
+HDF5 and SFML. Install on Ubuntu-like systems with:
+
+ `sudo apt install libsfml-dev libhdf5-dev`
+
 **TODO: This needs a proper make/cmake file instead of my hacky bash scripts**
 
 *Temporary:*
