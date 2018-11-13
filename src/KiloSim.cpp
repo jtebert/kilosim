@@ -9,7 +9,7 @@ namespace KiloSim
 World::World(double arena_width, double arena_height)
     : m_arena_width(arena_width), m_arena_height(arena_height)
 {
-    // TODO: Implement constructor without lightImg
+    // TODO: Implement constructor without light_img_src
 }
 World::World(double arena_width, double arena_height, std::string light_pattern_src)
     : m_arena_width(arena_width), m_arena_height(arena_height)
@@ -100,7 +100,7 @@ void World::run_controllers()
     // TODO: Parallelize
     for (auto &r : m_robots)
     {
-        if ((rand()) < (int)(m_pControlExecute * RAND_MAX))
+        if ((rand()) < (int)(m_prob_control_execute * RAND_MAX))
         {
             r->robot_controller();
         }
@@ -112,7 +112,7 @@ void World::communicate()
     // TODO: Parallelize
     // TODO: Is the shuffling necessary? (I killed it)
 
-    if (m_tick % m_commRate == 0)
+    if (m_tick % m_comm_rate == 0)
     {
         //#pragma omp for
         for (auto &tx_r : m_robots)
@@ -151,7 +151,7 @@ World::PosesPtr World::compute_next_step()
     newPos.resize(m_robots.size());
 
     int i = 0;
-    float dt = m_tickDeltaT;
+    float dt = m_tick_delta_t;
     for (auto &r : m_robots)
     {
         double theta = r->pos[2];
@@ -271,11 +271,11 @@ void World::move_robots(PosesPtr newPos, std::shared_ptr<std::vector<int16_t>> c
         { // Collision with another robot
             if (r->collision_turn_dir == 0)
             {
-                newTheta = r->pos[2] - r->turn_speed * m_tickDeltaT; // left/CCW
+                newTheta = r->pos[2] - r->turn_speed * m_tick_delta_t; // left/CCW
             }
             else
             {
-                newTheta = r->pos[2] + r->turn_speed * m_tickDeltaT; // right/CW
+                newTheta = r->pos[2] + r->turn_speed * m_tick_delta_t; // right/CW
             }
             if (r->collision_timer > r->max_collision_timer)
             { // Change turn dir
@@ -309,13 +309,13 @@ double World::wrap_angle(double angle)
 
 void World::set_tick_rate(uint16_t tickRate)
 {
-    m_tickRate = tickRate;
-    m_tickDeltaT = 1.0 / m_tickRate;
+    m_tick_rate = tickRate;
+    m_tick_delta_t = 1.0 / m_tick_rate;
 }
 
 uint16_t World::get_tick_rate()
 {
-    return m_tickRate;
+    return m_tick_rate;
 }
 
 uint32_t World::get_tick()
@@ -325,7 +325,7 @@ uint32_t World::get_tick()
 
 double World::get_time()
 {
-    return (double)m_tick / m_tickRate;
+    return (double)m_tick / m_tick_rate;
 }
 
 std::vector<Robot *> &World::get_robots()

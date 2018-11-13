@@ -34,19 +34,19 @@ protected:
   std::vector<Robot *> m_robots;
   // How many ticks per second in simulation
   // TODO: Set default
-  uint16_t m_tickRate = 32;
+  uint16_t m_tick_rate = 32;
   // Current tick of the system (starts at 0)
   uint32_t m_tick = 0;
   // Duration (seconds) of a tick
-  double m_tickDeltaT = 1.0 / m_tickRate;
+  double m_tick_delta_t = 1.0 / m_tick_rate;
   // Number of ticks between messages (eg, 3 means 10 messages per second)
-  uint m_commRate = 3;
+  uint m_comm_rate = 3;
   // Height of the arena in mm
   const double m_arena_width;
   // Width of the arena in mm
   const double m_arena_height;
   // probability of a controller executing its time step
-  const double m_pControlExecute = .99;
+  const double m_prob_control_execute = .99;
 
   // Background light pattern image (as a 2D vector)
   sf::Image m_light_pattern;
@@ -71,7 +71,7 @@ protected:
 
 public:
   // Construct a world of a fixed size with the background light pattern
-  World(double arena_width, double arena_height, std::string lightImg);
+  World(double arena_width, double arena_height, std::string light_img_src);
   // Construct a world with no background/light pattern
   World(double arena_width, double arena_height);
   // Destructor, destroy all objects
@@ -84,7 +84,7 @@ public:
   // Return a reference to the current light in the world
   sf::Image &get_light_pattern();
   // Set the light pattern for the world ground surface
-  void set_light_pattern(std::string lightImg);
+  void set_light_pattern(std::string light_img_src);
   // Get the 10-bit color at the given coordinates in World space
   // (NOT in image coordinates. (0,0) is bottom left)
   uint16_t get_light(float x, float y);

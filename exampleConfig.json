@@ -1,0 +1,14 @@
+{
+    "worldDimensions": [
+        1200,
+        1200
+    ],
+    "numRobots": 300,
+    "numThreads": 4,
+    "lightPatternFilename": "test-bg.png",
+    "showScene": false,
+    "trialDuration": 600,
+    "logFilename": "test-log.h5",
+    "numTrials": 10,
+    "startTrial": 1
+}
