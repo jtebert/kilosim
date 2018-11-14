@@ -23,6 +23,10 @@ struct rgb
 	double red, green, blue;
 };
 
+/*!
+ * This matches the Kilobot Library API. For detailed documentation and usage,
+ * see the [Kilolib documentation](https://www.kilobotics.com/docs/index.html).
+ */
 class Robot
 {
   public:

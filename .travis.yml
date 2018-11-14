@@ -1,3 +1,9 @@
+# Auto-deployment of documentation to GitHub Pages
+# Published on every master commit to: https://jtebert.github.io/kilosim/
+#
+# Based on the example at: https://gist.github.com/vidavidorra/548ffbcdae99d752da02
+# And particularly this comment: https://gist.github.com/vidavidorra/548ffbcdae99d752da02#gistcomment-1958817
+
 # This will run on Travis' 'new' container-based infrastructure
 sudo: false
 

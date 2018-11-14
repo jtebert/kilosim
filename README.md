@@ -1,6 +1,8 @@
 # KiloSim: Kilobot Simulator
 
-This is maintained on GitHub in the [kilobot-simulator](https://github.com/jtebert/kilosim) repository. You can [submit any issues or questions here](https://github.com/jtebert/kilosim/issues).
+This is maintained on GitHub in the [kilosim repository](https://github.com/jtebert/kilosim). You can [submit any issues or questions here](https://github.com/jtebert/kilosim/issues).
+
+[**Full Documentation**](https://jtebert.github.io/kilosim/index.html)
 
 ---
 
@@ -13,7 +15,7 @@ KiloSim is designed to be a fast, lightweight, pseudo-physical* simulator for Ki
 - [Coming soon] Parallelization with OpenMP
 - [Coming soon] Easy configuration with JSON files to run multiple and varied experiments
 
-_* Pseudo-physical means that it is spatial and handles issues like collisions in a functional but hand-wavy manner. We make no attempt to accurately model true physical interactions. If you want to see what this means, run an example simulation with the viewer._
+*\* Pseudo-physical means that it is spatial and handles issues like collisions in a functional but hand-wavy manner. We make no attempt to accurately model true physical interactions. If you want to see what this means, run an example simulation with the viewer.*
 
 ## Installing and Using
 
@@ -39,7 +41,7 @@ _* Pseudo-physical means that it is spatial and handles issues like collisions i
 
 `doxygen`
 
-This will automatically use the settings in `Doxyfile` and save the results to `docs/`
+This will automatically use the settings in `Doxyfile` and save the results to `docs/`. (The latest full documentation is automatically generated and published [here](https://jtebert.github.io/kilosim/index.html).)
 
 ## Configuration and Parameters
 
