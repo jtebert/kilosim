@@ -50,10 +50,10 @@ Logger::~Logger(void)
     std::cout << "TODO: Close the file when out of scope?" << std::endl;
 }
 
-void Logger::add_aggregator(std::string aggName, aggregatorFunc aggFunc)
+void Logger::add_aggregator(std::string agg_name, aggregatorFunc aggFunc)
 {
-    //std::pair<std::string, aggregatorFunc> agg(aggName, aggFunc);
-    aggregators.insert({{aggName, aggFunc}});
+    //std::pair<std::string, aggregatorFunc> agg(agg_name, aggFunc);
+    aggregators.insert({{agg_name, aggFunc}});
     // TODO: Create a packet table and save it
 }
 
@@ -110,7 +110,7 @@ void Logger::log_param(std::string name, double val)
     delete dataspace;
 }
 
-void Logger::log_aggregator(std::string aggName, aggregatorFunc aggFunc)
+void Logger::log_aggregator(std::string agg_name, aggregatorFunc aggFunc)
 {
     // Call the aggregator function on the robots
     std::vector<double> aggVal = (*aggFunc)(m_world->get_robots());
