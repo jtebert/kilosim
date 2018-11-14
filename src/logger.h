@@ -7,6 +7,27 @@
     Created 2018-10 by Julia Ebert
 */
 
+/*
+   * ```
+  * logFile.h5
+  * |__ trial_1  (group)
+  * |   |__ time (dataset)  [1 x t]
+  * |   |__ params (group)
+  * |   |   |__ param1 (dataset)
+  * |   |   |__ param2 (dataset)
+  * |   |   |__ ...
+  * |   |__ aggregator_1 (dataset)  [n x t]
+  * |   |__ aggregator_2 (dataset)  [m x t]
+  * |   |__ ...
+  * |__ trial_2
+  * |   |__ time (dataset)  [1 x t]
+  * |   |__ params
+  * |   |   |__ ...
+  * |   |__ ...
+  * ...
+  * ```
+  */
+
 #ifndef __KILOSIM_LOGGER_H
 #define __KILOSIM_LOGGER_H
 
@@ -21,6 +42,43 @@
 
 namespace KiloSim
 {
+/*!
+ * A Logger is used to save [HDF5](https://portal.hdfgroup.org/display/support)
+ * files containing parameters and continuous state information for multiple
+ * simulation trials.
+ *
+ * State information is logged through aggregator functions, which reduce the
+ * state of the robots to a vector. This could be a single average value over
+ * all the robots (e.g., mean observed ambient light) all the way to saving a
+ * value for every robot (e.g., each robot's ambient light value as an
+ * element). Each aggregator is saved as an array, where each row is the
+ * output of the aggregator function. Whenever the state is logged, the
+ * simulator time is also saved as a timeseries.
+ *
+ * The resulting file structure would look as follows:
+ *
+ * ```
+ * logFile.h5
+ * |__ trial_1  (group)
+ * |   |__ time (dataset)  [1 x t]
+ * |   |__ params (group)
+ * |   |   |__ param1 (dataset)
+ * |   |   |__ param2 (dataset)
+ * |   |   |__ ...
+ * |   |__ aggregator_1 (dataset)  [n x t]
+ * |   |__ aggregator_2 (dataset)  [m x t]
+ * |   |__ ...
+ * |__ trial_2
+ * |   |__ time (dataset)  [1 x t]
+ * |   |__ params
+ * |   |   |__ ...
+ * |   |__ ...
+ * ...
+ * ```
+ *
+ * where `t` is the number of time steps when data was logged, and
+ * `aggregator_1` and `aggregator_2` were specified by the user.
+ */
 class Logger
 {
 public:
@@ -116,6 +174,10 @@ protected:
   //! Create or open a group in an HDF5 file
   H5GroupPtr create_or_open_group(H5FilePtr file, std::string &groupName);
 };
+
+/*! \example example_logger.cpp
+ * Example minimal usage of a Logger
+ */
 } // namespace KiloSim
 
 #endif

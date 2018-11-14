@@ -68,11 +68,15 @@ public:
 protected:
   //! Draw a single robot onto the scene
   void draw_robot(Robot *robot);
-  //! Draw the current world time as text in the arena
+  //! Add the current world time to the display
   void draw_time();
   //! Draw the world's background light pattern image
   void draw_light_pattern();
 };
+
+/*! \example example_viewer.cpp
+ * Example usage of a viewer to display a World in a simulation loop.
+ */
 } // namespace KiloSim
 
 #endif
