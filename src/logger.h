@@ -108,7 +108,9 @@ protected:
   //! Trial number specifying group where the data lives
   int m_trial_num;
   //! Names and functions of aggregators
-  std::unordered_map<std::string, aggregatorFunc> aggregators;
+  std::unordered_map<std::string, aggregatorFunc> m_aggregators;
+  //! Names and HDF5 datasets (PacketTables) for every aggregator
+  std::unordered_map<std::string, H5PacketTablePtr> m_aggregator_dsets;
   //! Opened HDF5 file where this Logger saves
   H5FilePtr m_h5_file;
   //! HDF5 group name for trial. e.g., /trial_0
@@ -165,14 +167,14 @@ public:
   void log_params(Params paramPairs);
 
 protected:
+  //! Log data for this specific aggregator
+  void log_aggregator(std::string agg_name, aggregatorFunc agg_func);
   //! Log a single parameter name and value
   void log_param(std::string name, double val);
-  //! Log data for this specific aggregator
-  void log_aggregator(std::string agg_name, aggregatorFunc aggFunc);
   //! Create or open an HDF5 file
   H5FilePtr create_or_open_file(const std::string &fname);
   //! Create or open a group in an HDF5 file
-  H5GroupPtr create_or_open_group(H5FilePtr file, std::string &groupName);
+  H5GroupPtr create_or_open_group(H5FilePtr file, std::string &group_name);
 };
 
 /*! \example example_logger.cpp

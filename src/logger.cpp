@@ -36,13 +36,13 @@ Logger::Logger(World *world, std::string file_id, int trial_num) : m_file_id(fil
 
     // Create a packet table dataset for the timeseries
     m_time_dset_name = m_trial_group_name + "/time";
-    FL_PacketTable *timePacketTable = new FL_PacketTable(
+    FL_PacketTable *time_packet_table = new FL_PacketTable(
         m_h5_file->getId(), (char *)m_time_dset_name.c_str(), H5T_NATIVE_DOUBLE, 1);
-    if (!timePacketTable->IsValid())
+    if (!time_packet_table->IsValid())
     {
         fprintf(stderr, "WARNING: Failed to create time series");
     }
-    m_time_table = H5PacketTablePtr(timePacketTable);
+    m_time_table = H5PacketTablePtr(time_packet_table);
 }
 
 Logger::~Logger(void)
@@ -50,11 +50,19 @@ Logger::~Logger(void)
     std::cout << "TODO: Close the file when out of scope?" << std::endl;
 }
 
-void Logger::add_aggregator(std::string agg_name, aggregatorFunc aggFunc)
+void Logger::add_aggregator(std::string agg_name, aggregatorFunc agg_func)
 {
     //std::pair<std::string, aggregatorFunc> agg(agg_name, aggFunc);
-    aggregators.insert({{agg_name, aggFunc}});
+    m_aggregators.insert({{agg_name, agg_func}});
     // TODO: Create a packet table and save it
+    std::string agg_dset_name = m_trial_group_name + "/" + agg_name;
+    FL_PacketTable *agg_packet_table = new FL_PacketTable(
+         m_h5_file->getId(), (char *)agg_dset_name.c_str(), H5T_NATIVE_DOUBLE, 1);
+    if (!agg_packet_table)
+     {
+         fprintf(stderr, "WARNING: Failed to create aggregator table");
+     }
+     m_aggregator_dsets.insert({{agg_name, H5PacketTablePtr(agg_packet_table)}});
 }
 
 void Logger::log_state()
@@ -67,11 +75,22 @@ void Logger::log_state()
     if (err < 0)
         fprintf(stderr, "WARNING: Failed to append to time series");
 
-    for (std::pair<std::string, aggregatorFunc> agg : aggregators)
+    for (std::pair<std::string, aggregatorFunc> agg : m_aggregators)
     {
         // Not sure about passing the pointer / reference here ?
         log_aggregator(agg.first, agg.second);
-        // TODO: Create a packet table for each aggregator
+    }
+}
+
+void Logger::log_aggregator(std::string agg_name, aggregatorFunc agg_func)
+{
+    // Call the aggregator function on the robots
+    std::vector<double> agg_val = (*agg_func)(m_world->get_robots());
+    // TODO: append to the packet table (should be created by add_aggregator)
+    herr_t err = m_aggregator_dsets.at(agg_name)->AppendPacket(&agg_val);
+    if (err < 0)
+    {
+        fprintf(stderr, "WARNING: Failled to append data to aggregator table");
     }
 }
 
@@ -89,7 +108,7 @@ void Logger::log_param(std::string name, double val)
     // Example: https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5group.cpp
     // https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5tutr_crtgrpd.cpp
 
-    std::string dsetName = m_params_group_name + "/" + name;
+    std::string dset_name = m_params_group_name + "/" + name;
 
     // Save as array (saves something but truncates decimal values)
     // double data_arr[1];
@@ -103,18 +122,10 @@ void Logger::log_param(std::string name, double val)
 
     // Save scalar...
     H5::DataSpace *dataspace = new H5::DataSpace();
-    H5::DataSet *dataset = new H5::DataSet(m_h5_file->createDataSet(dsetName, H5::PredType::NATIVE_DOUBLE, *dataspace));
+    H5::DataSet *dataset = new H5::DataSet(m_h5_file->createDataSet(dset_name, H5::PredType::NATIVE_DOUBLE, *dataspace));
     dataset->write(&val, H5::PredType::NATIVE_DOUBLE);
-
     delete dataset;
     delete dataspace;
-}
-
-void Logger::log_aggregator(std::string agg_name, aggregatorFunc aggFunc)
-{
-    // Call the aggregator function on the robots
-    std::vector<double> aggVal = (*aggFunc)(m_world->get_robots());
-    // TODO: append to the packet table (should be created by add_aggregator)
 }
 
 Logger::H5FilePtr Logger::create_or_open_file(const std::string &fname)
@@ -134,18 +145,18 @@ Logger::H5FilePtr Logger::create_or_open_file(const std::string &fname)
     return H5FilePtr(file);
 }
 
-Logger::H5GroupPtr Logger::create_or_open_group(H5FilePtr file, std::string &groupName)
+Logger::H5GroupPtr Logger::create_or_open_group(H5FilePtr file, std::string &group_name)
 {
     // https://stackoverflow.com/q/35668056
     H5::Exception::dontPrint();
     H5::Group *group;
     try
     {
-        group = new H5::Group(file->openGroup(groupName));
+        group = new H5::Group(file->openGroup(group_name));
     }
     catch (H5::Exception &err)
     {
-        group = new H5::Group(file->createGroup(groupName));
+        group = new H5::Group(file->createGroup(group_name));
     }
 }
 

@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
         // std::cout << world->get_light(1100, 1000) << std::endl;
 
-        if ((world->get_tick() % (30 * world->get_tick_rate())) == 0)
+        if ((world->get_tick() % (2 * world->get_tick_rate())) == 0)
         {
             // Log the state of the world every 30 seconds
             // This works because the tickRate (ticks/sec) must be an integer
