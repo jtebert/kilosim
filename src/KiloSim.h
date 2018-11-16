@@ -13,7 +13,7 @@
 #include <iterator>
 #include <memory>
 #include <SFML/Graphics.hpp>
-#include "robot.h"
+#include "Robot.h"
 
 namespace KiloSim
 {

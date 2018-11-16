@@ -5,7 +5,7 @@
 
 #include <math.h>
 #include <omp.h>
-#include "robot.h"
+#include "Robot.h"
 
 const uint8_t ir = 1;
 const uint8_t NORMAL = 1;

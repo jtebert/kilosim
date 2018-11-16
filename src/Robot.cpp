@@ -1,7 +1,7 @@
 #include <math.h>
 #include <iostream>
 #include <numeric>
-#include "robot.h"
+#include "Robot.h"
 
 void Robot::robot_controller()
 {

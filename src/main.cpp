@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string>
 #include <sstream>
-#include "robot.h"
+#include "Robot.h"
 #include "kilobot.cpp"
 #include <chrono>
 #include <thread>

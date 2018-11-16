@@ -11,7 +11,7 @@
 #define __KILOSIM_VIEWER_H
 
 #include "KiloSim.h"
-#include "robot.h"
+#include "Robot.h"
 #include <SFML/Graphics.hpp>
 #include <memory>
 

@@ -71,7 +71,7 @@ void Viewer::draw()
 void Viewer::draw_robot(Robot *r)
 {
     // TODO : Implement this
-    // Maybe move this to robot.h (each robot responsible for determining its
+    // Maybe move this to Robot.h (each robot responsible for determining its
     // own representation)
 
     sf::Sprite sprite;

@@ -12,7 +12,7 @@
 
 #include <H5PacketTable.h>
 #include <H5Cpp.h>
-#include "robot.h"
+#include "Robot.h"
 #include "KiloSim.h"
 #include <unordered_map>
 #include <string>
