@@ -7,7 +7,11 @@
 
 class MyKilobot : public Kilobot
 {
+  public:
+    // I'm using this variable for checking logging/downcasting
+    int16_t light_intensity = -1;
 
+  private:
 // Variables
 #define STOP 0
 #define FORWARD 1
@@ -92,7 +96,9 @@ class MyKilobot : public Kilobot
                 set_color(RGB(0, 1, 1));
                 set_motion(STOP);
             }
+            light_intensity = next_check_dur;
         }
+        //light_intensity = get_ambientlight();
     }
 
     // Receiving message

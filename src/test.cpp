@@ -14,11 +14,11 @@ std::vector<double> mean_colors(std::vector<Robot *> &robots)
         int sum_belief = 0;
         for (auto &robot : robots)
         {
-            sum_belief += robot->color[c];
+            MyKilobot *kb = (MyKilobot *)robot;
+            sum_belief += kb->light_intensity;
         }
         means[c] = (double)sum_belief / 255 / robots.size();
     }
-    printf("Colors: %f, %f, %f\n", means[0], means[1], means[2]);
     return means;
 }
 

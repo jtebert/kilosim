@@ -86,7 +86,7 @@ uint16_t World::get_light(float x, float y)
 
 void World::add_robot(Robot *robot)
 {
-    robot->add_light_pattern(*m_light_pattern);
+    robot->add_light_pattern(&m_light_pattern);
     m_robots.push_back(robot);
 }
 

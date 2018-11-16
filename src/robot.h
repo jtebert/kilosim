@@ -54,19 +54,6 @@ class Robot
 		color[2] = c.blue;
 	}
 
-	// Must implement an robot initialization
-	void robot_init(double, double, double);
-	virtual void init() = 0;
-
-	// Robot's internal timer
-	int timer;
-
-	// Must implement the controller
-	void robot_controller();
-	virtual void controller() = 0;
-
-	virtual void sensing(int, int[], int[], int[], int[]) = 0;
-
 	// Flag set to 1 when robot wants to transmit
 	int tx_request;
 
@@ -79,6 +66,20 @@ class Robot
 	double turn_speed = 0.5;   // rad/s
 
 	double battery = -1;
+
+  public:
+	// Must implement an robot initialization
+	void robot_init(double, double, double);
+	virtual void init() = 0;
+
+	// Robot's internal timer
+	int timer;
+
+	// Must implement the controller
+	void robot_controller();
+	virtual void controller() = 0;
+
+	virtual void sensing(int, int[], int[], int[], int[]) = 0;
 
 	virtual char *get_debug_info(char *buffer, char *rt) = 0;
 
@@ -96,28 +97,6 @@ class Robot
 		return sqrt(s);
 	}
 
-	static double find_theta(double x1, double y1, double x2, double y2)
-	{
-		if (x1 == x2)
-			return 0;
-		double x = x2 - x1;
-		double y = y2 - y1;
-
-		if (x >= 0 && y >= 0)
-		{
-			return atan(y / x);
-		}
-		if (x < 0 && y < 0)
-		{
-			return atan(y / x) + PI;
-		}
-		if (x < 0 && y > 0)
-		{
-			return atan(abs(x) / y) + PI / 2;
-		}
-		return atan(x / abs(y)) + PI / 2 * 3;
-	}
-
 	static double gauss_rand(int timer)
 	{
 		static double pseudogaus_rand[GAUSS + 1];
@@ -133,19 +112,6 @@ class Robot
 		return pseudogaus_rand[timer % GAUSS];
 	}
 
-	static double theta_diff(double t1, double t2)
-	{
-		double diff = t1 - t2;
-		if (diff < -PI)
-		{
-			diff += 2 * PI;
-		}
-		else if (diff > PI)
-		{
-			diff -= 2 * PI;
-		}
-		return diff;
-	}
 	virtual void received() = 0;
 
   private:
