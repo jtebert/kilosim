@@ -2,7 +2,7 @@
 
 This is maintained on GitHub in the [kilosim repository](https://github.com/jtebert/kilosim). You can [submit any issues or questions here](https://github.com/jtebert/kilosim/issues).
 
-[**Full Documentation**](https://jtebert.github.io/kilosim/index.html)
+[__Full Documentation__](https://jtebert.github.io/kilosim/index.html)
 
 ---
 
@@ -29,7 +29,7 @@ KiloSim is designed to be a fast, lightweight, pseudo-physical* simulator for Ki
 
 **TODO: This needs a proper make/cmake file instead of my hacky bash scripts**
 
-`./make_test.sh`
+`./build.sh`
 
 ### Run
 

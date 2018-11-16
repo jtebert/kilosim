@@ -52,17 +52,25 @@ Logger::~Logger(void)
 
 void Logger::add_aggregator(std::string agg_name, aggregatorFunc agg_func)
 {
-    //std::pair<std::string, aggregatorFunc> agg(agg_name, aggFunc);
     m_aggregators.insert({{agg_name, agg_func}});
-    // TODO: Create a packet table and save it
+
+    // Do a test run of the aggregator to get the length of the output
+    std::vector<double> test_output = (*agg_func)(m_world->get_robots());
+
+    hsize_t out_len[1] = {test_output.size()};
+    // H5::ArrayType test(H5::PredType::NATIVE_FLOAT, 1, out_len);
+    H5::ArrayType agg_type(H5T_NATIVE_DOUBLE, 1, out_len);
+    std::make_shared<H5::ArrayType>(agg_type);
+
+    // Create a packet table and save it
     std::string agg_dset_name = m_trial_group_name + "/" + agg_name;
     FL_PacketTable *agg_packet_table = new FL_PacketTable(
-         m_h5_file->getId(), (char *)agg_dset_name.c_str(), H5T_NATIVE_DOUBLE, 1);
+        m_h5_file->getId(), (char *)agg_dset_name.c_str(), agg_type.getId(), 1);
     if (!agg_packet_table)
-     {
-         fprintf(stderr, "WARNING: Failed to create aggregator table");
-     }
-     m_aggregator_dsets.insert({{agg_name, H5PacketTablePtr(agg_packet_table)}});
+    {
+        fprintf(stderr, "WARNING: Failed to create aggregator table");
+    }
+    m_aggregator_dsets.insert({{agg_name, H5PacketTablePtr(agg_packet_table)}});
 }
 
 void Logger::log_state()
@@ -87,7 +95,7 @@ void Logger::log_aggregator(std::string agg_name, aggregatorFunc agg_func)
     // Call the aggregator function on the robots
     std::vector<double> agg_val = (*agg_func)(m_world->get_robots());
     // TODO: append to the packet table (should be created by add_aggregator)
-    herr_t err = m_aggregator_dsets.at(agg_name)->AppendPacket(&agg_val);
+    herr_t err = m_aggregator_dsets.at(agg_name)->AppendPacket(agg_val.data());
     if (err < 0)
     {
         fprintf(stderr, "WARNING: Failled to append data to aggregator table");
@@ -104,7 +112,6 @@ void Logger::log_params(Params paramPairs)
 
 void Logger::log_param(std::string name, double val)
 {
-    // Create a dataset in the 'params' group with the given value
     // Example: https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5group.cpp
     // https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5tutr_crtgrpd.cpp
 

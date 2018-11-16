@@ -31,8 +31,8 @@
 #ifndef __KILOSIM_LOGGER_H
 #define __KILOSIM_LOGGER_H
 
-#include "H5PacketTable.h"
-#include "H5Cpp.h"
+#include <H5PacketTable.h>
+#include <H5Cpp.h>
 #include "robot.h"
 #include "KiloSim.h"
 #include <unordered_map>

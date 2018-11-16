@@ -5,21 +5,20 @@
 
 #include <unistd.h>
 
-uint8_t num_features = 3;
-
-std::vector<double> mean_red(std::vector<Robot *> &robots)
+std::vector<double> mean_colors(std::vector<Robot *> &robots)
 {
-    // Get the mean belief for all features
-    std::vector<double> means(num_features, 0.0);
-    for (int feature = 0; feature < num_features; feature++)
+    // Get the mean color for all 3 LED color components
+    std::vector<double> means(3, 0.0);
+    for (int c = 0; c < 3; c++)
     {
         int sum_belief = 0;
         for (auto &robot : robots)
         {
-            sum_belief += robot->color[0];
+            sum_belief += robot->color[c];
         }
-        means[feature] = (double)sum_belief / 255 / robots.size();
+        means[c] = (double)sum_belief / 255 / robots.size();
     }
+    printf("Colors: %f, %f, %f\n", means[0], means[1], means[2]);
     return means;
 }
 
@@ -42,13 +41,13 @@ int main(int argc, char *argv[])
 
     // Create logger
     KiloSim::Logger *logger = new KiloSim::Logger(world, "test.h5", 1);
-    logger->add_aggregator("mean_red_led", mean_red);
+    logger->add_aggregator("mean_led_colors", mean_colors);
     logger->log_params({{"test", 100.25}});
 
     // Create viewer to visualize the world
-    KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
+    //KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
 
-    double sim_duration = 300; // Seconds
+    double sim_duration = 30; // Seconds
     while (world->get_time() < sim_duration)
     {
         // Run a simulation step
@@ -56,11 +55,11 @@ int main(int argc, char *argv[])
         world->step();
 
         // Draw the world
-        viewer->draw();
+        //viewer->draw();
 
         // std::cout << world->get_light(1100, 1000) << std::endl;
 
-        if ((world->get_tick() % (2 * world->get_tick_rate())) == 0)
+        if ((world->get_tick() % (5 * world->get_tick_rate())) == 0)
         {
             // Log the state of the world every 30 seconds
             // This works because the tickRate (ticks/sec) must be an integer
