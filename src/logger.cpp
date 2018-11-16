@@ -59,7 +59,6 @@ void Logger::add_aggregator(std::string agg_name, aggregatorFunc agg_func)
 
     hsize_t out_len[1] = {test_output.size()};
     H5::ArrayType agg_type(H5::PredType::NATIVE_DOUBLE, 1, out_len);
-    // H5::ArrayType agg_type(H5T_NATIVE_DOUBLE, 1, out_len);
     std::make_shared<H5::ArrayType>(agg_type);
 
     // Create a packet table and save it

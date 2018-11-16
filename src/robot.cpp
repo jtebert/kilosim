@@ -78,3 +78,8 @@ void Robot::robot_init(double x, double y, double t)
 	forward_speed = forward_speed + forward_speed_error;
 	init();
 }
+
+void Robot::add_light_pattern(sf::Image *light_pattern)
+{
+	m_light_pattern = light_pattern;
+}

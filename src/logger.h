@@ -7,27 +7,6 @@
     Created 2018-10 by Julia Ebert
 */
 
-/*
-   * ```
-  * logFile.h5
-  * |__ trial_1  (group)
-  * |   |__ time (dataset)  [1 x t]
-  * |   |__ params (group)
-  * |   |   |__ param1 (dataset)
-  * |   |   |__ param2 (dataset)
-  * |   |   |__ ...
-  * |   |__ aggregator_1 (dataset)  [n x t]
-  * |   |__ aggregator_2 (dataset)  [m x t]
-  * |   |__ ...
-  * |__ trial_2
-  * |   |__ time (dataset)  [1 x t]
-  * |   |__ params
-  * |   |   |__ ...
-  * |   |__ ...
-  * ...
-  * ```
-  */
-
 #ifndef __KILOSIM_LOGGER_H
 #define __KILOSIM_LOGGER_H
 

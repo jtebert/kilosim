@@ -158,6 +158,11 @@ class Kilobot : public Robot
 		turn_right = r;
 	}
 
+	int16_t get_ambientlight()
+	{
+		// Get the 10-bit light intensity from the robot
+	}
+
 	void delay(int i) {}
 
 	double comm_out_criteria(double dist)

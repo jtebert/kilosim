@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <math.h>
+#include <SFML/Graphics.hpp>
 
 const double motion_error_std = .02;
 const double PI = 3.14159265358979324;
@@ -84,6 +85,8 @@ class Robot
 	virtual double comm_out_criteria(double dist) = 0;
 	virtual bool comm_in_criteria(double dist, void *cd) = 0;
 
+	void add_light_pattern(sf::Image *light_pattern);
+
 	// Useful
 	static double distance(double x1, double y1, double x2, double y2)
 	{
@@ -146,6 +149,7 @@ class Robot
 	virtual void received() = 0;
 
   private:
+	sf::Image *m_light_pattern;
 	static double gaussrand()
 	{
 		static double V1, V2, S;
