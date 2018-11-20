@@ -8,6 +8,7 @@ This is maintained on GitHub in the [kilosim repository](https://github.com/jteb
 
 KiloSim is designed to be a fast, lightweight, pseudo-physical* simulator for Kilobots. Notable benefits include:
 
+- Pseudo-physical model means fast simulation for high-throughput
 - Directly use code written for Kilobots, using the same Kilolib API
 - Included Logger to easily to save experiment parameters in log continuous state data
 - Includes support for ambient light sensing

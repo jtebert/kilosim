@@ -2,7 +2,7 @@
     This is a barebones example implementation of a Kilobot class
 */
 
-#include "Kilolib.h"
+#include "Kilobot.h"
 #include <iostream>
 
 class MyKilobot : public Kilobot
