@@ -20,5 +20,9 @@ json ConfigParser::get(std::string val_name)
 {
     return m_config[val_name];
 }
+json ConfigParser::get()
+{
+    return m_config;
+}
 
 } // namespace KiloSim

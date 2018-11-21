@@ -28,9 +28,9 @@ int main(int argc, char *argv[])
 {
     // Create parser to manage configuration
     KiloSim::ConfigParser *config = new KiloSim::ConfigParser("exampleConfig.json");
-    json trial_dur = config->get("trialDuration");
-    std::cout << trial_dur << std::endl;
-    std::cout << trial_dur.get<int>() << std::endl;
+    json trial_dur = config->get("trial_duration");
+    // std::cout << trial_dur << std::endl;
+    // std::cout << trial_dur.get<int>() << std::endl;
 
     // Create world
     KiloSim::World *world = new KiloSim::World(1200.0, 1200.0, "test-bg.png");
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     KiloSim::Logger *logger = new KiloSim::Logger(world, "test.h5", 1);
     logger->add_aggregator("mean_led_colors", mean_colors);
     // logger->log_params({{"test", 100.25}});
-    logger->log_params({{"trialDuration", trial_dur}});
+    logger->log_config(config);
 
     // Create viewer to visualize the world
     //KiloSim::Viewer *viewer = new KiloSim::Viewer(world);

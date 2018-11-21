@@ -101,20 +101,67 @@ void Logger::log_aggregator(std::string agg_name, aggregatorFunc agg_func)
     }
 }
 
-void Logger::log_params(Params paramPairs)
+void Logger::log_params(Params param_pairs)
 {
-    for (std::pair<std::string, double> paramPair : paramPairs)
+    for (std::pair<std::string, double> param_pair : param_pairs)
     {
-        log_param(paramPair.first, paramPair.second);
+        log_param(param_pair.first, param_pair.second);
     }
 }
 
-void Logger::log_param(std::string name, double val)
+void Logger::log_config(ConfigParser *config)
+{
+    json j = config->get();
+    for (auto &mol : j.get<json::object_t>())
+    {
+        log_param(mol.first, mol.second);
+    }
+}
+
+void Logger::log_param(std::string name, json val)
 {
     // Example: https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5group.cpp
     // https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5tutr_crtgrpd.cpp
 
     std::string dset_name = m_params_group_name + "/" + name;
+
+    // Get the type of the parameter
+    if (val.type() == json::value_t::object)
+    {
+        printf("WARNING: Cannot save param '%s' (currently no support for JSON 'object' type)\n", name.c_str());
+    }
+    else if (val.type() == json::value_t::array)
+    {
+        // TODO: Implement non-scalar parameters
+        printf("WARNING: Cannot save param '%s' (currently no support for JSON 'array' type)\n", name.c_str());
+    }
+    else
+    {
+        H5::PredType val_type = h5_type(val);
+        std::cout << val << std::endl;
+        if (val_type == H5::PredType::NATIVE_UINT)
+        {
+            printf("unsigned int....\n");
+            // Save scalar...
+            H5::DataSpace *dataspace = new H5::DataSpace();
+            H5::DataSet *dataset = new H5::DataSet(m_h5_file->createDataSet(dset_name, val_type, *dataspace));
+            auto uint_val = val.get<uint>();
+            std::cout << "TYPE: " << typeid(uint_val).name() << std::endl;
+            dataset->write(&uint_val, val_type);
+            delete dataset;
+            delete dataspace;
+        }
+        else
+        {
+            // Save scalar...
+            std::cout << val << std::endl;
+            H5::DataSpace *dataspace = new H5::DataSpace();
+            H5::DataSet *dataset = new H5::DataSet(m_h5_file->createDataSet(dset_name, val_type, *dataspace));
+            dataset->write(&val, val_type);
+            delete dataset;
+            delete dataspace;
+        }
+    }
 
     // Save as array (saves something but truncates decimal values)
     // double data_arr[1];
@@ -125,13 +172,11 @@ void Logger::log_param(std::string name, double val)
     // H5::DataSet *dataset = new H5::DataSet(
     //     m_h5_file->createDataSet(dsetName, H5::PredType::NATIVE_DOUBLE, *dataspace));
     // dataset->write(data_arr, H5::PredType::NATIVE_DOUBLE);
+}
 
-    // Save scalar...
-    H5::DataSpace *dataspace = new H5::DataSpace();
-    H5::DataSet *dataset = new H5::DataSet(m_h5_file->createDataSet(dset_name, H5::PredType::NATIVE_DOUBLE, *dataspace));
-    dataset->write(&val, H5::PredType::NATIVE_DOUBLE);
-    delete dataset;
-    delete dataspace;
+H5::PredType Logger::h5_type(json j)
+{
+    return m_json_h5_types.at(j.type());
 }
 
 Logger::H5FilePtr Logger::create_or_open_file(const std::string &fname)

@@ -14,10 +14,14 @@
 #include <H5Cpp.h>
 #include "Robot.h"
 #include "KiloSim.h"
+#include "ConfigParser.h"
+#include "../include/json.hpp"
 #include <unordered_map>
 #include <string>
 #include <memory>
 #include <vector>
+
+using json = nlohmann::json;
 
 namespace KiloSim
 {
@@ -102,6 +106,14 @@ protected:
   std::string m_time_dset_name;
   //! HDF5 PacketTable used to track the time (in seconds) when logging state
   H5PacketTablePtr m_time_table;
+  //! Conversion from JSON types to HDF5 types (NOTE: only works for atomic datatypes)
+  std::unordered_map<json::value_t, H5::PredType> m_json_h5_types = {
+      {json::value_t::boolean, H5::PredType::NATIVE_HBOOL},
+      {json::value_t::number_integer, H5::PredType::NATIVE_INT},
+      {json::value_t::number_unsigned, H5::PredType::NATIVE_UINT},
+      {json::value_t::number_float, H5::PredType::NATIVE_FLOAT},
+      {json::value_t::string, H5::PredType::NATIVE_CHAR},
+  };
 
 public:
   /*!
@@ -122,9 +134,9 @@ public:
   //! Destructor: closes the file when it goes out of scope
   ~Logger();
   /*!
-   * Add an aggregator function that will be run on log_state
-   * when #log_state is called, all aggregator functions will be called on the
-   * robots in the World. The output is saved as a row in a dataset named by #agg_name
+   * Add an aggregator function that will be run on log_state when #log_state is
+   * called, all aggregator functions will be called on the robots in the World.
+   * The output is saved as a row in a dataset named by #agg_name
    *
    * @param agg_name Name of the dataset in with to store the output of the
    * agg_func. This exists within the trial_# group.
@@ -133,9 +145,9 @@ public:
    */
   void add_aggregator(std::string agg_name, aggregatorFunc agg_func);
   /*!
-   * Log the aggregators at the given time mapped over all the given robots in the World.
-   *
-   * __TODO:__ ...I also haven't implemented this.
+   * Log the aggregators at the given time mapped over all the given robots in
+   * the World. Every time this is called, the current time (in seconds) is
+   * added to the time series, and a row is appended to every aggregator array.
    */
   void log_state();
   /*!
@@ -144,12 +156,19 @@ public:
    * __TODO:__ This needs to be adapted for the config files and JSON
    */
   void log_params(Params paramPairs);
+  /*!
+   * Log all of the values in the configuration as params in the HDF5 file/trial
+   * @param config ConfigParser object loaded from a JSON file
+   */
+  void log_config(ConfigParser *config);
 
 protected:
   //! Log data for this specific aggregator
   void log_aggregator(std::string agg_name, aggregatorFunc agg_func);
   //! Log a single parameter name and value
-  void log_param(std::string name, double val);
+  void log_param(std::string name, json val);
+  //! Get the H5 data type (for saving) from the JSON
+  H5::PredType h5_type(json j);
   //! Create or open an HDF5 file
   H5FilePtr create_or_open_file(const std::string &fname);
   //! Create or open a group in an HDF5 file

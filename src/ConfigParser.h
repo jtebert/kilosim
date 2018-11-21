@@ -31,17 +31,21 @@ protected:
 
 public:
   /*!
-     * Create a parser to handle the values in the given JSON file
-     * This will automatically load the contents into the parser
-     * @param config_file Name/location of JSON file for config.
-     */
+   * Create a parser to handle the values in the given JSON file
+  * This will automatically load the contents into the parser
+   * @param config_file Name/location of JSON file for config.
+   */
   ConfigParser(std::string config_file);
   /*!
-     * Get a value from the configuration by name
-     * @param val_name Name/key to get the value for
-     * @returns Wrapped output value. Use .type_name() to get the type
-     */
+   * Get a value from the configuration by name
+   * @param val_name Name/key to get the value for
+   * @returns Wrapped output value. Use .type_name() to get the type
+   */
   json get(std::string val_name);
+  /*!
+   * Get the whole JSON object from the parser
+   */
+  json get();
 };
 } // namespace KiloSim
 
