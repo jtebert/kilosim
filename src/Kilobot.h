@@ -7,6 +7,9 @@
 #include <omp.h>
 #include "Robot.h"
 
+namespace KiloSim
+{
+
 const uint8_t ir = 1;
 const uint8_t NORMAL = 1;
 const uint8_t tolerance = 60;
@@ -160,7 +163,11 @@ class Kilobot : public Robot
 
 	int16_t get_ambientlight()
 	{
+		// Get point at front/nose of robot
+		int pos_x = pos[0] + RADIUS * 1 * cos(pos[2]);
+		int pos_y = pos[1] + RADIUS * 1 * sin(pos[2]);
 		// Get the 10-bit light intensity from the robot
+		//return m_world.get_light(pos_x, pos_y);
 	}
 
 	void delay(int i) {}
@@ -213,5 +220,6 @@ class Kilobot : public Robot
 		return buffer;
 	}
 };
+} // namespace KiloSim
 
 #endif

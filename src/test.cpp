@@ -6,7 +6,7 @@
 
 #include <unistd.h>
 
-std::vector<double> mean_colors(std::vector<Robot *> &robots)
+std::vector<double> mean_colors(std::vector<KiloSim::Robot *> &robots)
 {
     // Get the mean color for all 3 LED color components
     std::vector<double> means(3, 0.0);
@@ -16,7 +16,7 @@ std::vector<double> mean_colors(std::vector<Robot *> &robots)
         for (auto &robot : robots)
         {
             // Downcast to custom class to gain access to custom variables
-            MyKilobot *kb = (MyKilobot *)robot;
+            KiloSim::MyKilobot *kb = (KiloSim::MyKilobot *)robot;
             sum_belief += kb->light_intensity;
         }
         means[c] = (double)sum_belief / 255 / robots.size();
@@ -37,12 +37,12 @@ int main(int argc, char *argv[])
 
     // Create robot(s)
     int numRobots = 10;
-    std::vector<Robot *> robots;
+    std::vector<KiloSim::Robot *> robots;
     robots.resize(numRobots);
     for (int n = 0; n < numRobots; n++)
     {
         // std::cout << n * 50 + 20 << std::endl;
-        robots[n] = new MyKilobot();
+        robots[n] = new KiloSim::MyKilobot();
         robots[n]->robot_init(n * 80 + 75, 600, PI * n / 2);
         world->add_robot(robots[n]);
     }

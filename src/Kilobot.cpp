@@ -5,6 +5,8 @@
 #include "Kilobot.h"
 #include <iostream>
 
+namespace KiloSim
+{
 class MyKilobot : public Kilobot
 {
   public:
@@ -98,7 +100,7 @@ class MyKilobot : public Kilobot
             }
             light_intensity = next_check_dur;
         }
-        //light_intensity = get_ambientlight();
+        light_intensity = get_ambientlight();
     }
 
     // Receiving message
@@ -115,3 +117,4 @@ class MyKilobot : public Kilobot
 
     void message_tx_success() {}
 };
+}

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <math.h>
 #include <SFML/Graphics.hpp>
+// #include "KiloSim.h"
+class World;
 
 const double motion_error_std = .02;
 const double PI = 3.14159265358979324;
@@ -24,12 +26,19 @@ struct rgb
 	double red, green, blue;
 };
 
+namespace KiloSim
+{
+
 /*!
  * This matches the Kilobot Library API. For detailed documentation and usage,
  * see the [Kilolib documentation](https://www.kilobotics.com/docs/index.html).
  */
 class Robot
 {
+  protected:
+	//! World the robot belongs to (used for getting light pattern data)
+	World *m_world;
+
   public:
 	uint16_t id;
 	//x, y, theta position in real world, don't use these in controller, that's cheating!!
@@ -143,5 +152,5 @@ class Robot
 		return x;
 	}
 };
-
+} // namespace KiloSim
 #endif

@@ -1,8 +1,6 @@
 {
-    "world_dimensions": [
-        1200,
-        1200
-    ],
+    "world_width": 1200,
+    "world_height": 1200,
     "num_robots": 300,
     "num_threads": 4,
     "light_pattern_filename": "test-bg.png",
