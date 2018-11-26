@@ -5,7 +5,7 @@
 */
 
 #include <typeinfo>
-#include "logger.h"
+#include "Logger.h"
 
 namespace KiloSim
 {
@@ -145,9 +145,11 @@ void Logger::log_param(std::string name, json val)
             // Save scalar...
             H5::DataSpace *dataspace = new H5::DataSpace();
             H5::DataSet *dataset = new H5::DataSet(m_h5_file->createDataSet(dset_name, val_type, *dataspace));
-            auto uint_val = val.get<uint>();
-            std::cout << "TYPE: " << typeid(uint_val).name() << std::endl;
-            dataset->write(&uint_val, val_type);
+            void *ptr;
+            uint uint_val = val.get<uint>();
+            ptr = &uint_val;
+            std::cout << "TYPE: " << typeid(ptr).name() << std::endl;
+            dataset->write(ptr, val_type);
             delete dataset;
             delete dataspace;
         }

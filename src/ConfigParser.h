@@ -19,7 +19,7 @@ namespace KiloSim
 /*!
  * A ConfigParser is used to parse and process JSON configuration files for
  * user-provided simulation management. It also provides an option to directly
- * save all parameters to the logger HDF5 file (for consolidation).
+ * save all parameters to the Logger HDF5 file (for consolidation).
  */
 class ConfigParser
 {

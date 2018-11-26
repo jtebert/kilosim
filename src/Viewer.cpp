@@ -7,7 +7,7 @@
     Created 2018-11 by Julia Ebert
 */
 
-#include "viewer.h"
+#include "Viewer.h"
 
 namespace KiloSim
 {

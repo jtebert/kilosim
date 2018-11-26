@@ -30,7 +30,7 @@ protected:
   int m_window_width;
   //! Height of the display window (in pixels)
   int m_window_height;
-  //! Pointer to the World that this viewer draws
+  //! Pointer to the World that this Viewer draws
   World *m_world;
   //! SFML window in which the world will be drawn
   sf::RenderWindow m_window;
@@ -47,7 +47,7 @@ protected:
 
 public:
   /*!
-   * Create a viewer with the pointer to the given world
+   * Create a Viewer with the pointer to the given world
    *
    * @param world Pointer to the World that will be displayed
    * @param window_width Width (in pixels) to draw the display window. Height
@@ -75,7 +75,7 @@ protected:
 };
 
 /*! \example example_viewer.cpp
- * Example usage of a viewer to display a World in a simulation loop.
+ * Example usage of a Viewer to display a World in a simulation loop.
  */
 } // namespace KiloSim
 

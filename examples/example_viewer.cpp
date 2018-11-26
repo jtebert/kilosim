@@ -1,5 +1,5 @@
 #include "KiloSim.h"
-#include "viewer.h"
+#include "Viewer.h"
 
 int main(int argc, char *argv[])
 {

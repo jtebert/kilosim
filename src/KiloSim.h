@@ -149,7 +149,7 @@ public:
 
   /*!
    * Get a reference to a vector of pointers to all robots in the world
-   * This is useful for logger and viewer functions
+   * This is useful for Logger and Viewer functions
    * @return All the Robots added to the world
    */
   std::vector<Robot *> &get_robots();

@@ -12,11 +12,11 @@ KiloSim is designed to be a fast, lightweight, pseudo-physical* simulator for Ki
 - Directly use code written for Kilobots, using the same Kilolib API
 - Included Logger to easily to save experiment parameters in log continuous state data
 - Includes support for ambient light sensing
-- Cross-platform viewer for debugging and recording simulations
+- Cross-platform Viewer for debugging and recording simulations
 - [Coming soon] Parallelization with OpenMP
 - [Coming soon] Easy configuration with JSON files to run multiple and varied experiments
 
-*\* Pseudo-physical means that it is spatial and handles issues like collisions in a functional but hand-wavy manner. We make no attempt to accurately model true physical interactions. If you want to see what this means, run an example simulation with the viewer.*
+*\* Pseudo-physical means that it is spatial and handles issues like collisions in a functional but hand-wavy manner. We make no attempt to accurately model true physical interactions. If you want to see what this means, run an example simulation with the Viewer.*
 
 ## Installing and Using
 

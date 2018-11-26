@@ -1,6 +1,6 @@
 #include "Kilobot.h"
-#include "logger.h"
-#include "viewer.h"
+#include "Logger.h"
+#include "Viewer.h"
 #include "ConfigParser.h"
 #include "Kilobot.cpp"
 
@@ -47,13 +47,13 @@ int main(int argc, char *argv[])
         world->add_robot(robots[n]);
     }
 
-    // Create logger
+    // Create Logger
     KiloSim::Logger *logger = new KiloSim::Logger(world, "test.h5", 1);
     logger->add_aggregator("mean_led_colors", mean_colors);
     // logger->log_params({{"test", 100.25}});
     logger->log_config(config);
 
-    // Create viewer to visualize the world
+    // Create Viewer to visualize the world
     //KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
 
     double sim_duration = 30; // Seconds
