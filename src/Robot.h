@@ -6,7 +6,6 @@
 #include <math.h>
 #include <SFML/Graphics.hpp>
 // #include "KiloSim.h"
-class World;
 
 const double motion_error_std = .02;
 const double PI = 3.14159265358979324;
@@ -28,6 +27,8 @@ struct rgb
 
 namespace KiloSim
 {
+
+class World;
 
 /*!
  * This matches the Kilobot Library API. For detailed documentation and usage,

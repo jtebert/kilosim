@@ -98,7 +98,6 @@ class MyKilobot : public Kilobot
                 set_color(RGB(0, 1, 1));
                 set_motion(STOP);
             }
-            light_intensity = next_check_dur;
         }
         light_intensity = get_ambientlight();
     }

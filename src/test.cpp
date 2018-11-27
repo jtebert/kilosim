@@ -19,7 +19,7 @@ std::vector<double> mean_colors(std::vector<KiloSim::Robot *> &robots)
             KiloSim::MyKilobot *kb = (KiloSim::MyKilobot *)robot;
             sum_belief += kb->light_intensity;
         }
-        means[c] = (double)sum_belief / 255 / robots.size();
+        means[c] = (double)sum_belief / robots.size();
     }
     return means;
 }

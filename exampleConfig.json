@@ -8,5 +8,9 @@
     "trial_duration": 600,
     "log_filename": "test-log.h5",
     "num_trials": 10,
-    "start_trial": 1
+    "start_trial": 1,
+    "test_float": 1.345,
+    "test_int": -2349,
+    "test_bool": true,
+    "test_false": false
 }

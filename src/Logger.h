@@ -111,8 +111,8 @@ protected:
       {json::value_t::boolean, H5::PredType::NATIVE_HBOOL},
       {json::value_t::number_integer, H5::PredType::NATIVE_INT},
       {json::value_t::number_unsigned, H5::PredType::NATIVE_UINT},
-      {json::value_t::number_float, H5::PredType::NATIVE_FLOAT},
-      {json::value_t::string, H5::PredType::NATIVE_CHAR},
+      {json::value_t::number_float, H5::PredType::NATIVE_DOUBLE},
+      {json::value_t::string, H5::PredType::C_S1},
   };
 
 public:

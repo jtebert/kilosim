@@ -5,6 +5,7 @@
 
 #include <math.h>
 #include <omp.h>
+//#include "KiloSim.h"
 #include "Robot.h"
 
 namespace KiloSim
@@ -24,6 +25,28 @@ struct message_t
 	unsigned char crc;
 };
 
+/*!
+ * The abstract class Kilobot provides the implementation of the functions and
+ * attributes given by the
+ * [Kilolib](https://www.kilobotics.com/docs/index.html). You can imagine this
+ * as standing in for the physical Kilobots that your code will run on.
+ *
+ * Your implementation of Kilobot code should be in a class that inherits from
+ * the Kilobot class. It must implement the methods `setup()` and `loop()`.
+ * Unlike when using the Kilolib, these are automatically used as passed to the
+ * `kilo_start` function. Similarly, the following substitutions are made in
+ * place of using a main() function in Kilobot:
+ *
+ * - `kilo_message_rx` => `void message_rx(message_t *m, distance_measurement_t *d)`
+ * - `kilo_message_tx` => `message_t *message_tx()`
+ * - `kilo_message_tx_success` => `void message_tx_success()`
+ *
+ * This means that instead of setting these in a `main()` function, you simply
+ * implement the righthand methods in your Kilobot class.
+ *
+ * **NOTE:** Any values (attributes) that you want to be accessible to your
+ * aggregator functions must be declared public.
+ */
 class Kilobot : public Robot
 {
   public:
@@ -94,7 +117,7 @@ class Kilobot : public Robot
 	}
 
 	virtual void loop() = 0;
-	virtual void message_rx(message_t *message, distance_measurement_t *distance_measurement) = 0;
+	void message_rx(message_t *message, distance_measurement_t *distance_measurement){};
 
 	void controller()
 	{
@@ -167,7 +190,8 @@ class Kilobot : public Robot
 		int pos_x = pos[0] + RADIUS * 1 * cos(pos[2]);
 		int pos_y = pos[1] + RADIUS * 1 * sin(pos[2]);
 		// Get the 10-bit light intensity from the robot
-		//return m_world.get_light(pos_x, pos_y);
+		//printf("here\n");
+		//return m_world->get_light(pos_x, pos_y);
 	}
 
 	void delay(int i) {}
@@ -197,8 +221,8 @@ class Kilobot : public Robot
 
 	void sensing(int features, int type[], int x[], int y[], int value[]) {}
 
-	virtual void message_tx_success() = 0;
-	virtual message_t *message_tx() = 0;
+	void message_tx_success(){};
+	message_t *message_tx(){};
 
 	void *get_message()
 	{
@@ -220,6 +244,9 @@ class Kilobot : public Robot
 		return buffer;
 	}
 };
+/*! \example example_kilobot.cpp
+ * Example of a minimal custom Kilobot implementation
+ */
 } // namespace KiloSim
 
 #endif

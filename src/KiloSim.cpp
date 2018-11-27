@@ -78,10 +78,12 @@ uint16_t World::get_light(float x, float y)
     double scale = (double)img_dim.x / m_arena_width;
     int x_in_img = x * scale;
     int y_in_img = y * scale;
-    // Get the Color with the y-axis coordinate flip
+    // Get the Color with the y-axis coordinate flip (each is 8-bit)
     sf::Color c = m_light_pattern.getPixel(x_in_img, img_dim.y - y_in_img);
+    std::cout << c.r << " " << c.g << " " << c.b << std::endl;
     // Convert the color from RGB to grayscale using approximate luminosity
-    return (0.3 * c.r) + (0.59 * c.g) + (0.11 * c.b);
+    uint luminosity = (0.3 * c.r) + (0.59 * c.g) + (0.11 * c.b);
+    return luminosity;
 }
 
 void World::add_robot(Robot *robot)

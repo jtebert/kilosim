@@ -7,6 +7,10 @@
 #include <typeinfo>
 #include "Logger.h"
 
+struct PostProcessingData
+{
+    char *datatype;
+};
 namespace KiloSim
 {
 
@@ -138,42 +142,42 @@ void Logger::log_param(std::string name, json val)
     else
     {
         H5::PredType val_type = h5_type(val);
-        std::cout << val << std::endl;
-        if (val_type == H5::PredType::NATIVE_UINT)
+        H5::DataSpace *dataspace = new H5::DataSpace();
+        if (val_type == H5::PredType::C_S1)
         {
-            printf("unsigned int....\n");
-            // Save scalar...
-            H5::DataSpace *dataspace = new H5::DataSpace();
-            H5::DataSet *dataset = new H5::DataSet(m_h5_file->createDataSet(dset_name, val_type, *dataspace));
-            void *ptr;
-            uint uint_val = val.get<uint>();
-            ptr = &uint_val;
-            std::cout << "TYPE: " << typeid(ptr).name() << std::endl;
-            dataset->write(ptr, val_type);
-            delete dataset;
-            delete dataspace;
+            std::string str_val = val.get<std::string>();
+            hid_t strtype = H5Tcopy(H5T_C_S1);
+            H5Tset_size(strtype, H5T_VARIABLE);
+            H5::DataSet dataset = m_h5_file->createDataSet(dset_name, strtype, *dataspace);
+            dataset.write(&str_val, strtype);
         }
         else
         {
-            // Save scalar...
-            std::cout << val << std::endl;
-            H5::DataSpace *dataspace = new H5::DataSpace();
             H5::DataSet *dataset = new H5::DataSet(m_h5_file->createDataSet(dset_name, val_type, *dataspace));
-            dataset->write(&val, val_type);
-            delete dataset;
-            delete dataspace;
+            // Save scalar...
+
+            if (val_type == H5::PredType::NATIVE_HBOOL)
+            {
+                bool bool_val = val.get<bool>();
+                dataset->write(&bool_val, val_type);
+            }
+            else if (val_type == H5::PredType::NATIVE_INT)
+            {
+                int int_val = val.get<int>();
+                dataset->write(&int_val, val_type);
+            }
+            else if (val_type == H5::PredType::NATIVE_UINT)
+            {
+                uint uint_val = val.get<uint>();
+                dataset->write(&uint_val, val_type);
+            }
+            else if (val_type == H5::PredType::NATIVE_DOUBLE)
+            {
+                double double_val = val.get<double>();
+                dataset->write(&double_val, val_type);
+            }
         }
     }
-
-    // Save as array (saves something but truncates decimal values)
-    // double data_arr[1];
-    // data_arr[0] = val;
-    // hsize_t dims[1];
-    // dims[0] = 1;
-    // H5::DataSpace *dataspace = new H5::DataSpace(1, dims);
-    // H5::DataSet *dataset = new H5::DataSet(
-    //     m_h5_file->createDataSet(dsetName, H5::PredType::NATIVE_DOUBLE, *dataspace));
-    // dataset->write(data_arr, H5::PredType::NATIVE_DOUBLE);
 }
 
 H5::PredType Logger::h5_type(json j)
