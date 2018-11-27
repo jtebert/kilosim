@@ -14,9 +14,11 @@ struct PostProcessingData
 namespace KiloSim
 {
 
-Logger::Logger(World *world, std::string file_id, int trial_num) : m_file_id(file_id),
-                                                                   m_trial_num(trial_num),
-                                                                   m_world(world)
+Logger::Logger(World *world, std::string file_id, int trial_num, bool overwrite_trials)
+    : m_file_id(file_id),
+      m_trial_num(trial_num),
+      m_world(world),
+      m_overwrite_trials(overwrite_trials)
 {
     // Create the HDF5 file if it doesn't already exist
     m_h5_file = create_or_open_file(file_id);
@@ -26,8 +28,17 @@ Logger::Logger(World *world, std::string file_id, int trial_num) : m_file_id(fil
     m_params_group_name = m_trial_group_name + "/params";
     try
     {
-        m_h5_file->unlink(m_trial_group_name.c_str());
-        std::cout << "WARNING: Overwrote trial data" << std::endl;
+        H5::Group *trialGroup = new H5::Group(m_h5_file->openGroup(m_trial_group_name.c_str()));
+        if (m_overwrite_trials)
+        {
+            m_h5_file->unlink(m_trial_group_name.c_str());
+            std::cout << "WARNING: Overwrote trial data" << std::endl;
+        }
+        else
+        {
+            printf("Conflicts with existing trial. Exiting to avoid data overwrite.\n");
+            exit(EXIT_FAILURE);
+        }
     }
     catch (H5::FileIException &)
     {

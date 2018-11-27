@@ -88,6 +88,8 @@ protected:
   World *m_world;
   //! HDF5 file where the data lives
   std::string m_file_id;
+  //! Whether or not to override existing data trial groups (this is done at the group level); defaults to false
+  bool m_overwrite_trials;
   //! Trial number specifying group where the data lives
   int m_trial_num;
   //! Names and functions of aggregators
@@ -130,7 +132,7 @@ public:
    * @param trial_num Number of the trial to save the data. Data will be saved
    * in a group named "trial_#", where # is trial_num.
    */
-  Logger(World *world, std::string file_id, int trial_num);
+  Logger(World *world, std::string file_id, int trial_num, bool overwrite_trials = false);
   //! Destructor: closes the file when it goes out of scope
   ~Logger();
   /*!
@@ -158,6 +160,9 @@ public:
   void log_params(Params paramPairs);
   /*!
    * Log all of the values in the configuration as params in the HDF5 file/trial
+   * **NOTE:** This only supports atomic datatypes (bool, int, uint, float,
+   * string). Any non-atomic data (arrays and objects) will be skipped (with a
+   * warning displayed in the terminal).
    * @param config ConfigParser object loaded from a JSON file
    */
   void log_config(ConfigParser *config);
@@ -165,7 +170,7 @@ public:
 protected:
   //! Log data for this specific aggregator
   void log_aggregator(std::string agg_name, aggregatorFunc agg_func);
-  //! Log a single parameter name and value
+  //! Log a single parameter name and value (supports atomic datatypes only)
   void log_param(std::string name, json val);
   //! Get the H5 data type (for saving) from the JSON
   H5::PredType h5_type(json j);
