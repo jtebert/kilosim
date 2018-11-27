@@ -4,7 +4,7 @@
 #include <iostream>
 #include <math.h>
 #include <SFML/Graphics.hpp>
-// #include "KiloSim.h"
+#include "LightPattern.h"
 
 const double motion_error_std = .02;
 const double PI = 3.14159265358979324;
@@ -27,8 +27,6 @@ struct rgb
 namespace KiloSim
 {
 
-class World;
-
 /*!
  * This matches the Kilobot Library API. For detailed documentation and usage,
  * see the [Kilolib documentation](https://www.kilobotics.com/docs/index.html).
@@ -37,7 +35,7 @@ class Robot
 {
   protected:
 	//! World the robot belongs to (used for getting light pattern data)
-	World *m_world;
+	LightPattern *m_light_pattern;
 
   public:
 	uint16_t id;
@@ -82,7 +80,7 @@ class Robot
 	virtual void init() = 0;
 
 	//! Add a pointer to the world that the robot is part of
-	void add_to_world(World *world);
+	void add_light(LightPattern *light_pattern);
 
 	// Robot's internal timer
 	int timer;
@@ -125,7 +123,6 @@ class Robot
 	virtual void received() = 0;
 
   private:
-	sf::Image *m_light_pattern;
 	static double gaussrand()
 	{
 		static double V1, V2, S;

@@ -81,8 +81,8 @@ void Robot::robot_init(double x, double y, double t)
 	init();
 }
 
-void Robot::add_to_world(World *world)
+void Robot::add_light(LightPattern *light_pattern)
 {
-	m_world = world;
+	m_light_pattern = light_pattern;
 }
 }

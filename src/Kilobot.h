@@ -189,7 +189,7 @@ class Kilobot : public Robot
 		int pos_x = pos[0] + RADIUS * 1 * cos(pos[2]);
 		int pos_y = pos[1] + RADIUS * 1 * sin(pos[2]);
 		// Get the 10-bit light intensity from the robot
-		return m_world->get_light(pos_x, pos_y);
+		return m_light_pattern->get_ambientlight(pos_x, pos_y);
 	}
 
 	void delay(int i) {}

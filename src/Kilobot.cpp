@@ -80,26 +80,38 @@ class MyKilobot : public Kilobot
 
             if (dice <= 1)
             {
-                set_color(RGB(0, 1, 0));
+                // set_color(RGB(0, 1, 0));
                 set_motion(FORWARD);
             }
             else if (dice == 2)
             {
-                set_color(RGB(1, 0, 0));
+                // set_color(RGB(1, 0, 0));
                 set_motion(LEFT);
             }
             else if (dice == 3)
             {
-                set_color(RGB(0, 0, 1));
+                // set_color(RGB(0, 0, 1));
                 set_motion(RIGHT);
             }
             else
             { // Should only happen if there's a problem/mistake
-                set_color(RGB(0, 1, 1));
+                // set_color(RGB(0, 1, 1));
                 set_motion(STOP);
             }
         }
         light_intensity = get_ambientlight();
+        if (light_intensity > 700)
+        {
+            set_color(RGB(0, 1, 0));
+        }
+        else if (light_intensity < 300)
+        {
+            set_color(RGB(1, 0, 0));
+        }
+        else
+        {
+            set_color(RGB(0, 0, 1));
+        }
     }
 
     // Receiving message
@@ -116,4 +128,4 @@ class MyKilobot : public Kilobot
 
     void message_tx_success() {}
 };
-}
+} // namespace KiloSim

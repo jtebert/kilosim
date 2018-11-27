@@ -10,11 +10,12 @@ World::World(double arena_width, double arena_height)
     : m_arena_width(arena_width), m_arena_height(arena_height)
 {
     // TODO: Implement constructor without light_img_src
+    m_light_pattern.pattern_init(arena_width);
 }
 World::World(double arena_width, double arena_height, std::string light_pattern_src)
     : m_arena_width(arena_width), m_arena_height(arena_height)
 {
-    set_light_pattern(light_pattern_src);
+    m_light_pattern.pattern_init(arena_width, light_pattern_src);
 }
 
 World::~World()
@@ -50,44 +51,19 @@ void World::step()
     m_tick++;
 }
 
-bool World::has_light_pattern()
+sf::Image World::get_light_pattern()
 {
-    // If there is no light pattern, the image is empty (0x0)
-    sf::Vector2u img_dim = m_light_pattern.getSize();
-    return img_dim.x > 0 && img_dim.y > 0;
-}
-
-sf::Image &World::get_light_pattern()
-{
-    return m_light_pattern;
+    return m_light_pattern.get_light_pattern();
 }
 
 void World::set_light_pattern(std::string light_pattern_src)
 {
-    if (!m_light_pattern.loadFromFile(light_pattern_src))
-    {
-        printf("Failed to load light pattern\n");
-    }
-    // m_light_pattern.flipVertically();
-}
-
-uint16_t World::get_light(float x, float y)
-{
-    // Transform from world coordinates to image coordinates
-    sf::Vector2u img_dim = m_light_pattern.getSize();
-    double scale = (double)img_dim.x / m_arena_width;
-    int x_in_img = x * scale;
-    int y_in_img = y * scale;
-    // Get the Color with the y-axis coordinate flip (each is 8-bit)
-    sf::Color c = m_light_pattern.getPixel(x_in_img, img_dim.y - y_in_img);
-    // Convert the color from RGB to grayscale using approximate luminosity
-    uint luminosity = (0.3 * c.r) + (0.59 * c.g) + (0.11 * c.b);
-    return luminosity;
+    m_light_pattern.set_light_pattern(light_pattern_src);
 }
 
 void World::add_robot(Robot *robot)
 {
-    robot->add_to_world(this);
+    robot->add_light(&m_light_pattern);
     m_robots.push_back(robot);
 }
 

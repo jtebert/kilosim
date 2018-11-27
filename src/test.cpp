@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     KiloSim::World *world = new KiloSim::World(1200.0, 1200.0, "test-bg.png");
 
     // Create robot(s)
-    int numRobots = 10;
+    int numRobots = 1;
     std::vector<KiloSim::Robot *> robots;
     robots.resize(numRobots);
     for (int n = 0; n < numRobots; n++)
@@ -53,9 +53,9 @@ int main(int argc, char *argv[])
     logger->log_config(config);
 
     // Create Viewer to visualize the world
-    //KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
+    KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
 
-    double sim_duration = 30; // Seconds
+    double sim_duration = 300; // Seconds
     while (world->get_time() < sim_duration)
     {
         // Run a simulation step
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
         world->step();
 
         // Draw the world
-        //viewer->draw();
+        viewer->draw();
 
         // std::cout << world->get_light(1100, 1000) << std::endl;
 

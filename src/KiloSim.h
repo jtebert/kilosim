@@ -14,6 +14,7 @@
 #include <memory>
 #include <SFML/Graphics.hpp>
 #include "Robot.h"
+#include "LightPattern.h"
 
 namespace KiloSim
 {
@@ -50,7 +51,7 @@ protected:
   //! probability of a controller executing its time step
   const double m_prob_control_execute = .99;
   //! Background light pattern image
-  sf::Image m_light_pattern;
+  LightPattern m_light_pattern;
 
 protected:
   //! Run the controllers (kilolib) for all robots
@@ -87,16 +88,10 @@ public:
   void step();
 
   /*!
-   * Return whether there is a light pattern in the world
-   * @return True if light pattern was set in constructor or by set_light_pattern
-   */
-  bool has_light_pattern();
-
-  /*!
-   * Get a reference to the current light in the world
+   * Get the current light in the world
    * @return SFML Image showing the visible light in the world
    */
-  sf::Image &get_light_pattern();
+  sf::Image get_light_pattern();
 
   /*!
    * Set the world's light pattern using the given image file.
@@ -105,17 +100,6 @@ public:
    * @param set_light_pattern Name and location of the image file to use for light pattern
    */
   void set_light_pattern(std::string light_img_src);
-
-  /*!
-   * Get the 10-bit color at the given coordinates in World space
-   *
-   * Position refers to the position in Kilobot world coordinates, where
-   * (0, 0) is the bottom left.
-   * @param x Robot x position (from left) in mm
-   * @param y Robot y position (from bottom) in mm
-   * @return 10-bit light value (matching kilobot API)
-   */
-  uint16_t get_light(float x, float y);
 
   /*!
    * Add a robot to the world by its pointer.
