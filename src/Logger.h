@@ -61,6 +61,10 @@ namespace KiloSim
  *
  * where `t` is the number of time steps when data was logged, and
  * `aggregator_1` and `aggregator_2` were specified by the user.
+ *
+ * **NOTE:** The Logger does **not** provide functionality for reading/viewing
+ * log files once created. (It's kind of a pain in C++. I recommend using
+ * [h5py](https://www.h5py.org/) instead.)
  */
 class Logger
 {
@@ -91,7 +95,7 @@ protected:
   //! Whether or not to override existing data trial groups (this is done at the group level); defaults to false
   bool m_overwrite_trials;
   //! Trial number specifying group where the data lives
-  int m_trial_num;
+  uint m_trial_num;
   //! Names and functions of aggregators
   std::unordered_map<std::string, aggregatorFunc> m_aggregators;
   //! Names and HDF5 datasets (PacketTables) for every aggregator
@@ -135,6 +139,26 @@ public:
   Logger(World *world, std::string file_id, int trial_num, bool overwrite_trials = false);
   //! Destructor: closes the file when it goes out of scope
   ~Logger();
+
+  /*!
+   * Set which trial is being logged.
+   * This allows you to create a single logger and use it for many trials,
+   * without having to re-initialize and re-add your aggregators. You DO have
+   * to manually re-log parameters for each trial, if you want to do that.
+   *
+   * The same overwrite_trials flag from initialization is still in effect
+   *
+   * @param trial_num New trial you want to log.
+   */
+  void set_trial(uint trial_num);
+
+  /*!
+   * Get/check which trial the Logger is currently set to log data/parameters
+   * for.
+   * @return Current trial. Change with set_trial()
+   */
+  uint get_trial();
+
   /*!
    * Add an aggregator function that will be run on log_state when #log_state is
    * called, all aggregator functions will be called on the robots in the World.
@@ -146,18 +170,14 @@ public:
    * Each output is saved as a row in the dataset.
    */
   void add_aggregator(std::string agg_name, aggregatorFunc agg_func);
+
   /*!
    * Log the aggregators at the given time mapped over all the given robots in
    * the World. Every time this is called, the current time (in seconds) is
    * added to the time series, and a row is appended to every aggregator array.
    */
   void log_state();
-  /*!
-   * Log all of the given parameters
-   *
-   * __TODO:__ This needs to be adapted for the config files and JSON
-   */
-  void log_params(Params paramPairs);
+
   /*!
    * Log all of the values in the configuration as params in the HDF5 file/trial
    * **NOTE:** This only supports atomic datatypes (bool, int, uint, float,

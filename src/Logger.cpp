@@ -16,14 +16,23 @@ namespace KiloSim
 
 Logger::Logger(World *world, std::string file_id, int trial_num, bool overwrite_trials)
     : m_file_id(file_id),
-      m_trial_num(trial_num),
       m_world(world),
       m_overwrite_trials(overwrite_trials)
 {
     // Create the HDF5 file if it doesn't already exist
     m_h5_file = create_or_open_file(file_id);
-    // Create group for the trial. This should overwrite any existing group,
-    // maybe with confirmation?
+    set_trial(trial_num);
+}
+
+Logger::~Logger(void)
+{
+    std::cout << "TODO: Close the file when out of scope?" << std::endl;
+}
+
+void Logger::set_trial(uint trial_num)
+{
+    m_trial_num = trial_num;
+    // Create group for the trial
     m_trial_group_name = "trial_" + std::to_string(trial_num);
     m_params_group_name = m_trial_group_name + "/params";
     try
@@ -45,7 +54,6 @@ Logger::Logger(World *world, std::string file_id, int trial_num, bool overwrite_
     {
     }
     H5::Group *trialGroup = new H5::Group(m_h5_file->createGroup(m_trial_group_name.c_str()));
-    delete trialGroup;
 
     // Create the params group if it doesn't already exist
     m_params_group = create_or_open_group(m_h5_file, m_params_group_name);
@@ -61,9 +69,9 @@ Logger::Logger(World *world, std::string file_id, int trial_num, bool overwrite_
     m_time_table = H5PacketTablePtr(time_packet_table);
 }
 
-Logger::~Logger(void)
+uint Logger::get_trial()
 {
-    std::cout << "TODO: Close the file when out of scope?" << std::endl;
+    return m_trial_num;
 }
 
 void Logger::add_aggregator(std::string agg_name, aggregatorFunc agg_func)
@@ -114,14 +122,6 @@ void Logger::log_aggregator(std::string agg_name, aggregatorFunc agg_func)
     if (err < 0)
     {
         fprintf(stderr, "WARNING: Failled to append data to aggregator table");
-    }
-}
-
-void Logger::log_params(Params param_pairs)
-{
-    for (std::pair<std::string, double> param_pair : param_pairs)
-    {
-        log_param(param_pair.first, param_pair.second);
     }
 }
 

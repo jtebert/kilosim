@@ -37,7 +37,16 @@ public:
    */
   ConfigParser(std::string config_file);
   /*!
-   * Get a value from the configuration by name
+   * Get a value from the configuration by name.
+   *
+   * This can be automatically cast to the native type by defining the type on
+   * the returned value.
+   * For example, `int my_val = config.get("key_to_int_val");` will cast the
+   * output to an integer. If you use `auto`, I think you'll get back the `json`
+   * type.
+   * Alternatively, you can directly pass the output to a function taking the
+   * relevant type without needing to explicitly specify the type.
+   *
    * @param val_name Name/key to get the value for
    * @returns Wrapped output value. Use .type_name() to get the type
    */

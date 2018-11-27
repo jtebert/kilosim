@@ -4,7 +4,6 @@
 
 #include <math.h>
 #include <omp.h>
-#include "KiloSim.h"
 #include "Robot.h"
 
 namespace KiloSim

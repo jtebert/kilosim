@@ -1,4 +1,5 @@
 import h5py
+import argparse
 
 
 def h5_structure(h5_group, show_attrs=True, show_data=False):
@@ -6,6 +7,7 @@ def h5_structure(h5_group, show_attrs=True, show_data=False):
     Recursively print the tree structure of an HDF5 file or group
     """
     sep = '| '
+
     def print_group_structure(h5_group, str_prefix):
         for name, group in h5_group.items():
             if isinstance(group, h5py.Dataset):
@@ -18,15 +20,40 @@ def h5_structure(h5_group, show_attrs=True, show_data=False):
             else:
                 print(str_prefix + name)
                 print_group_structure(group, str_prefix+sep)
-    
+
     def print_attributes(dset, str_prefix):
         for k, v in dset.attrs.items():
             print(str_prefix, k, ':', v)
-    
+
     print_group_structure(h5_group, '')
 
-h5file = h5py.File('test.h5', 'r')
-h5_structure(h5file, show_data=True)
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Show the structure and content of an HDF5 file")
+    parser.add_argument(
+        'filename', type=str,
+        help='HDF5 file to show'
+    )
+    parser.add_argument(
+        '--section', type=str,
+        help='Show only the contents of this group/dataset')
 
-h5file.close()
+    parser.add_argument(
+        '--show_attrs', dest='show_attrs', action='store_true',
+        help='Show attributes of HDF5 datasets?')
+    parser.set_defaults(show_attrs=False)
+    parser.add_argument(
+        '--show_data', dest='show_data', action='store_true',
+        help='Show contents of HDF5 datasets? (Otherwise overview only)')
+    parser.set_defaults(show_data=False)
+
+    args = parser.parse_args()
+
+    h5_file = h5py.File(args.filename, 'r')
+    if args.section is not None:
+        h5_in = h5_file[args.section]
+    else:
+        h5_in = h5_file
+    h5_structure(h5_in, show_attrs=args.show_attrs, show_data=args.show_data)
+    h5_file.close()
