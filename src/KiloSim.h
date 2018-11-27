@@ -49,7 +49,7 @@ protected:
   const double m_arena_height;
   //! probability of a controller executing its time step
   const double m_prob_control_execute = .99;
-  //! Background light pattern image (as a 2D vector)
+  //! Background light pattern image
   sf::Image m_light_pattern;
 
 protected:

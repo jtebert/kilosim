@@ -48,9 +48,8 @@ int main(int argc, char *argv[])
     }
 
     // Create Logger
-    KiloSim::Logger *logger = new KiloSim::Logger(world, "test.h5", 1);
+    KiloSim::Logger *logger = new KiloSim::Logger(world, "test.h5", 1, true);
     logger->add_aggregator("mean_led_colors", mean_colors);
-    // logger->log_params({{"test", 100.25}});
     logger->log_config(config);
 
     // Create Viewer to visualize the world
