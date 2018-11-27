@@ -1,4 +1,3 @@
-#pragma once
 #ifndef ROBOT_H
 #define ROBOT_H
 
@@ -82,6 +81,9 @@ class Robot
 	void robot_init(double, double, double);
 	virtual void init() = 0;
 
+	//! Add a pointer to the world that the robot is part of
+	void add_to_world(World *world);
+
 	// Robot's internal timer
 	int timer;
 
@@ -95,8 +97,6 @@ class Robot
 
 	virtual double comm_out_criteria(double dist) = 0;
 	virtual bool comm_in_criteria(double dist, void *cd) = 0;
-
-	void add_light_pattern(sf::Image *light_pattern);
 
 	// Useful
 	static double distance(double x1, double y1, double x2, double y2)

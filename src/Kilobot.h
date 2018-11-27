@@ -1,11 +1,10 @@
-#pragma once
 #ifndef KILOLIB_H
 #define KILOLIB_H
 #undef RGB
 
 #include <math.h>
 #include <omp.h>
-//#include "KiloSim.h"
+#include "KiloSim.h"
 #include "Robot.h"
 
 namespace KiloSim
@@ -191,7 +190,7 @@ class Kilobot : public Robot
 		int pos_y = pos[1] + RADIUS * 1 * sin(pos[2]);
 		// Get the 10-bit light intensity from the robot
 		//printf("here\n");
-		//return m_world->get_light(pos_x, pos_y);
+		return m_world->get_light(pos_x, pos_y);
 	}
 
 	void delay(int i) {}
