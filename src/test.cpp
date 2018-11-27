@@ -2,7 +2,7 @@
 #include "Logger.h"
 #include "Viewer.h"
 #include "ConfigParser.h"
-#include "Kilobot.cpp"
+#include "MyKilobot.cpp"
 
 #include <unistd.h>
 
