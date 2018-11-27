@@ -32,11 +32,12 @@ Logger::Logger(World *world, std::string file_id, int trial_num, bool overwrite_
         if (m_overwrite_trials)
         {
             m_h5_file->unlink(m_trial_group_name.c_str());
-            std::cout << "WARNING: Overwrote trial data" << std::endl;
+            fprintf(stderr, "WARNING: Overwrote trial data");
         }
         else
         {
-            printf("Conflicts with existing trial. Exiting to avoid data overwrite.\n");
+            fprintf(stderr, "Conflicts with existing trial. Exiting to avoid data overwrite.");
+            m_h5_file->close();
             exit(EXIT_FAILURE);
         }
     }

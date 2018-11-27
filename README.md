@@ -22,9 +22,9 @@ KiloSim is designed to be a fast, lightweight, pseudo-physical* simulator for Ki
 
 ### Dependencies
 
-[HDF5](https://portal.hdfgroup.org/display/HDF5/HDF5) and [SFML](https://www.sfml-dev.org/index.php). Install on Ubuntu-like systems with:
+[HDF5](https://portal.hdfgroup.org/display/HDF5/HDF5) and [SFML](https://www.sfml-dev.org/index.php). Install on Ubuntu-like systems with: `sudo apt install libsfml-dev libhdf5-dev`
 
- `sudo apt install libsfml-dev libhdf5-dev`
+[nlohmann/json](https://github.com/nlohmann/json): Add [`json.hpp`](https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp) to the `include/` folder.
 
 ### Compile
 
