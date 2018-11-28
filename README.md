@@ -46,10 +46,12 @@ This will automatically use the settings in `Doxyfile` and save the results to `
 
 ## Configuration and Parameters
 
-*This doesn't exist yet. This is wishful thinking about I'll eventually have.*
+Configuration files are defined as JSON files and can be loaded with a ConfigParser. The contents of flat JSON files can be automatically saved with your data using the Logger. (Support for saving JSON objects and arrays to HDF5 may be added in the future if someone needs/wants it.)
 
-A `ConfigParser` class is provided to load JSON configuration files and pass them to a `Logger`. The user is responsible for passing any configuration parameters to other objects where necessary (for example, specifying the trial number when creating the `Logger`.) However, an example is provided in `exampleConfig.json`.
+There are no fixed requirements for the contents of the configuration files; it's an un-opinionated convenience tool for importing and using whatever (atomic) parameters you want.
 
-- [JSON?](https://github.com/nlohmann/json)
-- [YAML?](https://github.com/jbeder/yaml-cpp)
-- Explain configuration files... when they exist
+## License
+
+**TBD**
+
+This shouldn't be publicly used or shared until a license has been set for this software.

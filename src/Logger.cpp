@@ -6,11 +6,6 @@
 
 #include <typeinfo>
 #include "Logger.h"
-
-struct PostProcessingData
-{
-    char *datatype;
-};
 namespace KiloSim
 {
 

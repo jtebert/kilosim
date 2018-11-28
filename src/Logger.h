@@ -180,10 +180,12 @@ public:
 
   /*!
    * Log all of the values in the configuration as params in the HDF5 file/trial
+   *
    * **NOTE:** This only supports atomic datatypes (bool, int, uint, float,
    * string). Any non-atomic data (arrays and objects) will be skipped (with a
    * warning displayed in the terminal).
-   * @param config ConfigParser object loaded from a JSON file
+   *
+   * @param config Loaded configuration for this experiment/trial
    */
   void log_config(ConfigParser *config);
 
