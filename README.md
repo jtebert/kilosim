@@ -13,8 +13,8 @@ KiloSim is designed to be a fast, lightweight, pseudo-physical* simulator for Ki
 - Included Logger to easily to save experiment parameters in log continuous state data
 - Includes support for ambient light sensing
 - Cross-platform Viewer for debugging and recording simulations
-- [Coming soon] Parallelization with OpenMP
-- [Coming soon] Easy configuration with JSON files to run multiple and varied experiments
+- Parallelized with OpenMP (run a 100-minute, 800 robot simulation in about 10 seconds)
+- Easy configuration with JSON files to run multiple and varied experiments
 
 *\* Pseudo-physical means that it is spatial and handles issues like collisions in a functional but hand-wavy manner. We make no attempt to accurately model true physical interactions. If you want to see what this means, run an example simulation with the Viewer.*
 
@@ -22,7 +22,7 @@ KiloSim is designed to be a fast, lightweight, pseudo-physical* simulator for Ki
 
 ### Dependencies
 
-[HDF5](https://portal.hdfgroup.org/display/HDF5/HDF5) and [SFML](https://www.sfml-dev.org/index.php). Install on Ubuntu-like systems with: `sudo apt install libsfml-dev libhdf5-dev`
+[HDF5](https://portal.hdfgroup.org/display/HDF5/HDF5), [SFML](https://www.sfml-dev.org/index.php), and [OpenMP](https://www.openmp.org/). Install on Ubuntu-like systems with: `sudo apt install libsfml-dev libhdf5-dev libomp-dev`
 
 [nlohmann/json](https://github.com/nlohmann/json): Add [`json.hpp`](https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp) to the `include/` folder.
 
