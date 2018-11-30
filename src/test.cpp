@@ -32,15 +32,17 @@ int main(int argc, char *argv[])
     uint start_trial = config->get("start_trial");
     uint num_trials = config->get("num_trials");
     double trial_duration = config->get("trial_duration"); // seconds
+    uint log_freq = config->get("log_freq");
 
-    for (uint trial = start_trial; trial <= (num_trials + start_trial); trial++)
+    for (uint trial = start_trial; trial < (num_trials + start_trial); trial++)
     {
 
         // Create world
         KiloSim::World *world = new KiloSim::World(
             config->get("world_width"),
             config->get("world_height"),
-            config->get("light_pattern_filename"));
+            config->get("light_pattern_filename"),
+            config->get("num_threads"));
 
         // Create robot(s)
         int numRobots = config->get("num_robots");
@@ -74,11 +76,11 @@ int main(int argc, char *argv[])
             // Draw the world
             // viewer->draw();
 
-            if ((world->get_tick() % (5 * world->get_tick_rate())) == 0)
+            if ((world->get_tick() % (log_freq * world->get_tick_rate())) == 0)
             {
                 // Log the state of the world every 5 seconds
                 // This works because the tickRate (ticks/sec) must be an integer
-                std::cout << "Time: " << world->get_time() << " s" << std::endl;
+                // std::cout << "Time: " << world->get_time() << " s" << std::endl;
                 logger->log_state();
             }
         }

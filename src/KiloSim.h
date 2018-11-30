@@ -8,6 +8,7 @@
 #ifndef __KILOSIM_H
 #define __KILOSIM_H
 
+#include <omp.h>
 #include <set>
 #include <string>
 #include <iterator>
@@ -68,13 +69,21 @@ protected:
   double wrap_angle(double angle);
 
 public:
-  //! Construct a world of a fixed size with the background light pattern
-  World(double arena_width, double arena_height, std::string light_img_src);
-  //! Construct a world of a fixed size with no background/light pattern
-  World(double arena_width, double arena_height);
+  /*!
+   * Construct a world of a fixed size with the background light pattern
+   *
+   * @param arena_width Width of the rectangular World/arena in mm
+   * @param arena_height Height of the rectangular World/arena in mm
+   * @param light_img_src Name of image file of the light pattern to use. Aspect
+   * ratio should match the arena, but no specific resolution is mandated. If no
+   * light_img_src is provided (empty string), the background will be black.
+   * @param num_threads How many threads to parallelize the simulation over. If
+   * set to 0 (default), dynamic threading will be used.
+   */
+  World(double arena_width, double arena_height, std::string light_img_src = "", uint num_threads = 0);
   //! Destructor, destroy all objects within the world
   /*!
-   * This does not destroy and Robots that have pointers stored in the world.
+   * This does not destroy any Robots that have pointers stored in the world.
    */
   virtual ~World();
 

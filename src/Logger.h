@@ -62,6 +62,16 @@ namespace KiloSim
  * where `t` is the number of time steps when data was logged, and
  * `aggregator_1` and `aggregator_2` were specified by the user.
  *
+ * Logging (I/O in general) is one of the *slowest* parts of the simulation. As
+ * such, a high logging rate will significantly slow down your simulations. Try
+ * something like logging every 5-10 seconds, if you can get away with it.
+ *
+ * If you delete an HDF5 file, it does NOT actually delete the data; it just
+ * removes the reference to it. Therefore, rather than extensive use of the
+ * overwrite flag, if you plan to completely redo a set of simulations, delete
+ * the file and let it regenerate. (However, there are tools for removing this
+ * pseudo-deleted data later.)
+ *
  * **NOTE:** The Logger does **not** provide functionality for reading/viewing
  * log files once created. (It's kind of a pain in C++. I recommend using
  * [h5py](https://www.h5py.org/) instead.)

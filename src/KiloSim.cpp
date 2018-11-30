@@ -6,16 +6,25 @@
 
 namespace KiloSim
 {
-World::World(double arena_width, double arena_height)
+World::World(double arena_width, double arena_height, std::string light_pattern_src, uint num_threads)
     : m_arena_width(arena_width), m_arena_height(arena_height)
 {
-    // TODO: Implement constructor without light_img_src
-    m_light_pattern.pattern_init(arena_width);
-}
-World::World(double arena_width, double arena_height, std::string light_pattern_src)
-    : m_arena_width(arena_width), m_arena_height(arena_height)
-{
-    m_light_pattern.pattern_init(arena_width, light_pattern_src);
+    if (light_pattern_src.size() > 0)
+    {
+        m_light_pattern.pattern_init(arena_width, light_pattern_src);
+    }
+    // OpenMP settings
+    if (num_threads != 0)
+    {
+        // Explicitly disable dynamic teams
+        omp_set_dynamic(0);
+        // Use num_threads for all consecutive parallel regions
+        omp_set_num_threads(num_threads);
+    }
+    else
+    {
+        omp_set_dynamic(1);
+    }
 }
 
 World::~World()
@@ -31,24 +40,27 @@ World::RobotPose::RobotPose(double x, double y, double theta)
 
 void World::step()
 {
-    // Apply robot controller for all robots
-    run_controllers();
+#pragma omp parallel
+    {
+        // Apply robot controller for all robots
+        run_controllers();
 
-    // Communication between all robot pairs
-    communicate();
+        // Communication between all robot pairs
+        communicate();
 
-    // Compute potential movement for all robots
-    PosesPtr newPoses = compute_next_step();
+        // Compute potential movement for all robots
+        PosesPtr newPoses = compute_next_step();
 
-    // Check for collisions between all robot pairs
-    std::shared_ptr<std::vector<int16_t>> collisions = find_collisions(newPoses);
+        // Check for collisions between all robot pairs
+        std::shared_ptr<std::vector<int16_t>> collisions = find_collisions(newPoses);
 
-    // And execute move if no collision
-    // or turn if collision
-    move_robots(newPoses, collisions);
+        // And execute move if no collision
+        // or turn if collision
+        move_robots(newPoses, collisions);
 
-    // Increment time
-    m_tick++;
+        // Increment time
+        m_tick++;
+    }
 }
 
 sf::Image World::get_light_pattern()
@@ -75,32 +87,33 @@ void World::remove_robot(Robot *robot)
 
 void World::run_controllers()
 {
-    // TODO: Parallelize
-    for (auto &r : m_robots)
+#pragma omp for schedule(static)
+    for (int i = 0; i < m_robots.size(); i++)
     {
         if ((rand()) < (int)(m_prob_control_execute * RAND_MAX))
         {
-            r->robot_controller();
+            m_robots[i]->robot_controller();
         }
     }
-}
+} // namespace KiloSim
 
 void World::communicate()
 {
-    // TODO: Parallelize
     // TODO: Is the shuffling necessary? (I killed it)
 
     if (m_tick % m_comm_rate == 0)
     {
-        //#pragma omp for
-        for (auto &tx_r : m_robots)
+#pragma omp for
+        for (int tx_i = 0; tx_i < m_robots.size(); tx_i++)
         {
+            Robot *tx_r = m_robots[tx_i];
             // Loop over all transmitting robots
             void *msg = tx_r->get_message();
             if (msg)
             {
-                for (auto &rx_r : m_robots)
+                for (int rx_i = 0; rx_i < m_robots.size(); rx_i++)
                 {
+                    Robot *rx_r = m_robots[rx_i];
                     // Loop over receivers if transmitting robot is sending a message
                     if (rx_r != tx_r)
                     {
@@ -130,8 +143,10 @@ World::PosesPtr World::compute_next_step()
 
     int i = 0;
     float dt = m_tick_delta_t;
-    for (auto &r : m_robots)
+#pragma omp for schedule(static)
+    for (int r_i = 0; r_i < m_robots.size(); r_i++)
     {
+        Robot *r = m_robots[r_i];
         double theta = r->pos[2];
         double x = r->pos[0];
         double y = r->pos[1];
@@ -190,6 +205,7 @@ std::shared_ptr<std::vector<int16_t>> World::find_collisions(PosesPtr newPos)
     std::vector<int16_t> collisions(m_robots.size(), 0);
     double r_x, r_y, distance;
 
+#pragma omp for schedule(static)
     for (int r = 0; r < m_robots.size(); r++)
     {
         r_x = (*newPos)[r].x;

@@ -1,12 +1,13 @@
 {
-    "world_width": 1200,
-    "world_height": 1200,
-    "num_robots": 300,
-    "num_threads": 4,
+    "world_width": 2400,
+    "world_height": 2400,
+    "num_robots": 800,
+    "num_threads": 0,
     "light_pattern_filename": "test-bg.png",
     "show_scene": false,
-    "trial_duration": 20,
+    "trial_duration": 6000,
     "log_filename": "test-log.h5",
-    "num_trials": 10,
+    "log_freq": 5,
+    "num_trials": 1,
     "start_trial": 1
 }
