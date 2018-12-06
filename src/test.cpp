@@ -36,7 +36,6 @@ int main(int argc, char *argv[])
 
     for (uint trial = start_trial; trial < (num_trials + start_trial); trial++)
     {
-
         // Create world
         KiloSim::World *world = new KiloSim::World(
             config->get("world_width"),
@@ -65,7 +64,7 @@ int main(int argc, char *argv[])
         logger->log_config(config);
 
         // Create Viewer to visualize the world
-        // KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
+        KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
 
         while (world->get_time() < trial_duration)
         {
@@ -74,7 +73,7 @@ int main(int argc, char *argv[])
             world->step();
 
             // Draw the world
-            // viewer->draw();
+            viewer->draw();
 
             if ((world->get_tick() % (log_freq * world->get_tick_rate())) == 0)
             {

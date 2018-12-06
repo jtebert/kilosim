@@ -1,8 +1,8 @@
 {
     "world_width": 2400,
     "world_height": 2400,
-    "num_robots": 800,
-    "num_threads": 0,
+    "num_robots": 10,
+    "num_threads": 1,
     "light_pattern_filename": "test-bg.png",
     "show_scene": false,
     "trial_duration": 6000,
