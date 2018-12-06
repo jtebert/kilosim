@@ -52,7 +52,8 @@ void LightPattern::set_light_pattern(std::string img_src)
 {
     if (!m_light_pattern.loadFromFile(img_src))
     {
-        fprintf(stderr, "WARNING: Failed to load light pattern\n");
+        //std::cout << "ERROR: Failed to load light pattern: " << img_src << std::endl;
+        exit(EXIT_FAILURE);
     }
     // Set scaling and image dimensions when new image loaded
     m_img_dim = m_light_pattern.getSize();

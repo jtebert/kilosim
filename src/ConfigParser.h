@@ -9,6 +9,7 @@
 
 #include <string>
 #include <fstream>
+#include <iostream>
 #include "../include/json.hpp"
 
 // for convenience

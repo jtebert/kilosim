@@ -1,5 +1,5 @@
 # Declare phony targets
-.PHONY: static clean
+.PHONY: static exec clean
 
 # Compiler
 CXX = g++
@@ -14,15 +14,12 @@ SRC_DIR = src
 IDIR = include
 OBJ_DIR = obj
 
-_DEPS = json.hpp
-DEPS = $(patsubst %, $(IDIR)/%, $(_DEPS))
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))
 
-CPP_SRC = $(wildcard src/*.cpp)
-
-
 static: $(OUTPUT_DIR)/libKilosim.a
+
+exec: $(OUTPUT_DIR)/kilosim
 
 clean:
 	rm -f $(OUTPUT_DIR)/libKilosim.a $(OUTPUT_DIR)/kilosim $(OBJ_FILES)
@@ -31,9 +28,10 @@ clean:
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $(LIBS) -c -o $@ $^
 
-# Build library
+# Build executable (not used right now)
 $(OUTPUT_DIR)/kilosim: $(OBJ_FILES)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LIBS)
 
+# Build library
 $(OUTPUT_DIR)/libKilosim.a: $(OBJ_FILES)
 	ar rcs $@ $+
