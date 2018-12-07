@@ -8,11 +8,15 @@
 
 namespace KiloSim
 {
-LightPattern::LightPattern(){};
+LightPattern::LightPattern()
+{
+    m_has_source = false;
+};
 
 void LightPattern::pattern_init(double arena_width)
 {
     m_arena_width = arena_width;
+    m_has_source = false;
 }
 void LightPattern::pattern_init(double arena_width, std::string img_src)
 {

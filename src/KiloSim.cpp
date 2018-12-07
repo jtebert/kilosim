@@ -13,6 +13,10 @@ World::World(double arena_width, double arena_height, std::string light_pattern_
     {
         m_light_pattern.pattern_init(arena_width, light_pattern_src);
     }
+    else
+    {
+        m_light_pattern.pattern_init(arena_width);
+    }
     // OpenMP settings
     if (num_threads != 0)
     {

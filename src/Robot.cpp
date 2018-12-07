@@ -50,7 +50,6 @@ void Robot::robot_init(double x, double y, double t)
 	incoming_message_flag = 0;
 	tx_request = 0;
 	id = rand();
-	rand();
 	// Generate CLAMPED motor error (avoid extremes by regenerating)
 	motor_error = 100;
 	double motor_error_clamp = motion_error_std * 1.1;

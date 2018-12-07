@@ -75,7 +75,11 @@ class Robot
 	double battery = -1;
 
   public:
-	// Must implement an robot initialization
+	/*!
+	 * Must implement an robot initialization
+	 * **IMPORTANT!** Things break (with LightPatterns) if you try to call this
+	 * *before* adding a Robot to a World.
+	 */
 	void robot_init(double, double, double);
 	virtual void init() = 0;
 
