@@ -14,6 +14,9 @@ SRC_DIR = src
 IDIR = include
 OBJ_DIR = obj
 
+# Create the subdirectories if they don't exist
+$(info$(shell mkdir -p $(OBJ_DIR) $(OUTPUT_DIR)))
+
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))
 
