@@ -33,7 +33,7 @@ uint16_t LightPattern::get_ambientlight(double x, double y)
         uint y_in_img = y * m_scale;
 
         // Get the Color with the y-axis coordinate flip (each is 8-bit)
-        sf::Color c = m_light_pattern.getPixel(x_in_img, m_img_dim.y - y_in_img);
+        sf::Color c = m_light_pattern.getPixel(x_in_img, m_img_dim.y - y_in_img - 1);
         // Convert the color from RGB to grayscale using approximate luminosity
         // Each value is 8-bit, so the resulting value is in the scale [0-255]
         double luminosity = (0.3 * c.r) + (0.59 * c.g) + (0.11 * c.b);
