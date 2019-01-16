@@ -1,5 +1,7 @@
 # KiloSim: Kilobot Simulator
 
+[![Build Status](https://travis-ci.com/jtebert/kilosim.svg?token=s6ZVW1bvfNjgbZQh2x9M&branch=master)](https://travis-ci.com/jtebert/kilosim)
+
 This is maintained on GitHub in the [kilosim repository](https://github.com/jtebert/kilosim). You can [submit any issues or questions here](https://github.com/jtebert/kilosim/issues).
 
 [__Full Documentation__](https://jtebert.github.io/kilosim/index.html)

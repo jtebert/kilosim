@@ -52,6 +52,11 @@ sf::Image LightPattern::get_light_pattern()
     return m_light_pattern;
 };
 
+bool LightPattern::has_source()
+{
+    return m_has_source;
+}
+
 void LightPattern::set_light_pattern(std::string img_src)
 {
     if (!m_light_pattern.loadFromFile(img_src))

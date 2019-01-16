@@ -72,6 +72,11 @@ sf::Image World::get_light_pattern()
     return m_light_pattern.get_light_pattern();
 }
 
+bool World::has_light_pattern()
+{
+    return m_light_pattern.has_source();
+}
+
 void World::set_light_pattern(std::string light_pattern_src)
 {
     m_light_pattern.set_light_pattern(light_pattern_src);

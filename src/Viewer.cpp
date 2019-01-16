@@ -23,7 +23,15 @@ Viewer::Viewer(World *world, int window_width) : m_world(world), m_window_width(
     m_window.setFramerateLimit(144);
 
     m_background.setSize(sf::Vector2f(m_window_width, m_window_height));
-    m_bg_texture.loadFromImage(world->get_light_pattern());
+    if (world->has_light_pattern())
+    {
+        m_bg_texture.loadFromImage(world->get_light_pattern());
+    }
+    else
+    {
+        // If world doesn't have a light source texture, use blank black
+        m_bg_texture.create(m_window_width, m_window_height);
+    }
     m_background.setTexture(&m_bg_texture);
 
     // Create the texture for the Kilobot robots once

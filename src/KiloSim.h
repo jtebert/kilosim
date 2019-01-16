@@ -103,6 +103,12 @@ public:
   sf::Image get_light_pattern();
 
   /*!
+   * Check whether the World has a light pattern image set
+   * @return Whether LightPattern has an image source
+   */
+  bool has_light_pattern();
+
+  /*!
    * Set the world's light pattern using the given image file.
    * The image type must be supported by SFML's [Image::loadFromFile](https://www.sfml-dev.org/documentation/2.5.1/classsf_1_1Image.php#a9e4f2aa8e36d0cabde5ed5a4ef80290b)
    *
