@@ -184,11 +184,19 @@ class Kilobot : public Robot
 
 	int16_t get_ambientlight()
 	{
-		// Get point at front/nose of robot
-		int pos_x = pos[0] + RADIUS * 1 * cos(pos[2]);
-		int pos_y = pos[1] + RADIUS * 1 * sin(pos[2]);
-		// Get the 10-bit light intensity from the robot
-		return m_light_pattern->get_ambientlight(pos_x, pos_y);
+		if (m_light_pattern)
+		{
+			// Get point at front/nose of robot
+			int pos_x = pos[0] + RADIUS * 1 * cos(pos[2]);
+			int pos_y = pos[1] + RADIUS * 1 * sin(pos[2]);
+			// Get the 10-bit light intensity from the robot
+			return m_light_pattern->get_ambientlight(pos_x, pos_y);
+		}
+		else
+		{
+			printf("ERROR: Cannot get_ambientlight() until Kilobot is added to a World\n");
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	void delay(int i) {}

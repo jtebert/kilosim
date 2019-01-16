@@ -44,10 +44,10 @@ int main(int argc, char *argv[])
             config->get("num_threads"));
 
         // Create robot(s)
-        int numRobots = config->get("num_robots");
+        int num_robots = config->get("num_robots");
         std::vector<KiloSim::Robot *> robots;
-        robots.resize(numRobots);
-        for (int n = 0; n < numRobots; n++)
+        robots.resize(num_robots);
+        for (int n = 0; n < num_robots; n++)
         {
             // std::cout << n * 50 + 20 << std::endl;
             robots[n] = new KiloSim::MyKilobot();

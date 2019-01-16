@@ -37,7 +37,6 @@ void Robot::robot_controller()
 
 void Robot::robot_init(double x, double y, double t)
 {
-	// printf("INIT: %f, %f, %f\n", x, y, t);
 	// Pick a direction to randomly turn in event of collisions
 	collision_turn_dir = rand() % 2;
 	collision_timer = 0;
