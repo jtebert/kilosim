@@ -44,28 +44,31 @@ World::RobotPose::RobotPose(double x, double y, double theta)
 
 void World::step()
 {
-#pragma omp parallel
-    {
-        // Apply robot controller for all robots
-        run_controllers();
+    // Initialize vectors that are used in parallelism
+    std::vector<RobotPose> new_poses((m_robots.size()));
+    // PosesPtr new_poses_ptr = std::make_shared<std::vector<RobotPose>>(new_poses);
+    std::vector<int16_t> collisions(m_robots.size(), 0);
 
-        // Communication between all robot pairs
-        communicate();
+    // Apply robot controller for all robots
+    run_controllers();
 
-        // Compute potential movement for all robots
-        PosesPtr newPoses = compute_next_step();
+    // Communication between all robot pairs
+    communicate();
 
-        // Check for collisions between all robot pairs
-        std::shared_ptr<std::vector<int16_t>> collisions = find_collisions(newPoses);
+    // Compute potential movement for all robots
+    compute_next_step(&new_poses);
 
-        // And execute move if no collision
-        // or turn if collision
-        move_robots(newPoses, collisions);
+    // Check for collisions between all robot pairs
+    find_collisions(&new_poses, &collisions);
 
-        // Increment time
-        m_tick++;
-    }
-}
+    // And execute move if no collision
+    // or turn if collision
+    move_robots(&new_poses, &collisions);
+
+    // Increment time
+    m_tick++;
+
+} // namespace KiloSim
 
 sf::Image World::get_light_pattern()
 {
@@ -96,7 +99,7 @@ void World::remove_robot(Robot *robot)
 
 void World::run_controllers()
 {
-#pragma omp for schedule(static)
+    // #pragma omp parallel for schedule(static)
     for (int i = 0; i < m_robots.size(); i++)
     {
         if ((rand()) < (int)(m_prob_control_execute * RAND_MAX))
@@ -112,7 +115,7 @@ void World::communicate()
 
     if (m_tick % m_comm_rate == 0)
     {
-#pragma omp for
+        // #pragma omp parallel for
         for (int tx_i = 0; tx_i < m_robots.size(); tx_i++)
         {
             Robot *tx_r = m_robots[tx_i];
@@ -139,43 +142,39 @@ void World::communicate()
             }
         }
     }
-} // namespace KiloSim
+}
 
-World::PosesPtr World::compute_next_step()
+void World::compute_next_step(std::vector<RobotPose> *new_poses_ptr)
 {
     // TODO: Implement compute_next_step (and maybe change from pointers)
-    // TODO: Parallelize... eventually
 
-    // Initialize the new positions to be returned
-    std::vector<RobotPose> newPos;
-    newPos.resize(m_robots.size());
-
-    int i = 0;
-    float dt = m_tick_delta_t;
-#pragma omp for schedule(static)
+    // printf("\nt = %d\n", m_tick);
+// #pragma omp parallel for schedule(static)
+#pragma omp parallel for
     for (int r_i = 0; r_i < m_robots.size(); r_i++)
     {
+        // printf("%d\n", r_i);
         Robot *r = m_robots[r_i];
         double theta = r->pos[2];
         double x = r->pos[0];
         double y = r->pos[1];
         double temp_x = x;
-        ;
+
         double temp_y = y;
         double temp_cos, temp_sin, phi;
         switch (r->motor_command)
         {
         case 1:
         { // forward
-            //theta += r->motor_error * dt;
-            double speed = r->forward_speed * dt;
+            //theta += r->motor_error * m_tick_delta_t;
+            double speed = r->forward_speed * m_tick_delta_t;
             temp_x = speed * cos(theta) + r->pos[0];
             temp_y = speed * sin(theta) + r->pos[1];
             break;
         }
         case 2:
         { // CW rotation
-            phi = -r->turn_speed * dt;
+            phi = -r->turn_speed * m_tick_delta_t;
             theta += phi;
             temp_cos = RADIUS * cos(theta + 4 * PI / 3);
             temp_sin = RADIUS * sin(theta + 4 * PI / 3);
@@ -185,7 +184,7 @@ World::PosesPtr World::compute_next_step()
         }
         case 3:
         { // CCW rotation
-            phi = r->turn_speed * dt;
+            phi = r->turn_speed * m_tick_delta_t;
             theta += phi;
             temp_cos = RADIUS * cos(theta + 2 * PI / 3);
             temp_sin = RADIUS * sin(theta + 2 * PI / 3);
@@ -194,37 +193,30 @@ World::PosesPtr World::compute_next_step()
             break;
         }
         }
-        newPos[i] = RobotPose(temp_x, temp_y, wrap_angle(theta));
-        i++;
+        (*new_poses_ptr)[r_i] = RobotPose(temp_x, temp_y, wrap_angle(theta));
     }
-    return std::make_shared<std::vector<RobotPose>>(newPos);
 }
 
-std::shared_ptr<std::vector<int16_t>> World::find_collisions(PosesPtr newPos)
+void World::find_collisions(std::vector<RobotPose> *new_poses_ptr, std::vector<int16_t> *collisions)
 {
-    // TODO: Parallelize
-
     // Check to see if motion causes robots to collide with their updated positions
 
     // 0 = no collision
     // -1 = collision w/ wall
-    // other positive # = collision w/ robot of that ind;
+    // 1 = collision w/ robot of that ind;
 
-    // Initialize the collisions to be returned
-    std::vector<int16_t> collisions(m_robots.size(), 0);
-    double r_x, r_y, distance;
-
-#pragma omp for schedule(static)
+    // #pragma omp parallel for schedule(static)
     for (int r = 0; r < m_robots.size(); r++)
     {
-        r_x = (*newPos)[r].x;
-        r_y = (*newPos)[r].y;
+        double distance;
+        double r_x = (*new_poses_ptr)[r].x;
+        double r_y = (*new_poses_ptr)[r].y;
         // Check for collisions with walls
         if (r_x <= RADIUS || r_x >= m_arena_width - RADIUS || r_y <= RADIUS || r_y >= m_arena_height - RADIUS)
         {
             // There's a collision with the wall.
             // Don't even bother to check for collisions with other robots
-            collisions[r] = -1;
+            (*collisions)[r] = -1;
         }
         else
         {
@@ -235,11 +227,11 @@ std::shared_ptr<std::vector<int16_t>> World::find_collisions(PosesPtr newPos)
                 // had a wall collision (and therefore didn't check for robot collisions)
                 if (r != c)
                 {
-                    distance = sqrt(pow(r_x - (*newPos)[c].x, 2) +
-                                    pow(r_y - (*newPos)[c].y, 2));
+                    distance = sqrt(pow(r_x - (*new_poses_ptr)[c].x, 2) +
+                                    pow(r_y - (*new_poses_ptr)[c].y, 2));
                     if (distance < 2 * RADIUS)
                     {
-                        collisions[r] = 1; // r is colliding with c
+                        (*collisions)[r] = 1; // r is colliding with c
                         // Don't need to worry about more than 1 collision
                         break;
                     }
@@ -247,26 +239,25 @@ std::shared_ptr<std::vector<int16_t>> World::find_collisions(PosesPtr newPos)
             }
         }
     }
-    return std::make_shared<std::vector<int16_t>>(collisions);
+    // return std::make_shared<std::vector<int16_t>>(collisions);
 }
 
-void World::move_robots(PosesPtr newPos, std::shared_ptr<std::vector<int16_t>> collisions)
+void World::move_robots(std::vector<RobotPose> *new_poses_ptr, std::vector<int16_t> *collisions)
 {
     // TODO: Parallelize
-
-    double newTheta;
-
-    for (int ri = 0; ri < m_robots.size(); ++ri)
+    // #pragma omp parallel for
+    for (int ri = 0; ri < m_robots.size(); ri++)
     {
+        // printf("ri=%d\n", ri);
         Robot *r = m_robots[ri];
 
-        newTheta = (*newPos)[ri].theta;
+        double new_theta = (*new_poses_ptr)[ri].theta;
         switch ((*collisions)[ri])
         {
         case 0:
         { // No collisions
-            r->pos[0] = (*newPos)[ri].x;
-            r->pos[1] = (*newPos)[ri].y;
+            r->pos[0] = (*new_poses_ptr)[ri].x;
+            r->pos[1] = (*new_poses_ptr)[ri].y;
             r->collision_timer = 0;
             break;
         }
@@ -274,11 +265,11 @@ void World::move_robots(PosesPtr newPos, std::shared_ptr<std::vector<int16_t>> c
         { // Collision with another robot
             if (r->collision_turn_dir == 0)
             {
-                newTheta = r->pos[2] - r->turn_speed * m_tick_delta_t; // left/CCW
+                new_theta = r->pos[2] - r->turn_speed * m_tick_delta_t; // left/CCW
             }
             else
             {
-                newTheta = r->pos[2] + r->turn_speed * m_tick_delta_t; // right/CW
+                new_theta = r->pos[2] + r->turn_speed * m_tick_delta_t; // right/CW
             }
             if (r->collision_timer > r->max_collision_timer)
             { // Change turn dir
@@ -290,7 +281,7 @@ void World::move_robots(PosesPtr newPos, std::shared_ptr<std::vector<int16_t>> c
         }
         }
         // If a bot is touching the wall (collision_type == 2), update angle but not position
-        r->pos[2] = wrap_angle(newTheta);
+        r->pos[2] = wrap_angle(new_theta);
     }
 }
 

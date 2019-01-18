@@ -39,7 +39,7 @@ protected:
   //! The background rectangle shape itself
   sf::RectangleShape m_background;
   //! Scaling ratio between world and window coordinates
-  float m_scale;
+  double m_scale;
   //! Texture used for drawing all the robots
   sf::RenderTexture m_robot_texture;
   //! Settings for SFML

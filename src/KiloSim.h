@@ -59,12 +59,24 @@ protected:
   void run_controllers();
   //! Send messages between robots
   void communicate();
-  //! Compute the next positions of the robots from positions and motor commands
-  PosesPtr compute_next_step();
-  //! Check to see if motion causes robots to collide
-  std::shared_ptr<std::vector<int16_t>> find_collisions(PosesPtr newPos);
-  //! Move the robots based on new positions and collisions
-  void move_robots(PosesPtr newPos, std::shared_ptr<std::vector<int16_t>> collisions);
+  /*!
+   * Compute the next positions of the robots from positions and motor commands
+   * @param new_poses_ptr Shared pointer of new positions to compute over all of the robots. (This is passed as a parameter so it can be initialized outside of the parallelization)
+   */
+  void compute_next_step(std::vector<RobotPose> *new_poses_ptr);
+  /*!
+   * Check to see if motion causes robots to collide
+   * @param new_poses_ptr Check for collisions between these would-be next positions
+   * @return For each robot: 0 if no collision; -1 if wall collision; 1 if collision with another robot
+   */
+  void find_collisions(std::vector<RobotPose> *new_poses_ptr, std::vector<int16_t> *collisions);
+  /*!
+   * Move the robots based on new positions and collisions. This modifies the
+   * internal positions of all robots in m_robots vector
+   * @param new_poses_ptr Possible next step positions from compute_next_step()
+   * @param collisions Whether or not robots are colliding, from find_collisions()
+   */
+  void move_robots(std::vector<RobotPose> *new_poses_ptr, std::vector<int16_t> *collisions);
   //! Wrap an angle to be within [0, 2*pi)
   double wrap_angle(double angle);
 

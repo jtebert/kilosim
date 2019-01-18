@@ -51,8 +51,8 @@ int main(int argc, char *argv[])
         {
             // std::cout << n * 50 + 20 << std::endl;
             robots[n] = new KiloSim::MyKilobot();
-            robots[n]->robot_init(n * 80 + 75, 600, PI * n / 2);
             world->add_robot(robots[n]);
+            robots[n]->robot_init(n * 80 + 75, 600, PI * n / 2);
         }
 
         KiloSim::Logger *logger = new KiloSim::Logger(
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
         logger->log_config(config);
 
         // Create Viewer to visualize the world
-        KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
+        // KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
 
         while (world->get_time() < trial_duration)
         {
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
             world->step();
 
             // Draw the world
-            viewer->draw();
+            // viewer->draw();
 
             if ((world->get_tick() % (log_freq * world->get_tick_rate())) == 0)
             {

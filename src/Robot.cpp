@@ -45,6 +45,7 @@ void Robot::robot_init(double x, double y, double t)
 	pos[0] = x;
 	pos[1] = y;
 	pos[2] = t;
+
 	motor_command = 0;
 	incoming_message_flag = 0;
 	tx_request = 0;
