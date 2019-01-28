@@ -7,7 +7,7 @@
 namespace KiloSim
 {
 World::World(double arena_width, double arena_height, std::string light_pattern_src, uint num_threads)
-    : m_arena_width(arena_width), m_arena_height(arena_height)
+    : m_arena_width(arena_width), m_arena_height(arena_height), cb(arena_width, arena_height, RADIUS)
 {
     if (light_pattern_src.size() > 0)
     {
@@ -207,34 +207,35 @@ void World::find_collisions(
     // -1 = collision w/ wall
     // 1 = collision w/ robot of that ind;
 
+    cb.update(new_poses_ptr);
+
     // #pragma omp parallel for schedule(static)
-    for (int r = 0; r < m_robots.size(); r++)
-    {
-        const double r_x = new_poses_ptr[r].x;
-        const double r_y = new_poses_ptr[r].y;
+    for (int ci = 0; ci < m_robots.size(); ci++){
+        const auto &cr = new_poses_ptr[ci];
         // Check for collisions with walls
-        if (r_x <= RADIUS || r_x >= m_arena_width - RADIUS || r_y <= RADIUS || r_y >= m_arena_height - RADIUS)
+        if (cr.x <= RADIUS || cr.x >= m_arena_width - RADIUS || cr.y <= RADIUS || cr.y >= m_arena_height - RADIUS)
         {
             // There's a collision with the wall.
             // Don't even bother to check for collisions with other robots
-            collisions[r] = -1;
+            collisions[ci] = -1;
+            continue;
         }
-        else
-        {
-            for (int c = r+1; c < m_robots.size(); ++c)
+
+        for(const auto &ni: cb(cr.x,cr.y)){
+            if(collisions[ni]==1)
+                continue;
+
+            const auto &nr = new_poses_ptr[ni];
+            // Check for collisions with other robots
+            // Don't do repeat checks, unless the one you're checking against
+            // had a wall collision (and therefore didn't check for robot collisions)
+            const double distance = pow(cr.x - nr.x, 2) + pow(cr.y - nr.y, 2);
+            if (distance < 4 * RADIUS * RADIUS)
             {
-                // Check for collisions with other robots
-                // Don't do repeat checks, unless the one you're checking against
-                // had a wall collision (and therefore didn't check for robot collisions)
-                const double distance = pow(r_x - new_poses_ptr[c].x, 2) +
-                                        pow(r_y - new_poses_ptr[c].y, 2);
-                if (distance < 4 * RADIUS * RADIUS)
-                {
-                    collisions[r] = 1; // r is colliding with c
-                    collisions[c] = 1;
-                    // Don't need to worry about more than 1 collision
-                    break;
-                }
+                collisions[ni] = 1; // r is colliding with c
+                collisions[ci] = 1;
+                // Don't need to worry about more than 1 collision
+                break;
             }
         }
     }

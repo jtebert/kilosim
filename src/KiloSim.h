@@ -16,6 +16,7 @@
 #include <SFML/Graphics.hpp>
 #include "Robot.h"
 #include "LightPattern.h"
+#include "CollisionBoxes.h"
 
 namespace KiloSim
 {
@@ -34,6 +35,8 @@ protected:
 
   typedef std::shared_ptr<std::vector<RobotPose>> PosesPtr;
 
+private:
+  CollisionBoxes cb;
 protected:
   //! Robots in the world
   std::vector<Robot *> m_robots;
