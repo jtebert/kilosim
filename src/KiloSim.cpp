@@ -16,6 +16,8 @@ World::World(double arena_width, double arena_height, std::string light_pattern_
     {
         m_light_pattern.pattern_init(arena_width);
     }
+
+    #ifdef _OPENMP
     // OpenMP settings
     if (num_threads != 0)
     {
@@ -28,6 +30,7 @@ World::World(double arena_width, double arena_height, std::string light_pattern_
     {
         omp_set_dynamic(1);
     }
+    #endif
 }
 
 World::~World()
