@@ -147,47 +147,6 @@ void World::compute_next_step(std::vector<std::vector<double>> &new_poses_ptr)
     for (int r_i = 0; r_i < m_robots.size(); r_i++)
     {
         new_poses_ptr[r_i] = m_robots[r_i]->robot_compute_next_step();
-        // printf("%d\n", r_i);
-        // Robot *r = m_robots[r_i];
-        // double theta = r->pos[2];
-        // double x = r->pos[0];
-        // double y = r->pos[1];
-        // double temp_x = x;
-
-        // double temp_y = y;
-        // double temp_cos, temp_sin, phi;
-        // switch (r->motor_command)
-        // {
-        // case 1:
-        // { // forward
-        //     //theta += r->motor_error * m_tick_delta_t;
-        //     double speed = r->forward_speed * m_tick_delta_t;
-        //     temp_x = speed * cos(theta) + r->pos[0];
-        //     temp_y = speed * sin(theta) + r->pos[1];
-        //     break;
-        // }
-        // case 2:
-        // { // CW rotation
-        //     phi = -r->turn_speed * m_tick_delta_t;
-        //     theta += phi;
-        //     temp_cos = RADIUS * cos(theta + 4 * PI / 3);
-        //     temp_sin = RADIUS * sin(theta + 4 * PI / 3);
-        //     temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
-        //     temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
-        //     break;
-        // }
-        // case 3:
-        // { // CCW rotation
-        //     phi = r->turn_speed * m_tick_delta_t;
-        //     theta += phi;
-        //     temp_cos = RADIUS * cos(theta + 2 * PI / 3);
-        //     temp_sin = RADIUS * sin(theta + 2 * PI / 3);
-        //     temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
-        //     temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
-        //     break;
-        // }
-        // }
-        // new_poses_ptr[r_i] = RobotPose(temp_x, temp_y, wrap_angle(theta));
     }
 }
 
@@ -244,39 +203,6 @@ void World::move_robots(std::vector<std::vector<double>> &new_poses_ptr, std::ve
     {
         m_robots[ri]->robot_move(new_poses_ptr[ri], collisions[ri]);
         // // printf("ri=%d\n", ri);
-        // Robot *r = m_robots[ri];
-
-        // double new_theta = new_poses_ptr[ri].theta;
-        // switch (collisions[ri])
-        // {
-        // case 0:
-        // { // No collisions
-        //     r->pos[0] = new_poses_ptr[ri].x;
-        //     r->pos[1] = new_poses_ptr[ri].y;
-        //     r->collision_timer = 0;
-        //     break;
-        // }
-        // case 1:
-        // { // Collision with another robot
-        //     if (r->collision_turn_dir == 0)
-        //     {
-        //         new_theta = r->pos[2] - r->turn_speed * m_tick_delta_t; // left/CCW
-        //     }
-        //     else
-        //     {
-        //         new_theta = r->pos[2] + r->turn_speed * m_tick_delta_t; // right/CW
-        //     }
-        //     if (r->collision_timer > r->max_collision_timer)
-        //     { // Change turn dir
-        //         r->collision_turn_dir = (r->collision_turn_dir + 1) % 2;
-        //         r->collision_timer = 0;
-        //     }
-        //     r->collision_timer++;
-        //     break;
-        // }
-        // }
-        // // If a bot is touching the wall (collision_type == 2), update angle but not position
-        // r->pos[2] = wrap_angle(new_theta);
     }
 }
 

@@ -39,27 +39,24 @@ class Robot
 	//! Time per tick (set when Robot added to World)
 	double m_tick_delta_t;
 	//! When robots collide, which direction this will turn (0 or 1)
-	uint8_t collision_turn_dir;
+	uint8_t m_collision_turn_dir;
 	//! How long the robot has been turning this way while colliding (will time out and switch direction)
-	uint32_t collision_timer = 0;
+	uint32_t m_collision_timer = 0;
 	//! How long to turn one way when colliding, before switching (set randomly in robot_init())
-	uint32_t max_collision_timer;
-
+	uint32_t m_max_collision_timer;
 	//! Value of how motors differ from ideal. (Don't use these; that's cheating!) Set in robot_init()
-	double motor_error;
+	double m_motor_error;
 	//! Robot commanded motion 1=forward, 2=cw rotation, 3=ccw rotation, 4=stop
-	int motor_command;
+	int m_motor_command;
 	//! Base forward speed in mm/s (Will be randomized around this in robot_init())
-	double forward_speed = 24;
+	double m_forward_speed = 24;
 	//! Base turning speed in rad/s (Will be randomized around this in robot_init())
-	double turn_speed = 0.5;
-
+	double m_turn_speed = 0.5;
 	//! Battery remaining (to be set in Kilobot.init())
 	//! TODO: Shouldn't this also be set in robot_init()?
 	double battery = -1;
-
 	//! Communication range between robots in mm (3 bodylengths)
-	const double comm_range = 6 * 16;
+	const double m_comm_range = 6 * 16;
 	//! Flag set to 1 when robot wants to transmit
 	int tx_request;
 
@@ -115,11 +112,21 @@ class Robot
 
 	void robot_move(const std::vector<double> &new_pose, const int16_t &collision);
 
-	virtual void sensing(int, int[], int[], int[], int[]) = 0;
+	// TODO: Not used and no idea what it's for
+	// virtual void sensing(int, int[], int[], int[], int[]) = 0;
 
 	virtual char *get_debug_info(char *buffer, char *rt) = 0;
 
+	// TODO: Why is this implemented in Kilobot.h instead of Robot.cpp? Also this implementation seems weird/pointless. It's only used by KiloSim.cpp for determining if communication works in both directions (and it's symmetric) WTF. I don't think I wrote this...
+	/*!
+	 * Determine if another robot is within communication range
+	 * @dist Distance between the robots (in mm)
+	 * @return 0 if out of range; otherwise distance
+	 */
 	virtual double comm_out_criteria(double dist) = 0;
+	/*!
+	 * Check if in communication range?
+	 */
 	virtual bool comm_in_criteria(double dist, void *cd) = 0;
 
 	// Useful

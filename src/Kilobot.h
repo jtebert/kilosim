@@ -11,7 +11,6 @@ namespace KiloSim
 
 const uint8_t ir = 1;
 const uint8_t NORMAL = 1;
-const uint8_t tolerance = 60;
 
 typedef double distance_measurement_t;
 
@@ -48,65 +47,28 @@ struct message_t
 class Kilobot : public Robot
 {
   protected:
+	//! Is the left motor ready to move? (aka used spinup_motors())
 	bool left_ready = false;
+	//! Is the right motor ready to move? (aka used spinup_motors())
 	bool right_ready = false;
-	int kilo_turn_right = 50;
-	int kilo_straight_left = 50;
-	int kilo_straight_right = 50;
-	int kilo_turn_left = 50;
-	int turn_right = 0;
-	int turn_left = 0;
+	//! [Kilolib API] Calibrated straight (left motor) duty cycle
+	const int kilo_straight_left = 50;
+	//! [Kilolib API] Calibrated straight (right motor) duty cycle
+	const int kilo_straight_right = 50;
+	//! [Kilolib API] Calibrated turn left duty cycle
+	const int kilo_turn_left = 50;
+	//! [Kilolib API] Calibrated turn right duty cycle
+	const int kilo_turn_right = 50;
+	//! [Kilolib API] Kilobot clock variable
 	uint32_t kilo_ticks = 0;
+	//! Set duty cycle of the right motor
+	int m_turn_right = 0;
+	//! Set duty cycle of the left motor
+	int m_turn_left = 0;
 
 	double distance_measurement;
 	bool message_sent = false;
 
-	struct rgb
-	{
-		double red, green, blue;
-	};
-
-	rgb RGB(double r, double g, double b)
-	{
-		rgb c;
-		c.red = r;
-		c.green = g;
-		c.blue = b;
-		return c;
-	}
-
-	void rand_seed(char seed) {}
-
-	unsigned char rand_soft()
-	{
-		return rand() * 255 / RAND_MAX;
-	}
-
-	uint8_t rand_hard()
-	{
-		uint8_t x = rand() % 255;
-		return x;
-	}
-
-	unsigned char message_crc(message_t *m)
-	{
-		int crc = 0;
-		for (int i = 0; i < 9; i++)
-		{
-			crc += m->data[i];
-		}
-		return crc % 256;
-	}
-	/*!
-	 * [KiloLib API] Set the Kilobot's LED color
-	 * @c RGB color to set the LED to
-	 */
-	void set_color(rgb c)
-	{
-		color[0] = c.red;
-		color[1] = c.green;
-		color[2] = c.blue;
-	}
 	/*!
 	 * [User API] User-implemented setup function that is run once in initialization
 	 */
@@ -123,26 +85,8 @@ class Kilobot : public Robot
 		setup();
 	}
 
-	/*!
-	 * [KiloLib API] Function that is called when the Kilobot receives a message
-	 * On real robots, this is called as an interrupt, so processing here (outside the loop) should be minimized
-	 * @message Contents of the received message
-	 * @distance_measurement Estimated distance (in mm) from the Kilobot sending the message
-	 */
-	void message_rx(message_t *message, distance_measurement_t *distance_measurement){};
-
 	void controller()
 	{
-		//if (pos[0] > 1000 && pos[0] < 1005 && pos[1]>1000 && pos[1] < 1005)
-		//{
-		//	distance_measurement = 35;
-		//	message_t m;
-		//	m.data[0] = 1;
-		//	m.data[1] = 5;
-		//	m.data[2] = 10;
-		//	m.data[3] = 1;
-		//	message_rx(&m, &distance_measurement);
-		//}
 		if (message_sent)
 		{
 			tx_request = 0;
@@ -159,18 +103,18 @@ class Kilobot : public Robot
 				kilo_ticks++;
 		}
 		this->loop();
-		motor_command = 4;
-		if (right_ready && turn_right == kilo_turn_right)
+		m_motor_command = 4;
+		if (right_ready && m_turn_right == m_kilo_turn_right)
 		{
-			motor_command -= 2;
+			m_motor_command -= 2;
 		}
 		else
 		{
 			right_ready = false;
 		}
-		if (left_ready && turn_left == kilo_turn_left)
+		if (left_ready && m_turn_left == kilo_turn_left)
 		{
-			motor_command -= 1;
+			m_motor_command -= 1;
 		}
 		else
 		{
@@ -182,20 +126,81 @@ class Kilobot : public Robot
 			tx_request = 0;
 	}
 
-	void kilo_init() {}
+	// KILOLIB API FUNCTIONS
 
-	void spinup_motors()
+	/*!
+	 * [KiloLib API] Create an RGB color
+	 * @r Red intensity (0-1)
+	 * @g Green intensity (0-1)
+	 * @b Blue intensity (0-1)
+	 */
+	rgb RGB(double r, double g, double b)
 	{
-		left_ready = true;
-		right_ready = true;
+		rgb c;
+		c.red = r;
+		c.green = g;
+		c.blue = b;
+		return c;
 	}
 
-	void set_motors(char l, char r)
+	// TODO: This isn't used but it's part of the Kilolib API. Not even sure of its accuracy...
+	uint8_t estimate_distance(distance_measurement_t *d)
 	{
-		turn_left = l;
-		turn_right = r;
+		if (*d < 255)
+			return (unsigned char)*d;
+		else
+			return 255;
 	}
 
+	// TODO: Part of the KiloLib API but does nothing
+	void delay(int i) {}
+
+	/*!
+	 * [KiloLib API] Compute a cyclic redundancy check for a message
+	 * Used as error-detecting code for receiving robot to verify the contents
+	 * of the message.
+	 * @m Pointer to the message for which to create a code
+	 * @return Byte hashing the message data contents
+	 */
+	uint16_t message_crc(message_t *m)
+	{
+		int crc = 0;
+		for (int i = 0; i < 9; i++)
+		{
+			crc += m->data[i];
+		}
+		return crc % 256;
+	}
+
+	/*!
+	 * [Kilolib API] Hardware random number generator
+	 * TODO: Currently this does the same thing as rand_soft
+	 */
+	uint8_t rand_hard()
+	{
+		uint8_t x = rand() % 255;
+		return x;
+	}
+
+	/*!
+	 * [Kilolib API] Software random number generator
+	 * TODO: Currently does the same thing as rand_hard
+	 */
+	uint8_t rand_soft()
+	{
+		return rand() * 255 / RAND_MAX;
+	}
+
+	/*!
+	 * [Kilolib API] Seed software random number generator.
+	 * TODO: Currently this does nothing
+	 */
+	void rand_seed(char seed) {}
+
+	/*!
+	 * [Kilolib API] Get the 10-bit light intensity from the Kilobot's light sensor (from World's LightPattern)
+	 * @return 10-bit monochrome light intensity
+	 */
 	int16_t get_ambientlight()
 	{
 		if (m_light_pattern)
@@ -213,12 +218,65 @@ class Kilobot : public Robot
 		}
 	}
 
-	void delay(int i) {}
+	// TODO: Not implementing get_voltage() from Kilolib. Could get it from battery value
+	// TODO: Not implementing get_temperature()... and probably don't need to
+
+	/*!
+	 * [Kilolib API] Set the rate of both the motors. Set both to go straight
+	 * @l Speed of the motor to turn left
+	 * @r Speed of the motor to turn right
+	 */
+	void set_motors(char l, char r)
+	{
+		m_turn_left = l;
+		m_turn_right = r;
+	}
+
+	/*!
+	 * [Kilolib API] Spin up both motors to overcome static friction
+	 */
+	void spinup_motors()
+	{
+		left_ready = true;
+		right_ready = true;
+	}
+
+	/*!
+	 * [Kilolib API] Set the Kilobot's LED color
+	 * @c RGB color to set the LED to
+	 */
+	void set_color(rgb c)
+	{
+		color[0] = c.red;
+		color[1] = c.green;
+		color[2] = c.blue;
+	}
+
+	/*!
+	 * [KiloLib API] Function that is called when the Kilobot receives a message
+	 * On real robots, this is called as an interrupt, so processing here (outside the loop) should be minimized
+	 * @message Contents of the received message
+	 * @distance_measurement Estimated distance (in mm) from the Kilobot sending the message
+	 */
+	void message_rx(message_t *message, distance_measurement_t *distance_measurement){};
+
+	/*!
+	 * [Kilolib API] Callback for message transmission
+	 * (By default, it does nothing)
+	 * @return Contents of the sent message
+	 */
+	message_t *message_tx(){};
+
+	/*!
+	 * [Kilolib API] Callback for successful message transmission
+	 * (By default, it does nothing)
+	 */
+	void message_tx_success(){};
 
 	double comm_out_criteria(double dist)
 	{
-		//standard circular transmission area
-		if (dist > comm_range)
+		// Standard circular transmission area
+		if (dist > m_comm_range)
 			return 0; // it's outside communication range
 		return dist;
 	}
@@ -230,18 +288,8 @@ class Kilobot : public Robot
 		return true;
 	}
 
-	unsigned char estimate_distance(distance_measurement_t *d)
-	{
-		if (*d < 255)
-			return (unsigned char)*d;
-		else
-			return 255;
-	}
-
-	void sensing(int features, int type[], int x[], int y[], int value[]) {}
-
-	void message_tx_success(){};
-	message_t *message_tx(){};
+	// TODO: This *also* isn't used and I have no idea what it was for.
+	// void sensing(int features, int type[], int x[], int y[], int value[]) {}
 
 	void *get_message()
 	{
