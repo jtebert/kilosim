@@ -98,8 +98,8 @@ void World::remove_robot(Robot *robot)
 
 void World::run_controllers()
 {
-    // #pragma omp parallel for schedule(static)
-    for (int i = 0; i < m_robots.size(); i++)
+    // #pragma omp parallel for default(none) //schedule(static)
+    for (unsigned int i = 0; i < m_robots.size(); i++)
     {
         if (uniform_rand_real(0,1) < m_prob_control_execute) //TODO: This is a poor way of generating random numbers, especially in ensemble simulations
         {
@@ -115,14 +115,14 @@ void World::communicate()
     if (m_tick % m_comm_rate == 0)
     {
         // #pragma omp parallel for
-        for (int tx_i = 0; tx_i < m_robots.size(); tx_i++)
+        for (unsigned int tx_i = 0; tx_i < m_robots.size(); tx_i++)
         {
             Robot &tx_r = *m_robots[tx_i];
             // Loop over all transmitting robots
             void *msg = tx_r.get_message();
             if (msg)
             {
-                for (int rx_i = 0; rx_i < m_robots.size(); rx_i++)
+                for (unsigned int rx_i = 0; rx_i < m_robots.size(); rx_i++)
                 {
                     Robot &rx_r = *m_robots[rx_i];
                     // Loop over receivers if transmitting robot is sending a message
@@ -150,7 +150,7 @@ void World::compute_next_step(std::vector<RobotPose> &new_poses_ptr)
     // printf("\nt = %d\n", m_tick);
 // #pragma omp parallel for schedule(static)
 #pragma omp parallel for
-    for (int r_i = 0; r_i < m_robots.size(); r_i++)
+    for (unsigned int r_i = 0; r_i < m_robots.size(); r_i++)
     {
         // printf("%d\n", r_i);
         Robot &r = *m_robots[r_i];
@@ -208,7 +208,7 @@ void World::find_collisions(
     cb.update(new_poses_ptr);
 
     // #pragma omp parallel for schedule(static)
-    for (int ci = 0; ci < m_robots.size(); ci++){
+    for (unsigned int ci = 0; ci < m_robots.size(); ci++){
         const auto &cr = new_poses_ptr[ci];
         // Check for collisions with walls
         if (cr.x <= RADIUS || cr.x >= m_arena_width - RADIUS || cr.y <= RADIUS || cr.y >= m_arena_height - RADIUS)
@@ -246,7 +246,7 @@ void World::move_robots(
 ){
     // TODO: Parallelize
     // #pragma omp parallel for
-    for (int ri = 0; ri < m_robots.size(); ri++)
+    for (unsigned int ri = 0; ri < m_robots.size(); ri++)
     {
         // printf("ri=%d\n", ri);
         Robot &r = *m_robots[ri];

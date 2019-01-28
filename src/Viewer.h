@@ -26,12 +26,12 @@ namespace KiloSim
 class Viewer
 {
 protected:
+  //! Pointer to the World that this Viewer draws
+  World *m_world;
   //! Width of the display window (in pixels)
   int m_window_width;
   //! Height of the display window (in pixels)
   int m_window_height;
-  //! Pointer to the World that this Viewer draws
-  World *m_world;
   //! SFML window in which the world will be drawn
   sf::RenderWindow m_window;
   //! Texture of the World image (will be displayed as background)

@@ -36,9 +36,6 @@ protected:
 
   typedef std::shared_ptr<std::vector<RobotPose>> PosesPtr;
 
-private:
-  CollisionBoxes cb;
-
 protected:
   //! Robots in the world
   std::vector<Robot *> m_robots;
@@ -58,6 +55,9 @@ protected:
   const double m_prob_control_execute = .99;
   //! Background light pattern image
   LightPattern m_light_pattern;
+
+private:
+  CollisionBoxes cb;
 
 protected:
   //! Run the controllers (kilolib) for all robots
