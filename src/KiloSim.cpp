@@ -226,9 +226,9 @@ void World::find_collisions(std::vector<RobotPose> *new_poses_ptr, std::vector<i
                 // had a wall collision (and therefore didn't check for robot collisions)
                 if (r != c)
                 {
-                    const double distance = sqrt(pow(r_x - (*new_poses_ptr)[c].x, 2) +
-                                                 pow(r_y - (*new_poses_ptr)[c].y, 2));
-                    if (distance < 2 * RADIUS)
+                    const double distance = pow(r_x - (*new_poses_ptr)[c].x, 2) +
+                                            pow(r_y - (*new_poses_ptr)[c].y, 2);
+                    if (distance < 4 * RADIUS * RADIUS)
                     {
                         (*collisions)[r] = 1; // r is colliding with c
                         // Don't need to worry about more than 1 collision
