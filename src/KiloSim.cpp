@@ -67,8 +67,7 @@ void World::step()
 
     // Increment time
     m_tick++;
-
-} // namespace KiloSim
+}
 
 sf::Image World::get_light_pattern()
 {
@@ -107,7 +106,7 @@ void World::run_controllers()
             m_robots[i]->robot_controller();
         }
     }
-} // namespace KiloSim
+}
 
 void World::communicate()
 {
@@ -146,9 +145,9 @@ void World::communicate()
 
 void World::compute_next_step(std::vector<RobotPose> *new_poses_ptr)
 {
-    // TODO: Implement compute_next_step (and maybe change from pointers)
+// TODO: Implement compute_next_step (and maybe change from pointers)
 
-    // printf("\nt = %d\n", m_tick);
+// printf("\nt = %d\n", m_tick);
 // #pragma omp parallel for schedule(static)
 #pragma omp parallel for
     for (int r_i = 0; r_i < m_robots.size(); r_i++)

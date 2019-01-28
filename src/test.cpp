@@ -44,6 +44,9 @@ int main(int argc, char *argv[])
             config->get("num_threads"));
 
         // Create robot(s)
+        // Creates a grid of 23x23 robots (can handle up to 529 robots)
+        // That's the most that will fit into a 2.4x2.4 m arena with this spacing
+        int num_rows = 23;
         int num_robots = config->get("num_robots");
         std::vector<KiloSim::Robot *> robots;
         robots.resize(num_robots);
@@ -52,7 +55,7 @@ int main(int argc, char *argv[])
             // std::cout << n * 50 + 20 << std::endl;
             robots[n] = new KiloSim::MyKilobot();
             world->add_robot(robots[n]);
-            robots[n]->robot_init(n * 80 + 75, 600, PI * n / 2);
+            robots[n]->robot_init(floor(n / num_rows) * 100 + 75, (n % num_rows) * 100 + 75, PI * n / 2);
         }
 
         KiloSim::Logger *logger = new KiloSim::Logger(
