@@ -120,7 +120,7 @@ void World::run_controllers()
     // #pragma omp parallel for default(none) //schedule(static)
     for (unsigned int i = 0; i < m_robots.size(); i++)
     {
-        if (uniform_rand_real(0,1) < m_prob_control_execute) //TODO: This is a poor way of generating random numbers, especially in ensemble simulations
+        if (uniform_rand_real(0,1) < m_prob_control_execute)
         {
             m_robots[i]->robot_controller();
         }
