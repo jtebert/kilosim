@@ -30,8 +30,8 @@ protected:
   int m_window_width;
   //! Height of the display window (in pixels)
   int m_window_height;
-  //! Pointer to the World that this Viewer draws
-  World *m_world;
+  //! Reference to the World that this Viewer draws
+  World &m_world;
   //! SFML window in which the world will be drawn
   sf::RenderWindow m_window;
   //! Texture of the World image (will be displayed as background)
@@ -54,7 +54,7 @@ public:
    * will be automatically determined from the aspect ratio of the World's
    * dimensions.
    */
-  Viewer(World *world, int window_width = 1080);
+  Viewer(World &world, int window_width = 1080);
   /*!
    * Draw everything in the world at the current state
    *

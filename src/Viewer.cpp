@@ -11,21 +11,21 @@
 
 namespace KiloSim
 {
-Viewer::Viewer(World *world, int window_width) : m_world(world), m_window_width(window_width)
+Viewer::Viewer(World &world, int window_width) : m_world(world), m_window_width(window_width)
 {
-    std::vector<double> world_dim = world->get_dimensions();
+    std::vector<double> world_dim = world.get_dimensions();
     m_scale = m_window_width / world_dim[0];
     m_window_height = world_dim[1] * m_scale;
 
-    //m_settings.antialiasingLevel = 32;
+    // m_settings.antialiasingLevel = 32;
     m_window.create(sf::VideoMode(m_window_width, m_window_height),
                     "KiloSim", sf::Style::Default, m_settings);
     m_window.setFramerateLimit(144);
 
     m_background.setSize(sf::Vector2f(m_window_width, m_window_height));
-    if (world->has_light_pattern())
+    if (world.has_light_pattern())
     {
-        m_bg_texture.loadFromImage(world->get_light_pattern());
+        m_bg_texture.loadFromImage(world.get_light_pattern());
     }
     else
     {
@@ -67,7 +67,7 @@ void Viewer::draw()
     draw_time();
 
     // TODO: Implement this
-    for (auto &r : m_world->get_robots())
+    for (auto &r : m_world.get_robots())
     {
         draw_robot(r);
         // r->draw();
@@ -94,7 +94,7 @@ void Viewer::draw_robot(Robot *r)
 
 void Viewer::draw_time()
 {
-    int t = m_world->get_time();
+    int t = m_world.get_time();
     int hour = t / 3600;
     t = t % 3600;
     int minute = t / 60;

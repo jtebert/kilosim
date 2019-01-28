@@ -46,7 +46,6 @@ void World::step()
 {
     // Initialize vectors that are used in parallelism
     std::vector<RobotPose> new_poses((m_robots.size()));
-    // PosesPtr new_poses_ptr = std::make_shared<std::vector<RobotPose>>(new_poses);
     std::vector<int16_t> collisions(m_robots.size(), 0);
 
     // Apply robot controller for all robots
@@ -56,14 +55,14 @@ void World::step()
     communicate();
 
     // Compute potential movement for all robots
-    compute_next_step(&new_poses);
+    compute_next_step(new_poses);
 
     // Check for collisions between all robot pairs
-    find_collisions(&new_poses, &collisions);
+    find_collisions(new_poses, collisions);
 
     // And execute move if no collision
     // or turn if collision
-    move_robots(&new_poses, &collisions);
+    move_robots(new_poses, collisions);
 
     // Increment time
     m_tick++;
@@ -143,7 +142,7 @@ void World::communicate()
     }
 }
 
-void World::compute_next_step(std::vector<RobotPose> *new_poses_ptr)
+void World::compute_next_step(std::vector<RobotPose> &new_poses_ptr)
 {
 // TODO: Implement compute_next_step (and maybe change from pointers)
 
@@ -192,11 +191,11 @@ void World::compute_next_step(std::vector<RobotPose> *new_poses_ptr)
             break;
         }
         }
-        (*new_poses_ptr)[r_i] = RobotPose(temp_x, temp_y, wrap_angle(theta));
+        new_poses_ptr[r_i] = RobotPose(temp_x, temp_y, wrap_angle(theta));
     }
 }
 
-void World::find_collisions(std::vector<RobotPose> *new_poses_ptr, std::vector<int16_t> *collisions)
+void World::find_collisions(std::vector<RobotPose> &new_poses_ptr, std::vector<int16_t> &collisions)
 {
     // Check to see if motion causes robots to collide with their updated positions
 
@@ -208,14 +207,14 @@ void World::find_collisions(std::vector<RobotPose> *new_poses_ptr, std::vector<i
     for (int r = 0; r < m_robots.size(); r++)
     {
         double distance;
-        double r_x = (*new_poses_ptr)[r].x;
-        double r_y = (*new_poses_ptr)[r].y;
+        double r_x = new_poses_ptr[r].x;
+        double r_y = new_poses_ptr[r].y;
         // Check for collisions with walls
         if (r_x <= RADIUS || r_x >= m_arena_width - RADIUS || r_y <= RADIUS || r_y >= m_arena_height - RADIUS)
         {
             // There's a collision with the wall.
             // Don't even bother to check for collisions with other robots
-            (*collisions)[r] = -1;
+            collisions[r] = -1;
         }
         else
         {
@@ -226,11 +225,11 @@ void World::find_collisions(std::vector<RobotPose> *new_poses_ptr, std::vector<i
                 // had a wall collision (and therefore didn't check for robot collisions)
                 if (r != c)
                 {
-                    distance = sqrt(pow(r_x - (*new_poses_ptr)[c].x, 2) +
-                                    pow(r_y - (*new_poses_ptr)[c].y, 2));
+                    distance = sqrt(pow(r_x - new_poses_ptr[c].x, 2) +
+                                    pow(r_y - new_poses_ptr[c].y, 2));
                     if (distance < 2 * RADIUS)
                     {
-                        (*collisions)[r] = 1; // r is colliding with c
+                        collisions[r] = 1; // r is colliding with c
                         // Don't need to worry about more than 1 collision
                         break;
                     }
@@ -241,7 +240,7 @@ void World::find_collisions(std::vector<RobotPose> *new_poses_ptr, std::vector<i
     // return std::make_shared<std::vector<int16_t>>(collisions);
 }
 
-void World::move_robots(std::vector<RobotPose> *new_poses_ptr, std::vector<int16_t> *collisions)
+void World::move_robots(std::vector<RobotPose> &new_poses_ptr, std::vector<int16_t> &collisions)
 {
     // TODO: Parallelize
     // #pragma omp parallel for
@@ -250,13 +249,13 @@ void World::move_robots(std::vector<RobotPose> *new_poses_ptr, std::vector<int16
         // printf("ri=%d\n", ri);
         Robot *r = m_robots[ri];
 
-        double new_theta = (*new_poses_ptr)[ri].theta;
-        switch ((*collisions)[ri])
+        double new_theta = new_poses_ptr[ri].theta;
+        switch (collisions[ri])
         {
         case 0:
         { // No collisions
-            r->pos[0] = (*new_poses_ptr)[ri].x;
-            r->pos[1] = (*new_poses_ptr)[ri].y;
+            r->pos[0] = new_poses_ptr[ri].x;
+            r->pos[1] = new_poses_ptr[ri].y;
             r->collision_timer = 0;
             break;
         }

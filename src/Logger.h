@@ -98,8 +98,8 @@ protected:
   //! Managed pointer to HDF5 PacketTable
   typedef std::shared_ptr<FL_PacketTable> H5PacketTablePtr;
   typedef std::unordered_map<std::string, double> Params;
-  //! Pointer to KiloSim World that this Logger tracks
-  World *m_world;
+  //! Reference to KiloSim World that this Logger tracks
+  World &m_world;
   //! HDF5 file where the data lives
   std::string m_file_id;
   //! Whether or not to override existing data trial groups (this is done at the group level); defaults to false
@@ -146,7 +146,7 @@ public:
    * @param trial_num Number of the trial to save the data. Data will be saved
    * in a group named "trial_#", where # is trial_num.
    */
-  Logger(World *world, std::string file_id, int trial_num, bool overwrite_trials = false);
+  Logger(World &world, std::string file_id, int trial_num, bool overwrite_trials = false);
   //! Destructor: closes the file when it goes out of scope
   ~Logger();
 
@@ -197,7 +197,7 @@ public:
    *
    * @param config Loaded configuration for this experiment/trial
    */
-  void log_config(ConfigParser *config);
+  void log_config(ConfigParser &config);
 
 protected:
   //! Log data for this specific aggregator

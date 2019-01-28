@@ -15,7 +15,7 @@ const uint8_t tolerance = 60;
 
 typedef double distance_measurement_t;
 
-//communication data struct without distance it should be 9 bytes max
+// Communication data struct without distance it should be 9 bytes max
 struct message_t
 {
 	unsigned char type = 0;

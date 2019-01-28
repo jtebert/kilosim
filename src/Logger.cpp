@@ -9,7 +9,7 @@
 namespace KiloSim
 {
 
-Logger::Logger(World *world, std::string file_id, int trial_num, bool overwrite_trials)
+Logger::Logger(World &world, std::string file_id, int trial_num, bool overwrite_trials)
     : m_file_id(file_id),
       m_world(world),
       m_overwrite_trials(overwrite_trials)
@@ -74,7 +74,7 @@ void Logger::add_aggregator(std::string agg_name, aggregatorFunc agg_func)
     m_aggregators.insert({{agg_name, agg_func}});
 
     // Do a test run of the aggregator to get the length of the output
-    std::vector<double> test_output = (*agg_func)(m_world->get_robots());
+    std::vector<double> test_output = (*agg_func)(m_world.get_robots());
 
     hsize_t out_len[1] = {test_output.size()};
     H5::ArrayType agg_type(H5::PredType::NATIVE_DOUBLE, 1, out_len);
@@ -96,7 +96,7 @@ void Logger::log_state()
     // https://thispointer.com/how-to-iterate-over-an-unordered_map-in-c11/
 
     // Add the current time to the time series
-    double t = m_world->get_time();
+    double t = m_world.get_time();
     herr_t err = m_time_table->AppendPacket(&t);
     if (err < 0)
         fprintf(stderr, "WARNING: Failed to append to time series");
@@ -111,7 +111,7 @@ void Logger::log_state()
 void Logger::log_aggregator(std::string agg_name, aggregatorFunc agg_func)
 {
     // Call the aggregator function on the robots
-    std::vector<double> agg_val = (*agg_func)(m_world->get_robots());
+    std::vector<double> agg_val = (*agg_func)(m_world.get_robots());
     // TODO: append to the packet table (should be created by add_aggregator)
     herr_t err = m_aggregator_dsets.at(agg_name)->AppendPacket(agg_val.data());
     if (err < 0)
@@ -120,9 +120,9 @@ void Logger::log_aggregator(std::string agg_name, aggregatorFunc agg_func)
     }
 }
 
-void Logger::log_config(ConfigParser *config)
+void Logger::log_config(ConfigParser &config)
 {
-    json j = config->get();
+    json j = config.get();
     for (auto &mol : j.get<json::object_t>())
     {
         log_param(mol.first, mol.second);
