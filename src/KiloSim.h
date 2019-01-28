@@ -13,6 +13,7 @@
 #include <string>
 #include <iterator>
 #include <memory>
+#include <random>
 #include <SFML/Graphics.hpp>
 #include "Robot.h"
 #include "LightPattern.h"
@@ -37,6 +38,9 @@ protected:
 
 private:
   CollisionBoxes cb;
+  std::mt19937_64 reng;
+  std::uniform_real_distribution<double> dis01;
+
 protected:
   //! Robots in the world
   std::vector<Robot *> m_robots;

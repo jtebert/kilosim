@@ -29,6 +29,10 @@ World::World(double arena_width, double arena_height, std::string light_pattern_
     {
         omp_set_dynamic(1);
     }
+
+    std::random_device rd;
+    reng.seed(rd());
+    dis01 = std::uniform_real_distribution<double>(0.0, 1.0);
 }
 
 World::~World()
@@ -102,7 +106,7 @@ void World::run_controllers()
     // #pragma omp parallel for schedule(static)
     for (int i = 0; i < m_robots.size(); i++)
     {
-        if ((rand()) < (int)(m_prob_control_execute * RAND_MAX)) //TODO: This is a poor way of generating random numbers, especially in ensemble simulations
+        if (dis01(reng) < m_prob_control_execute) //TODO: This is a poor way of generating random numbers, especially in ensemble simulations
         {
             m_robots[i]->robot_controller();
         }
