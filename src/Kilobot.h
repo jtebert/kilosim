@@ -2,8 +2,6 @@
 #define KILOLIB_H
 #undef RGB
 
-#include <math.h>
-#include <omp.h>
 #include "Robot.h"
 #include "random.hpp"
 

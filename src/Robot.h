@@ -2,7 +2,7 @@
 #define ROBOT_H
 
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include <SFML/Graphics.hpp>
 #include "LightPattern.h"
 

@@ -1,6 +1,4 @@
 #include "KiloSim.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "random.hpp"
 
 // Implementation of Kilobot Arena/World
