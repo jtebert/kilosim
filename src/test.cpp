@@ -4,8 +4,7 @@
 #include "ConfigParser.h"
 #include "MyKilobot.cpp"
 #include "random.hpp"
-
-#include <unistd.h>
+#include "Timer.hpp"
 
 std::vector<double> mean_colors(std::vector<KiloSim::Robot *> &robots)
 {
@@ -27,6 +26,10 @@ std::vector<double> mean_colors(std::vector<KiloSim::Robot *> &robots)
 
 int main(int argc, char *argv[])
 {
+    Timer timer_overall;
+    Timer timer_step;
+    timer_overall.start();
+
     // Create parser to manage configuration
     KiloSim::ConfigParser *config = new KiloSim::ConfigParser("exampleConfig.json");
 
@@ -89,4 +92,7 @@ int main(int argc, char *argv[])
         printf("Completed trial %d\n\n", trial);
     }
     printf("Simulations complete\n\n");
+
+    std::cerr<<"t Step    = "<<timer_step.accumulated()<<" s"<<std::endl;
+    std::cerr<<"t Overall = "<<timer_overall.stop()<<" s"<<std::endl;
 }

@@ -58,6 +58,13 @@ protected:
 
 private:
   CollisionBoxes cb;
+  Timer timer_controllers;
+  Timer timer_collisions;
+  Timer timer_move;
+  Timer timer_compute_next_step;
+  Timer timer_communicate;
+  Timer timer_step;
+  Timer timer_step_memory;
 
 protected:
   //! Run the controllers (kilolib) for all robots
@@ -175,6 +182,8 @@ public:
    * @return 2-element [width, height] vector of dimensions in mm
    */
   std::vector<double> get_dimensions();
+
+  void printTimes() const;
 };
 } // namespace KiloSim
 

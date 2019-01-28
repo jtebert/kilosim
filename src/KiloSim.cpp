@@ -46,29 +46,45 @@ World::RobotPose::RobotPose(double x, double y, double theta)
 
 void World::step()
 {
+    timer_step.start();
+
+    timer_step_memory.start();
     // Initialize vectors that are used in parallelism
     std::vector<RobotPose> new_poses((m_robots.size()));
     // PosesPtr new_poses_ptr = std::make_shared<std::vector<RobotPose>>(new_poses);
     std::vector<int16_t> collisions(m_robots.size(), 0);
+    timer_step_memory.stop();
 
     // Apply robot controller for all robots
+    timer_controllers.start();
     run_controllers();
+    timer_controllers.stop();
 
     // Communication between all robot pairs
+    timer_communicate.start();
     communicate();
+    timer_communicate.stop();
 
     // Compute potential movement for all robots
+    timer_compute_next_step.start();
     compute_next_step(new_poses);
+    timer_compute_next_step.stop();
 
     // Check for collisions between all robot pairs
+    timer_collisions.start();
     find_collisions(new_poses, collisions);
+    timer_collisions.stop();
 
     // And execute move if no collision
     // or turn if collision
+    timer_move.start();
     move_robots(new_poses, collisions);
+    timer_move.stop();
 
     // Increment time
     m_tick++;
+
+    timer_step.stop();
 
 } // namespace KiloSim
 
@@ -327,6 +343,16 @@ std::vector<double> World::get_dimensions()
 {
     std::vector<double> dimensions{m_arena_width, m_arena_height};
     return dimensions;
+}
+
+void World::printTimes() const {
+    std::cerr<<"t timer_step              = " << timer_step.accumulated()<<std::endl;
+    std::cerr<<"t timer_step_memory       = " << timer_step_memory.accumulated()<<std::endl;
+    std::cerr<<"t timer_controllers       = " << timer_controllers.accumulated()<<std::endl;
+    std::cerr<<"t timer_communicate       = " << timer_communicate.accumulated()<<std::endl;
+    std::cerr<<"t timer_compute_next_step = " << timer_compute_next_step.accumulated()<<std::endl;
+    std::cerr<<"t timer_collisions        = " << timer_collisions.accumulated()<<std::endl;
+    std::cerr<<"t timer_move              = " << timer_move.accumulated()<<std::endl;
 }
 
 } // namespace KiloSim
