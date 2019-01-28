@@ -103,9 +103,9 @@ class Robot
 	// Useful
 	static double distance(double x1, double y1, double x2, double y2)
 	{
-		double x = x1 - x2;
-		double y = y1 - y2;
-		double s = pow(x, 2) + pow(y, 2);
+		const double x = x1 - x2;
+		const double y = y1 - y2;
+		const double s = pow(x, 2) + pow(y, 2);
 		return sqrt(s);
 	}
 

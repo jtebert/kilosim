@@ -160,33 +160,32 @@ void World::compute_next_step(std::vector<RobotPose> &new_poses_ptr)
         double temp_x = x;
 
         double temp_y = y;
-        double temp_cos, temp_sin, phi;
         switch (r.motor_command)
         {
         case 1:
         { // forward
             //theta += r.motor_error * m_tick_delta_t;
-            double speed = r.forward_speed * m_tick_delta_t;
+            const double speed = r.forward_speed * m_tick_delta_t;
             temp_x = speed * cos(theta) + r.pos[0];
             temp_y = speed * sin(theta) + r.pos[1];
             break;
         }
         case 2:
         { // CW rotation
-            phi = -r.turn_speed * m_tick_delta_t;
+            const double phi = -r.turn_speed * m_tick_delta_t;
             theta += phi;
-            temp_cos = RADIUS * cos(theta + 4 * PI / 3);
-            temp_sin = RADIUS * sin(theta + 4 * PI / 3);
+            const double temp_cos = RADIUS * cos(theta + 4 * PI / 3);
+            const double temp_sin = RADIUS * sin(theta + 4 * PI / 3);
             temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
             temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
             break;
         }
         case 3:
         { // CCW rotation
-            phi = r.turn_speed * m_tick_delta_t;
+            const double phi = r.turn_speed * m_tick_delta_t;
             theta += phi;
-            temp_cos = RADIUS * cos(theta + 2 * PI / 3);
-            temp_sin = RADIUS * sin(theta + 2 * PI / 3);
+            const double temp_cos = RADIUS * cos(theta + 2 * PI / 3);
+            const double temp_sin = RADIUS * sin(theta + 2 * PI / 3);
             temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
             temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
             break;
