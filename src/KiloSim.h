@@ -69,7 +69,7 @@ protected:
    * @param new_poses_ptr Check for collisions between these would-be next positions
    * @return For each robot: 0 if no collision; -1 if wall collision; 1 if collision with another robot
    */
-  void find_collisions(std::vector<RobotPose> *new_poses_ptr, std::vector<int16_t> *collisions);
+  void find_collisions(const std::vector<RobotPose> &new_poses_ptr, std::vector<int16_t> &collisions);
   /*!
    * Move the robots based on new positions and collisions. This modifies the
    * internal positions of all robots in m_robots vector

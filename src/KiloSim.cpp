@@ -59,7 +59,7 @@ void World::step()
     compute_next_step(&new_poses);
 
     // Check for collisions between all robot pairs
-    find_collisions(&new_poses, &collisions);
+    find_collisions(new_poses, collisions);
 
     // And execute move if no collision
     // or turn if collision
@@ -197,8 +197,10 @@ void World::compute_next_step(std::vector<RobotPose> *new_poses_ptr)
     }
 }
 
-void World::find_collisions(std::vector<RobotPose> *new_poses_ptr, std::vector<int16_t> *collisions)
-{
+void World::find_collisions(
+    const std::vector<RobotPose> &new_poses_ptr, 
+    std::vector<int16_t> &collisions
+){
     // Check to see if motion causes robots to collide with their updated positions
 
     // 0 = no collision
@@ -208,14 +210,14 @@ void World::find_collisions(std::vector<RobotPose> *new_poses_ptr, std::vector<i
     // #pragma omp parallel for schedule(static)
     for (int r = 0; r < m_robots.size(); r++)
     {
-        double r_x = (*new_poses_ptr)[r].x;
-        double r_y = (*new_poses_ptr)[r].y;
+        const double r_x = new_poses_ptr[r].x;
+        const double r_y = new_poses_ptr[r].y;
         // Check for collisions with walls
         if (r_x <= RADIUS || r_x >= m_arena_width - RADIUS || r_y <= RADIUS || r_y >= m_arena_height - RADIUS)
         {
             // There's a collision with the wall.
             // Don't even bother to check for collisions with other robots
-            (*collisions)[r] = -1;
+            collisions[r] = -1;
         }
         else
         {
@@ -226,11 +228,11 @@ void World::find_collisions(std::vector<RobotPose> *new_poses_ptr, std::vector<i
                 // had a wall collision (and therefore didn't check for robot collisions)
                 if (r != c)
                 {
-                    const double distance = pow(r_x - (*new_poses_ptr)[c].x, 2) +
-                                            pow(r_y - (*new_poses_ptr)[c].y, 2);
+                    const double distance = pow(r_x - new_poses_ptr[c].x, 2) +
+                                            pow(r_y - new_poses_ptr[c].y, 2);
                     if (distance < 4 * RADIUS * RADIUS)
                     {
-                        (*collisions)[r] = 1; // r is colliding with c
+                        collisions[r] = 1; // r is colliding with c
                         // Don't need to worry about more than 1 collision
                         break;
                     }
