@@ -8,7 +8,6 @@
 #ifndef __KILOSIM_H
 #define __KILOSIM_H
 
-#include <omp.h>
 #include <set>
 #include <string>
 #include <iterator>
@@ -18,6 +17,11 @@
 #include "Robot.h"
 #include "LightPattern.h"
 #include "CollisionBoxes.h"
+#include "Timer.hpp"
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 namespace KiloSim
 {
