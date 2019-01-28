@@ -5,7 +5,7 @@
 CXX = g++
 
 #Flags
-CXXFLAGS = -std=c++11 -O3 -I /usr/include/hdf5/serial/ -L /usr/lib/x86_64-linux-gnu/hdf5/serial/ -fopenmp
+CXXFLAGS = -std=c++11 -g -O3 -I /usr/include/hdf5/serial/ -L /usr/lib/x86_64-linux-gnu/hdf5/serial/ -fopenmp
 LIBS = -lhdf5 -lhdf5_hl_cpp -lhdf5_cpp -lsfml-graphics -lsfml-window -lsfml-system
 
 # Directories
