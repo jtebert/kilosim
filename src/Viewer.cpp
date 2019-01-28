@@ -11,7 +11,7 @@
 
 namespace KiloSim
 {
-Viewer::Viewer(World &world, int window_width) : m_world(world), m_window_width(window_width)
+Viewer::Viewer(World &world, const int window_width) : m_world(world), m_window_width(window_width)
 {
     std::vector<double> world_dim = world.get_dimensions();
     m_scale = m_window_width / world_dim[0];
@@ -105,10 +105,5 @@ void Viewer::draw_time()
     snprintf(buff, sizeof(buff), "%.2d:%.2d:%.2d", hour, minute, second);
     std::string timeStr = buff;
     m_window.setTitle(timeStr);
-}
-
-void Viewer::draw_light_pattern()
-{
-    // TODO: Implement draw_light_pattern()
 }
 } // namespace KiloSim

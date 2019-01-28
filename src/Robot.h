@@ -36,43 +36,46 @@ class Robot
   protected:
 	//! World the robot belongs to (used for getting light pattern data)
 	LightPattern *m_light_pattern;
+	//! Time per tick (set when Robot added to World)
+	double m_tick_delta_t;
+	//! When robots collide, which direction this will turn (0 or 1)
+	uint8_t collision_turn_dir;
+	//! How long the robot has been turning this way while colliding (will time out and switch direction)
+	uint32_t collision_timer = 0;
+	//! How long to turn one way when colliding, before switching (set randomly in robot_init())
+	uint32_t max_collision_timer;
+
+	//! Value of how motors differ from ideal. (Don't use these; that's cheating!) Set in robot_init()
+	double motor_error;
+	//! Robot commanded motion 1=forward, 2=cw rotation, 3=ccw rotation, 4=stop
+	int motor_command;
+	//! Base forward speed in mm/s (Will be randomized around this in robot_init())
+	double forward_speed = 24;
+	//! Base turning speed in rad/s (Will be randomized around this in robot_init())
+	double turn_speed = 0.5;
+
+	//! Battery remaining (to be set in Kilobot.init())
+	//! TODO: Shouldn't this also be set in robot_init()?
+	double battery = -1;
+
+	//! Communication range between robots in mm (3 bodylengths)
+	const double comm_range = 6 * 16;
+	//! Flag set to 1 when robot wants to transmit
+	int tx_request;
 
   public:
+	//! UUID of the robot, set in robot_init()
 	uint16_t id;
-	//x, y, theta position in real world, don't use these in controller, that's cheating!!
+	//! (x, y, theta) position in real world. (Don't use these in controller; that's cheating! It's public for logging purposes.)
 	double pos[3];
-	//value of how motors differ from ideal, don't use these, that's cheating!!
-	double motor_error;
-	// communication range between robots (mm)
-	double comm_range = 6 * 16;
 	// RGB LED display color, values 0-1
 	double color[3];
 
-	uint8_t collision_turn_dir;
-	uint32_t collision_timer;
-	uint32_t max_collision_timer;
-
-	//robot commanded motion 1=forward, 2=cw rotation, 3=ccw rotation, 4=stop
-	int motor_command;
-	virtual void set_color(rgb c)
-	{
-		color[0] = c.red;
-		color[1] = c.green;
-		color[2] = c.blue;
-	}
-
-	// Flag set to 1 when robot wants to transmit
-	int tx_request;
-
-	// Flag set to 1 when new message received
+	//! Flag set to 1 when new message received
+	// TODO: This doesn't appear to actually be used anymore. Kill it?
 	int incoming_message_flag;
 
 	virtual void *get_message() = 0;
-
-	double forward_speed = 24; // mm/s
-	double turn_speed = 0.5;   // rad/s
-
-	double battery = -1;
 
   public:
 	/*!
@@ -83,15 +86,34 @@ class Robot
 	void robot_init(double, double, double);
 	virtual void init() = 0;
 
-	//! Add a pointer to the world that the robot is part of
-	void add_light(LightPattern *light_pattern);
+	virtual void set_color(rgb c)
+	{
+		color[0] = c.red;
+		color[1] = c.green;
+		color[2] = c.blue;
+	}
 
-	// Robot's internal timer
+	/*!
+	 * Add a pointer to the world that the robot is part of
+	 * @light_pattern Reference to the World's LightPattern
+	 * @dt Seconds per tick (World's simulation step size)
+	 */
+	void add_to_world(LightPattern &light_pattern, const double dt);
+
+	//! Robot's internal timer
+	// TODO: Not sure what use this is
 	int timer;
 
 	// Must implement the controller
 	void robot_controller();
 	virtual void controller() = 0;
+	/*!
+	 * Compute the next position of the robot if it doesn't run into anything
+	 * @return Vector of (x, y, and wrapped theta) to possibly move t
+	 */
+	std::vector<double> robot_compute_next_step() const;
+
+	void robot_move(const std::vector<double> &new_pose, const int16_t &collision);
 
 	virtual void sensing(int, int[], int[], int[], int[]) = 0;
 
@@ -125,6 +147,10 @@ class Robot
 	}
 
 	virtual void received() = 0;
+
+  protected:
+	//! Wrap an angle to be within [0, 2*pi)
+	double wrap_angle(double angle) const;
 
   private:
 	static double gaussrand()

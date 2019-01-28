@@ -27,7 +27,7 @@ class Viewer
 {
 protected:
   //! Width of the display window (in pixels)
-  int m_window_width;
+  const int m_window_width;
   //! Height of the display window (in pixels)
   int m_window_height;
   //! Reference to the World that this Viewer draws
@@ -49,12 +49,12 @@ public:
   /*!
    * Create a Viewer with the pointer to the given world
    *
-   * @param world Pointer to the World that will be displayed
+   * @param world Pointe_r to the World that will be displayed
    * @param window_width Width (in pixels) to draw the display window. Height
    * will be automatically determined from the aspect ratio of the World's
    * dimensions.
    */
-  Viewer(World &world, int window_width = 1080);
+  Viewer(World &world, const int window_width = 1080);
   /*!
    * Draw everything in the world at the current state
    *
@@ -70,8 +70,6 @@ protected:
   void draw_robot(Robot *robot);
   //! Add the current world time to the display
   void draw_time();
-  //! Draw the world's background light pattern image
-  void draw_light_pattern();
 };
 
 /*! \example example_viewer.cpp

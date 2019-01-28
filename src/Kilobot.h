@@ -47,7 +47,7 @@ struct message_t
  */
 class Kilobot : public Robot
 {
-  public:
+  protected:
 	bool left_ready = false;
 	bool right_ready = false;
 	int kilo_turn_right = 50;
@@ -97,15 +97,24 @@ class Kilobot : public Robot
 		}
 		return crc % 256;
 	}
-
+	/*!
+	 * [KiloLib API] Set the Kilobot's LED color
+	 * @c RGB color to set the LED to
+	 */
 	void set_color(rgb c)
 	{
 		color[0] = c.red;
 		color[1] = c.green;
 		color[2] = c.blue;
 	}
-
+	/*!
+	 * [User API] User-implemented setup function that is run once in initialization
+	 */
 	virtual void setup() = 0;
+	/*!
+	 * [User API] User-implemented loop function that is called for the Kilobot on every tick
+	 */
+	virtual void loop() = 0;
 
 	void init()
 	{
@@ -114,7 +123,12 @@ class Kilobot : public Robot
 		setup();
 	}
 
-	virtual void loop() = 0;
+	/*!
+	 * [KiloLib API] Function that is called when the Kilobot receives a message
+	 * On real robots, this is called as an interrupt, so processing here (outside the loop) should be minimized
+	 * @message Contents of the received message
+	 * @distance_measurement Estimated distance (in mm) from the Kilobot sending the message
+	 */
 	void message_rx(message_t *message, distance_measurement_t *distance_measurement){};
 
 	void controller()
@@ -249,6 +263,7 @@ class Kilobot : public Robot
 		return buffer;
 	}
 };
+
 /*! \example example_kilobot.cpp
  * Example of a minimal custom Kilobot implementation
  */

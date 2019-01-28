@@ -26,14 +26,14 @@ class ConfigParser
 {
 protected:
   //! Name/location of the file configuration comes from
-  std::string m_config_file;
+  const std::string m_config_file;
   //! Internal JSON representation of the config retrieved from file
   json m_config;
 
 public:
   /*!
    * Create a parser to handle the values in the given JSON file
-  * This will automatically load the contents into the parser
+   * This will automatically load the contents into the parser
    * @param config_file Name/location of JSON file for config.
    */
   ConfigParser(std::string config_file);
@@ -51,11 +51,11 @@ public:
    * @param val_name Name/key to get the value for
    * @returns Wrapped output value. Use .type_name() to get the type
    */
-  json get(std::string val_name);
+  json get(const std::string val_name) const;
   /*!
    * Get the whole JSON object from the parser
    */
-  json get();
+  json get() const;
 };
 } // namespace KiloSim
 

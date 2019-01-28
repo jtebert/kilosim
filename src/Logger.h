@@ -146,7 +146,7 @@ public:
    * @param trial_num Number of the trial to save the data. Data will be saved
    * in a group named "trial_#", where # is trial_num.
    */
-  Logger(World &world, std::string file_id, int trial_num, bool overwrite_trials = false);
+  Logger(World &world, std::string const file_id, int const trial_num, bool const overwrite_trials = false);
   //! Destructor: closes the file when it goes out of scope
   ~Logger();
 
@@ -160,14 +160,14 @@ public:
    *
    * @param trial_num New trial you want to log.
    */
-  void set_trial(uint trial_num);
+  void set_trial(uint const trial_num);
 
   /*!
    * Get/check which trial the Logger is currently set to log data/parameters
    * for.
    * @return Current trial. Change with set_trial()
    */
-  uint get_trial();
+  uint get_trial() const;
 
   /*!
    * Add an aggregator function that will be run on log_state when #log_state is
@@ -179,14 +179,14 @@ public:
    * @param agg_func Aggregator that saves values from the Robots in the World.
    * Each output is saved as a row in the dataset.
    */
-  void add_aggregator(std::string agg_name, aggregatorFunc agg_func);
+  void add_aggregator(std::string const agg_name, aggregatorFunc const agg_func);
 
   /*!
    * Log the aggregators at the given time mapped over all the given robots in
    * the World. Every time this is called, the current time (in seconds) is
    * added to the time series, and a row is appended to every aggregator array.
    */
-  void log_state();
+  void log_state() const;
 
   /*!
    * Log all of the values in the configuration as params in the HDF5 file/trial
@@ -201,15 +201,15 @@ public:
 
 protected:
   //! Log data for this specific aggregator
-  void log_aggregator(std::string agg_name, aggregatorFunc agg_func);
+  void log_aggregator(const std::string agg_name, const aggregatorFunc agg_func) const;
   //! Log a single parameter name and value (supports atomic datatypes only)
-  void log_param(std::string name, json val);
+  void log_param(const std::string name, const json val);
   //! Get the H5 data type (for saving) from the JSON
-  H5::PredType h5_type(json j);
+  H5::PredType h5_type(const json j) const;
   //! Create or open an HDF5 file
   H5FilePtr create_or_open_file(const std::string &fname);
   //! Create or open a group in an HDF5 file
-  H5GroupPtr create_or_open_group(H5FilePtr file, std::string &group_name);
+  H5GroupPtr create_or_open_group(H5FilePtr file, const std::string &group_name);
 };
 
 /*! \example example_logger.cpp
