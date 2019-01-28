@@ -168,7 +168,7 @@ void World::compute_next_step(std::vector<RobotPose> &new_poses_ptr)
 
     // printf("\nt = %d\n", m_tick);
 // #pragma omp parallel for schedule(static)
-#pragma omp parallel for
+    // #pragma omp parallel for
     for (unsigned int r_i = 0; r_i < m_robots.size(); r_i++)
     {
         // printf("%d\n", r_i);
