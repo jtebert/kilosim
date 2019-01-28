@@ -107,7 +107,7 @@ void World::run_controllers()
             m_robots[i]->robot_controller();
         }
     }
-} // namespace KiloSim
+}
 
 void World::communicate()
 {
