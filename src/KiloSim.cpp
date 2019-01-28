@@ -221,21 +221,19 @@ void World::find_collisions(
         }
         else
         {
-            for (int c = 0; c < m_robots.size(); ++c)
+            for (int c = r+1; c < m_robots.size(); ++c)
             {
                 // Check for collisions with other robots
                 // Don't do repeat checks, unless the one you're checking against
                 // had a wall collision (and therefore didn't check for robot collisions)
-                if (r != c)
+                const double distance = pow(r_x - new_poses_ptr[c].x, 2) +
+                                        pow(r_y - new_poses_ptr[c].y, 2);
+                if (distance < 4 * RADIUS * RADIUS)
                 {
-                    const double distance = pow(r_x - new_poses_ptr[c].x, 2) +
-                                            pow(r_y - new_poses_ptr[c].y, 2);
-                    if (distance < 4 * RADIUS * RADIUS)
-                    {
-                        collisions[r] = 1; // r is colliding with c
-                        // Don't need to worry about more than 1 collision
-                        break;
-                    }
+                    collisions[r] = 1; // r is colliding with c
+                    collisions[c] = 1;
+                    // Don't need to worry about more than 1 collision
+                    break;
                 }
             }
         }
