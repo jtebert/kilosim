@@ -38,8 +38,6 @@ protected:
 
 private:
   CollisionBoxes cb;
-  std::mt19937_64 reng;
-  std::uniform_real_distribution<double> dis01;
 
 protected:
   //! Robots in the world

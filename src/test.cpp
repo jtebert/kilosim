@@ -3,6 +3,7 @@
 #include "Viewer.h"
 #include "ConfigParser.h"
 #include "MyKilobot.cpp"
+#include "random.hpp"
 
 #include <unistd.h>
 
@@ -28,6 +29,8 @@ int main(int argc, char *argv[])
 {
     // Create parser to manage configuration
     KiloSim::ConfigParser *config = new KiloSim::ConfigParser("exampleConfig.json");
+
+    seed_rand(config->get("seed"));
 
     uint start_trial = config->get("start_trial");
     uint num_trials = config->get("num_trials");

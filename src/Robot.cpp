@@ -2,6 +2,7 @@
 #include <iostream>
 #include <numeric>
 #include "Robot.h"
+#include "random.hpp"
 
 namespace KiloSim
 {
@@ -38,9 +39,9 @@ void Robot::robot_controller()
 void Robot::robot_init(double x, double y, double t)
 {
 	// Pick a direction to randomly turn in event of collisions
-	collision_turn_dir = rand() % 2;
+	collision_turn_dir = uniform_rand_int(0,1);
 	collision_timer = 0;
-	max_collision_timer = (uint32_t)rand() % (20 * SECOND) + (10 * SECOND) + 1; // Max duration 10-30 seconds
+	max_collision_timer = uniform_rand_int(10,30)*SECOND;
 	// Initialize robot variables
 	pos[0] = x;
 	pos[1] = y;
@@ -49,14 +50,13 @@ void Robot::robot_init(double x, double y, double t)
 	motor_command = 0;
 	incoming_message_flag = 0;
 	tx_request = 0;
-	id = rand();
+	id = uniform_rand_int(0,2147483640);
 	// Generate CLAMPED motor error (avoid extremes by regenerating)
 	motor_error = 100;
 	double motor_error_clamp = motion_error_std * 1.1;
 	while (abs(motor_error) > motor_error_clamp)
 	{
-		timer = rand() / 100;
-		motor_error = Robot::gauss_rand(timer) * motion_error_std;
+		motor_error = normal_rand(0.0,1.0) * motion_error_std;
 	}
 	// Add random variation to forward/turn speeds
 	double turn_speed_error = 100;
@@ -64,8 +64,7 @@ void Robot::robot_init(double x, double y, double t)
 	double turn_speed_error_clamp = turn_speed_error_std * 1.1;
 	while (abs(turn_speed_error) > turn_speed_error_clamp)
 	{
-		timer = rand() / 100;
-		turn_speed_error = Robot::gauss_rand(timer) * turn_speed_error_std;
+		turn_speed_error = normal_rand(0.0,1.0) * turn_speed_error_std;
 	}
 	turn_speed = turn_speed + turn_speed_error;
 	double forward_speed_error = 100;
@@ -73,8 +72,7 @@ void Robot::robot_init(double x, double y, double t)
 	double forward_speed_error_clamp = forward_speed_error_std * 1.1;
 	while (abs(forward_speed_error) > forward_speed_error_clamp)
 	{
-		timer = rand() / 100;
-		forward_speed_error = Robot::gauss_rand(timer) * forward_speed_error_std;
+		forward_speed_error = normal_rand(0.0,1.0) * forward_speed_error_std;
 	}
 	forward_speed = forward_speed + forward_speed_error;
 	init();

@@ -5,6 +5,7 @@
 #include <math.h>
 #include <omp.h>
 #include "Robot.h"
+#include "random.hpp"
 
 namespace KiloSim
 {
@@ -79,13 +80,12 @@ class Kilobot : public Robot
 
 	unsigned char rand_soft()
 	{
-		return rand() * 255 / RAND_MAX;
+		return uniform_rand_int(0,255);
 	}
 
 	uint8_t rand_hard()
 	{
-		uint8_t x = rand() % 255;
-		return x;
+		return uniform_rand_int(0,255);
 	}
 
 	unsigned char message_crc(message_t *m)
@@ -110,7 +110,7 @@ class Kilobot : public Robot
 	void init()
 	{
 		double two_hours = SECOND * 60 * 60 * 2;
-		battery = (1 + gauss_rand(rand()) / 5) * two_hours;
+		battery = (1 + normal_rand(0.0,1.0) / 5) * two_hours;
 		setup();
 	}
 
@@ -136,10 +136,9 @@ class Kilobot : public Robot
 			message_tx_success();
 		}
 		kilo_ticks++;
-		int rand_tick = rand();
-		if (rand_tick < RAND_MAX * .1)
+		if (uniform_rand_real(0,1) < 0.1)
 		{
-			if (rand_tick < RAND_MAX * .05)
+			if (uniform_rand_real(0,1) < 0.05)
 				kilo_ticks--;
 			else
 				kilo_ticks++;

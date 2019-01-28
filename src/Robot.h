@@ -109,50 +109,7 @@ class Robot
 		return sqrt(s);
 	}
 
-	static double gauss_rand(int timer)
-	{
-		static double pseudogaus_rand[GAUSS + 1];
-		if (pseudogaus_rand[GAUSS] == 1)
-		{
-			return pseudogaus_rand[timer % GAUSS];
-		}
-		for (int i = 0; i < GAUSS; i++)
-		{
-			pseudogaus_rand[i] = gaussrand();
-		};
-		pseudogaus_rand[GAUSS] = 1;
-		return pseudogaus_rand[timer % GAUSS];
-	}
-
 	virtual void received() = 0;
-
-  private:
-	static double gaussrand()
-	{
-		static double V1, V2, S;
-		static int phase = 0;
-		double x;
-
-		if (phase == 0)
-		{
-			do
-			{
-				double U1 = (double)rand() / RAND_MAX;
-				double U2 = (double)rand() / RAND_MAX;
-
-				V1 = 2 * U1 - 1;
-				V2 = 2 * U2 - 1;
-				S = V1 * V1 + V2 * V2;
-			} while (S >= 1 || S == 0);
-
-			x = V1 * sqrt(-2 * log(S) / S);
-		}
-		else
-			x = V2 * sqrt(-2 * log(S) / S);
-
-		phase = 1 - phase;
-		return x;
-	}
 };
 } // namespace KiloSim
 #endif

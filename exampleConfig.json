@@ -9,5 +9,6 @@
     "log_filename": "test-log.h5",
     "log_freq": 5,
     "num_trials": 1,
-    "start_trial": 1
+    "start_trial": 1,
+    "seed": 123456789
 }
