@@ -208,7 +208,6 @@ void World::find_collisions(std::vector<RobotPose> *new_poses_ptr, std::vector<i
     // #pragma omp parallel for schedule(static)
     for (int r = 0; r < m_robots.size(); r++)
     {
-        double distance;
         double r_x = (*new_poses_ptr)[r].x;
         double r_y = (*new_poses_ptr)[r].y;
         // Check for collisions with walls
@@ -227,8 +226,8 @@ void World::find_collisions(std::vector<RobotPose> *new_poses_ptr, std::vector<i
                 // had a wall collision (and therefore didn't check for robot collisions)
                 if (r != c)
                 {
-                    distance = sqrt(pow(r_x - (*new_poses_ptr)[c].x, 2) +
-                                    pow(r_y - (*new_poses_ptr)[c].y, 2));
+                    const double distance = sqrt(pow(r_x - (*new_poses_ptr)[c].x, 2) +
+                                                 pow(r_y - (*new_poses_ptr)[c].y, 2));
                     if (distance < 2 * RADIUS)
                     {
                         (*collisions)[r] = 1; // r is colliding with c
