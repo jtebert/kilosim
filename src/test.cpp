@@ -31,57 +31,59 @@ int main(int argc, char *argv[])
     timer_overall.start();
 
     // Create parser to manage configuration
-    KiloSim::ConfigParser *config = new KiloSim::ConfigParser("exampleConfig.json");
+    KiloSim::ConfigParser config("exampleConfig.json");
 
-    seed_rand(config->get("seed"));
+    seed_rand(config.get("seed"));
 
-    uint start_trial = config->get("start_trial");
-    uint num_trials = config->get("num_trials");
-    double trial_duration = config->get("trial_duration"); // seconds
-    uint log_freq = config->get("log_freq");
+    uint start_trial = config.get("start_trial");
+    uint num_trials = config.get("num_trials");
+    double trial_duration = config.get("trial_duration"); // seconds
+    uint log_freq = config.get("log_freq");
 
     for (uint trial = start_trial; trial < (num_trials + start_trial); trial++)
     {
         // Create world
-        KiloSim::World *world = new KiloSim::World(
-            config->get("world_width"),
-            config->get("world_height"),
-            config->get("light_pattern_filename"),
-            config->get("num_threads"));
+        KiloSim::World world(
+            config.get("world_width"),
+            config.get("world_height"),
+            config.get("light_pattern_filename"),
+            config.get("num_threads"));
 
         // Create robot(s)
-        int num_robots = config->get("num_robots");
+        int num_robots = config.get("num_robots");
         std::vector<KiloSim::Robot *> robots;
         robots.resize(num_robots);
         for (int n = 0; n < num_robots; n++)
         {
             // std::cout << n * 50 + 20 << std::endl;
             robots[n] = new KiloSim::MyKilobot();
-            world->add_robot(robots[n]);
+            world.add_robot(robots[n]);
             robots[n]->robot_init(n * 80 + 75, 600, PI * n / 2);
         }
 
         KiloSim::Logger *logger = new KiloSim::Logger(
-            world,
-            config->get("log_filename"),
+            &world,
+            config.get("log_filename"),
             trial,
             true);
         logger->add_aggregator("mean_led_colors", mean_colors);
-        logger->log_config(config);
+        logger->log_config(&config);
 
         // Create Viewer to visualize the world
         // KiloSim::Viewer *viewer = new KiloSim::Viewer(world);
 
-        while (world->get_time() < trial_duration)
+        while (world.get_time() < trial_duration)
         {
             // Run a simulation step
             // This automatically increments the tick
-            world->step();
+            timer_step.start();
+            world.step();
+            timer_step.stop();
 
             // Draw the world
             // viewer->draw();
 
-            if ((world->get_tick() % (log_freq * world->get_tick_rate())) == 0)
+            if ((world.get_tick() % (log_freq * world.get_tick_rate())) == 0)
             {
                 // Log the state of the world every 5 seconds
                 // This works because the tickRate (ticks/sec) must be an integer
@@ -89,6 +91,11 @@ int main(int argc, char *argv[])
                 logger->log_state();
             }
         }
+
+        world.printTimes();
+        for(int n=0;n<num_robots;n++)
+            delete robots[n];
+
         printf("Completed trial %d\n\n", trial);
     }
     printf("Simulations complete\n\n");
