@@ -1,5 +1,5 @@
 /*
-    KiloSim
+    Kilosim
 
     Created 2018-11 by Julia Ebert
 */
@@ -15,7 +15,7 @@
 // for convenience
 using json = nlohmann::json;
 
-namespace KiloSim
+namespace Kilosim
 {
 /*!
  * A ConfigParser is used to parse and process JSON configuration files for
@@ -57,6 +57,6 @@ public:
    */
   json get() const;
 };
-} // namespace KiloSim
+} // namespace Kilosim
 
 #endif

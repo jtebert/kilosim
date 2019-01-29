@@ -1,12 +1,12 @@
 /*
-    KiloSim
+    Kilosim
 
     Created 2018-10 by Julia Ebert
 */
 
 #include <typeinfo>
 #include "Logger.h"
-namespace KiloSim
+namespace Kilosim
 {
 
 Logger::Logger(World &world, std::string const file_id, int const trial_num, bool const overwrite_trials)
@@ -223,4 +223,4 @@ Logger::H5GroupPtr Logger::create_or_open_group(H5FilePtr file, const std::strin
     }
 }
 
-} // namespace KiloSim
+} // namespace Kilosim

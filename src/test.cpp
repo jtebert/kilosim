@@ -6,7 +6,7 @@
 
 #include <unistd.h>
 
-std::vector<double> mean_colors(std::vector<KiloSim::Robot *> &robots)
+std::vector<double> mean_colors(std::vector<Kilosim::Robot *> &robots)
 {
     // Get the mean color for all 3 LED color components
     std::vector<double> means(3, 0.0);
@@ -16,7 +16,7 @@ std::vector<double> mean_colors(std::vector<KiloSim::Robot *> &robots)
         for (auto &robot : robots)
         {
             // Downcast to custom class to gain access to custom variables
-            KiloSim::MyKilobot *kb = (KiloSim::MyKilobot *)robot;
+            Kilosim::MyKilobot *kb = (Kilosim::MyKilobot *)robot;
             sum_belief += kb->light_intensity;
         }
         means[c] = (double)sum_belief / robots.size();
@@ -27,8 +27,8 @@ std::vector<double> mean_colors(std::vector<KiloSim::Robot *> &robots)
 int main(int argc, char *argv[])
 {
     // Create parser to manage configuration
-    // KiloSim::ConfigParser *config = new KiloSim::ConfigParser("exampleConfig.json");
-    KiloSim::ConfigParser config("exampleConfig.json");
+    // Kilosim::ConfigParser *config = new Kilosim::ConfigParser("exampleConfig.json");
+    Kilosim::ConfigParser config("exampleConfig.json");
 
     uint start_trial = config.get("start_trial");
     uint num_trials = config.get("num_trials");
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     for (uint trial = start_trial; trial < (num_trials + start_trial); trial++)
     {
         // Create world
-        KiloSim::World world(
+        Kilosim::World world(
             config.get("world_width"),
             config.get("world_height"),
             config.get("light_pattern_filename"),
@@ -49,17 +49,17 @@ int main(int argc, char *argv[])
         // That's the most that will fit into a 2.4x2.4 m arena with this spacing
         int num_rows = 23;
         int num_robots = config.get("num_robots");
-        std::vector<KiloSim::Robot *> robots;
+        std::vector<Kilosim::Robot *> robots;
         robots.resize(num_robots);
         for (int n = 0; n < num_robots; n++)
         {
             // std::cout << n * 50 + 20 << std::endl;
-            robots[n] = new KiloSim::MyKilobot();
+            robots[n] = new Kilosim::MyKilobot();
             world.add_robot(robots[n]);
             robots[n]->robot_init(floor(n / num_rows) * 100 + 75, (n % num_rows) * 100 + 75, PI * n / 2);
         }
 
-        KiloSim::Logger logger(
+        Kilosim::Logger logger(
             world,
             config.get("log_filename"),
             trial,
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
         logger.log_config(config);
 
         // Create Viewer to visualize the world
-        KiloSim::Viewer viewer(world);
+        Kilosim::Viewer viewer(world);
 
         while (world.get_time() < trial_duration)
         {

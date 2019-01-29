@@ -3,7 +3,7 @@
 #include <numeric>
 #include "Robot.h"
 
-namespace KiloSim
+namespace Kilosim
 {
 void Robot::robot_controller()
 {
@@ -182,4 +182,4 @@ double Robot::wrap_angle(double angle) const
 	return angle;
 }
 
-} // namespace KiloSim
+} // namespace Kilosim

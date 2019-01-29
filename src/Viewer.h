@@ -1,5 +1,5 @@
 /*
-    KiloSim
+    Kilosim
 
     Visualizer for the Kilobot simulator to display robots and light pattern
     (OpenGL-based)
@@ -10,15 +10,15 @@
 #ifndef __KILOSIM_VIEWER_H
 #define __KILOSIM_VIEWER_H
 
-#include "KiloSim.h"
+#include "World.h"
 #include "Robot.h"
 #include <SFML/Graphics.hpp>
 #include <memory>
 
-namespace KiloSim
+namespace Kilosim
 {
 /*!
- * The Viewer is used to display a KiloSim World. It is instantiated with a
+ * The Viewer is used to display a Kilosim World. It is instantiated with a
  * pointer to a World, which will be displayed whenever the #draw method is
  * called. After constructing your Viewer, this is the only method you need to
  * call to use it.
@@ -75,6 +75,6 @@ protected:
 /*! \example example_viewer.cpp
  * Example usage of a Viewer to display a World in a simulation loop.
  */
-} // namespace KiloSim
+} // namespace Kilosim
 
 #endif

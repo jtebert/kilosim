@@ -1,12 +1,12 @@
 /*
-    KiloSim
+    Kilosim
 
     Created 2018-11 by Julia Ebert
 */
 
 #include "ConfigParser.h"
 
-namespace KiloSim
+namespace Kilosim
 {
 ConfigParser::ConfigParser(const std::string config_file)
     : m_config_file(config_file)
@@ -33,4 +33,4 @@ json ConfigParser::get() const
     return m_config;
 }
 
-} // namespace KiloSim
+} // namespace Kilosim

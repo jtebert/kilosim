@@ -1,5 +1,5 @@
 /*
-    KiloSim
+    Kilosim
 
     Visualizer for the Kilobot simulator to display robots and light pattern
     (OpenGL-based)
@@ -9,7 +9,7 @@
 
 #include "Viewer.h"
 
-namespace KiloSim
+namespace Kilosim
 {
 Viewer::Viewer(World &world, const int window_width) : m_world(world), m_window_width(window_width)
 {
@@ -19,7 +19,7 @@ Viewer::Viewer(World &world, const int window_width) : m_world(world), m_window_
 
     // m_settings.antialiasingLevel = 32;
     m_window.create(sf::VideoMode(m_window_width, m_window_height),
-                    "KiloSim", sf::Style::Default, m_settings);
+                    "Kilosim", sf::Style::Default, m_settings);
     m_window.setFramerateLimit(144);
 
     m_background.setSize(sf::Vector2f(m_window_width, m_window_height));
@@ -106,4 +106,4 @@ void Viewer::draw_time()
     std::string timeStr = buff;
     m_window.setTitle(timeStr);
 }
-} // namespace KiloSim
+} // namespace Kilosim

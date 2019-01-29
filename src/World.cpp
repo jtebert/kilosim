@@ -1,11 +1,11 @@
-#include "KiloSim.h"
+#include "World.h"
 #include "Robot.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 // Implementation of Kilobot Arena/World
 
-namespace KiloSim
+namespace Kilosim
 {
 World::World(const double arena_width, const double arena_height, const std::string light_pattern_src, const uint num_threads)
     : m_arena_width(arena_width), m_arena_height(arena_height)
@@ -231,4 +231,4 @@ std::vector<double> World::get_dimensions() const
     return dimensions;
 }
 
-} // namespace KiloSim
+} // namespace Kilosim

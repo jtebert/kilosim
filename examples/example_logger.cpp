@@ -1,4 +1,4 @@
-#include "KiloSim.h"
+#include "World.h"
 #include "Logger.h"
 
 std::vector<double> meanAmbientLightFunc(std::vector<Robot *> &robots)
@@ -16,10 +16,10 @@ std::vector<double> meanAmbientLightFunc(std::vector<Robot *> &robots)
 
 int main(int argc, char *argv[])
 {
-    KiloSim::World world(1200.0, 1200.0);
+    Kilosim::World world(1200.0, 1200.0);
 
     // Create a Logger that will save to logFilename.h5, in the group trial_1
-    KiloSim::Logger logger("logFilename.h5", 1);
+    Kilosim::Logger logger("logFilename.h5", 1);
     // The values output by meanAmbientLightFunc will be saved in a dataset
     // named meanAmbientLight
     logger.add_aggregator("meanAmbientLight", meanAmbientLightFunc);

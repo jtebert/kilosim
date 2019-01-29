@@ -6,7 +6,7 @@
 #include <omp.h>
 #include "Robot.h"
 
-namespace KiloSim
+namespace Kilosim
 {
 
 const uint8_t ir = 1;
@@ -104,7 +104,7 @@ class Kilobot : public Robot
 		}
 		this->loop();
 		m_motor_command = 4;
-		if (right_ready && m_turn_right == m_kilo_turn_right)
+		if (right_ready && m_turn_right == kilo_turn_right)
 		{
 			m_motor_command -= 2;
 		}
@@ -315,6 +315,6 @@ class Kilobot : public Robot
 /*! \example example_kilobot.cpp
  * Example of a minimal custom Kilobot implementation
  */
-} // namespace KiloSim
+} // namespace Kilosim
 
 #endif

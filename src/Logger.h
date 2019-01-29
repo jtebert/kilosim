@@ -1,5 +1,5 @@
 /*
-    KiloSim
+    Kilosim
 
     Saves the parameters and time series logs of the Kilobot simulator in HDF5
     files
@@ -13,7 +13,7 @@
 #include <H5PacketTable.h>
 #include <H5Cpp.h>
 #include "Robot.h"
-#include "KiloSim.h"
+#include "World.h"
 #include "ConfigParser.h"
 #include "../include/json.hpp"
 #include <unordered_map>
@@ -23,7 +23,7 @@
 
 using json = nlohmann::json;
 
-namespace KiloSim
+namespace Kilosim
 {
 /*!
  * A Logger is used to save [HDF5](https://portal.hdfgroup.org/display/support)
@@ -98,7 +98,7 @@ protected:
   //! Managed pointer to HDF5 PacketTable
   typedef std::shared_ptr<FL_PacketTable> H5PacketTablePtr;
   typedef std::unordered_map<std::string, double> Params;
-  //! Reference to KiloSim World that this Logger tracks
+  //! Reference to Kilosim World that this Logger tracks
   World &m_world;
   //! HDF5 file where the data lives
   std::string m_file_id;
@@ -215,6 +215,6 @@ protected:
 /*! \example example_logger.cpp
  * Example minimal usage of a Logger
  */
-} // namespace KiloSim
+} // namespace Kilosim
 
 #endif

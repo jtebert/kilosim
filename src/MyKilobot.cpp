@@ -5,7 +5,7 @@
 #include "Kilobot.h"
 #include <iostream>
 
-namespace KiloSim
+namespace Kilosim
 {
 class MyKilobot : public Kilobot
 {
@@ -128,4 +128,4 @@ class MyKilobot : public Kilobot
 
     void message_tx_success() {}
 };
-} // namespace KiloSim
+} // namespace Kilosim

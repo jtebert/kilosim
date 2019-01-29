@@ -1,12 +1,12 @@
 /*
-    KiloSim
+    Kilosim
 
     Created 2018-11 by Julia Ebert
 */
 
 #include "LightPattern.h"
 
-namespace KiloSim
+namespace Kilosim
 {
 LightPattern::LightPattern()
 {
@@ -69,4 +69,4 @@ void LightPattern::set_light_pattern(const std::string img_src)
     m_scale = (double)m_img_dim.x / m_arena_width;
     m_has_source = true;
 };
-} // namespace KiloSim
+} // namespace Kilosim

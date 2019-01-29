@@ -24,12 +24,24 @@ struct rgb
 	double red, green, blue;
 };
 
-namespace KiloSim
+namespace Kilosim
 {
 
 /*!
- * This matches the Kilobot Library API. For detailed documentation and usage,
- * see the [Kilolib documentation](https://www.kilobotics.com/docs/index.html).
+ * This class provides an abstract controller interface for robots. It provides
+ * functions for movement, communication, and interaction with the simulator
+ * World. It is the abstract base class for the Kilosim, and as such is not
+ * to be directly constructed. It serves as the parent for the Kilobot class,
+ * which provides the [Kilolib](https://www.kilobotics.com/docs/index.html)
+ * Kilobot library. In turn, Kilobot serves as the parent class for user
+ * implementations of Kilobot code (matching what would be written for actual
+ * Kilobot robots.)
+ *
+ * To summarize:
+ *
+ * - `Robot`: Controller interface for interacting
+ * - `Kilobot`: Implementation of Kilolib, inheriting from `Robot` and serving
+ *   as parent class for user code
  */
 class Robot
 {
@@ -117,7 +129,7 @@ class Robot
 
 	virtual char *get_debug_info(char *buffer, char *rt) = 0;
 
-	// TODO: Why is this implemented in Kilobot.h instead of Robot.cpp? Also this implementation seems weird/pointless. It's only used by KiloSim.cpp for determining if communication works in both directions (and it's symmetric) WTF. I don't think I wrote this...
+	// TODO: Why is this implemented in Kilobot.h instead of Robot.cpp? Also this implementation seems weird/pointless. It's only used by Kilosim.cpp for determining if communication works in both directions (and it's symmetric) WTF. I don't think I wrote this...
 	/*!
 	 * Determine if another robot is within communication range
 	 * @dist Distance between the robots (in mm)
@@ -187,5 +199,5 @@ class Robot
 		return x;
 	}
 };
-} // namespace KiloSim
+} // namespace Kilosim
 #endif

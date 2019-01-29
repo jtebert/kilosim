@@ -17,7 +17,7 @@
 #include "Robot.h"
 #include "LightPattern.h"
 
-namespace KiloSim
+namespace Kilosim
 {
 class World
 {
@@ -158,6 +158,6 @@ public:
    */
   std::vector<double> get_dimensions() const;
 };
-} // namespace KiloSim
+} // namespace Kilosim
 
 #endif

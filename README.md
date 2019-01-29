@@ -1,4 +1,4 @@
-# KiloSim: Kilobot Simulator
+# Kilosim: Kilobot Simulator
 
 [![Build Status](https://travis-ci.com/jtebert/kilosim.svg?token=s6ZVW1bvfNjgbZQh2x9M&branch=master)](https://travis-ci.com/jtebert/kilosim)
 
@@ -8,7 +8,7 @@ This is maintained on GitHub in the [kilosim repository](https://github.com/jteb
 
 ---
 
-KiloSim is designed to be a fast, lightweight, pseudo-physical* simulator for Kilobots. Notable benefits include:
+Kilosim is designed to be a fast, lightweight, pseudo-physical* simulator for Kilobots. Notable benefits include:
 
 - Pseudo-physical model means fast simulation for high-throughput
 - Directly use code written for Kilobots, using the same Kilolib API
