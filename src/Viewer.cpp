@@ -86,8 +86,8 @@ void Viewer::draw_robot(Robot *r)
     sprite.setOrigin(RADIUS * m_scale, RADIUS * m_scale);
     sprite.setTexture(m_robot_texture.getTexture());
     sprite.setColor(sf::Color(r->color[0] * 255, r->color[1] * 255, r->color[2] * 255));
-    sprite.setPosition(sf::Vector2f(r->pos[0] * m_scale, m_window_height - (r->pos[1] * m_scale)));
-    sprite.setRotation(r->pos[2] * -180 / PI);
+    sprite.setPosition(sf::Vector2f(r->x * m_scale, m_window_height - (r->y * m_scale)));
+    sprite.setRotation(r->theta * -180 / PI);
 
     m_window.draw(sprite);
 }

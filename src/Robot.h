@@ -40,7 +40,7 @@ class Robot
   public:
 	uint16_t id;
 	//x, y, theta position in real world, don't use these in controller, that's cheating!!
-	double pos[3];
+	double x,y,theta;
 	//value of how motors differ from ideal, don't use these, that's cheating!!
 	double motor_error;
 	// communication range between robots (mm)

@@ -184,8 +184,8 @@ class Kilobot : public Robot
 		if (m_light_pattern)
 		{
 			// Get point at front/nose of robot
-			int pos_x = pos[0] + RADIUS * 1 * cos(pos[2]);
-			int pos_y = pos[1] + RADIUS * 1 * sin(pos[2]);
+			int pos_x = x + RADIUS * 1 * cos(theta);
+			int pos_y = y + RADIUS * 1 * sin(theta);
 			// Get the 10-bit light intensity from the robot
 			return m_light_pattern->get_ambientlight(pos_x, pos_y);
 		}

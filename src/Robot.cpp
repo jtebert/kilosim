@@ -36,16 +36,16 @@ void Robot::robot_controller()
 	}
 }
 
-void Robot::robot_init(double x, double y, double t)
+void Robot::robot_init(double x0, double y0, double theta0)
 {
 	// Pick a direction to randomly turn in event of collisions
 	collision_turn_dir = uniform_rand_int(0,1);
 	collision_timer = 0;
 	max_collision_timer = uniform_rand_int(10,30)*SECOND;
 	// Initialize robot variables
-	pos[0] = x;
-	pos[1] = y;
-	pos[2] = t;
+	x     = x0;
+	y     = y0;
+	theta = theta0;
 
 	motor_command = 0;
 	incoming_message_flag = 0;

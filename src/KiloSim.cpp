@@ -149,7 +149,7 @@ void World::communicate()
                     {
                         // Check communication range in both directions
                         // (due to potentially noisy communication range)
-                        double dist = tx_r.distance(tx_r.pos[0], tx_r.pos[1], rx_r.pos[0], rx_r.pos[1]);
+                        double dist = tx_r.distance(tx_r.x, tx_r.y, rx_r.x, rx_r.y);
                         if (tx_r.comm_out_criteria(dist) &&
                             rx_r.comm_in_criteria(dist, msg))
                         {
@@ -173,9 +173,9 @@ void World::compute_next_step(std::vector<RobotPose> &new_poses_ptr)
     {
         // printf("%d\n", r_i);
         Robot &r = *m_robots[r_i];
-        double theta = r.pos[2];
-        double x = r.pos[0];
-        double y = r.pos[1];
+        double theta = r.theta;
+        double x = r.x;
+        double y = r.y;
         double temp_x = x;
 
         double temp_y = y;
@@ -185,8 +185,8 @@ void World::compute_next_step(std::vector<RobotPose> &new_poses_ptr)
         { // forward
             //theta += r.motor_error * m_tick_delta_t;
             const double speed = r.forward_speed * m_tick_delta_t;
-            temp_x = speed * cos(theta) + r.pos[0];
-            temp_y = speed * sin(theta) + r.pos[1];
+            temp_x = speed * cos(theta) + r.x;
+            temp_y = speed * sin(theta) + r.y;
             break;
         }
         case 2:
@@ -275,8 +275,8 @@ void World::move_robots(
         {
         case 0:
         { // No collisions
-            r.pos[0] = new_poses_ptr[ri].x;
-            r.pos[1] = new_poses_ptr[ri].y;
+            r.x = new_poses_ptr[ri].x;
+            r.y = new_poses_ptr[ri].y;
             r.collision_timer = 0;
             break;
         }
@@ -284,11 +284,11 @@ void World::move_robots(
         { // Collision with another robot
             if (r.collision_turn_dir == 0)
             {
-                new_theta = r.pos[2] - r.turn_speed * m_tick_delta_t; // left/CCW
+                new_theta = r.theta - r.turn_speed * m_tick_delta_t; // left/CCW
             }
             else
             {
-                new_theta = r.pos[2] + r.turn_speed * m_tick_delta_t; // right/CW
+                new_theta = r.theta + r.turn_speed * m_tick_delta_t; // right/CW
             }
             if (r.collision_timer > r.max_collision_timer)
             { // Change turn dir
@@ -300,7 +300,7 @@ void World::move_robots(
         }
         }
         // If a bot is touching the wall (collision_type == 2), update angle but not position
-        r.pos[2] = wrap_angle(new_theta);
+        r.theta = wrap_angle(new_theta);
     }
 }
 
