@@ -241,6 +241,8 @@ void World::find_collisions(
         for(const auto &ni: cb(cr.x,cr.y)){
             if(collisions[ni]==1)
                 continue;
+            if(ci==ni)
+                continue;
 
             const auto &nr = new_poses_ptr[ni];
             // Check for collisions with other robots
