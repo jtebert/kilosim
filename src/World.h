@@ -19,9 +19,28 @@
 
 namespace Kilosim
 {
+/*!
+ * The `World` provides the base environment for running simulations. It
+ * represents a two-dimensional bounded arena for simulating Kilobots.
+ *
+ * The user can configure the World dimensions and the monochrome light
+ * intensity at every point in the World (with a `LightPattern`), and add
+ * `Robot`s to the World to simulate.
+ *
+ * After initial configuration, the simulation is run simply by invoking the
+ * `step()` method, which processes a single time step (1/32 second, by default)
+ * for all `Robot`s.
+ *
+ * References to a `World` are used by both the `Logger` (to save information
+ * about the `Robot`s during simulation) and the `Viewer` (to visualize the
+ * simulation).
+ *
+ * It manages fixed-step simulated control over all `Robot`s placed in it.
+ *
+ */
 class World
 {
-protected:
+private:
   //! Robots in the world
   std::vector<Robot *> m_robots;
   //! How many ticks per second in simulation
@@ -41,7 +60,7 @@ protected:
   //! Background light pattern image
   LightPattern m_light_pattern;
 
-protected:
+private:
   //! Run the controllers (kilolib) for all robots
   void run_controllers();
   //! Send messages between robots
@@ -111,19 +130,21 @@ public:
    * Set the world's light pattern using the given image file.
    * The image type must be supported by SFML's [Image::loadFromFile](https://www.sfml-dev.org/documentation/2.5.1/classsf_1_1Image.php#a9e4f2aa8e36d0cabde5ed5a4ef80290b)
    *
-   * @param set_light_pattern Name and location of the image file to use for light pattern
+   * @param light_img_src Name and location of the image file to use for light pattern
    */
   void set_light_pattern(const std::string light_img_src);
 
   /*!
    * Add a robot to the world by its pointer.
-   * WARNING: It is possible right now to add a Robot twice, so be careful.
+   * @warning It is possible right now to add a Robot twice, so be careful.
    */
   void add_robot(Robot *robot);
 
   /*!
    * Remove a robot from the world by its pointer
-   * WARNING: ...I haven't implemented this yet.
+   *
+   * TODO: `remove_robot` is currently unimplemented...
+   * @warning ...I haven't implemented this yet.
    */
   void remove_robot(Robot *robot);
 

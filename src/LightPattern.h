@@ -21,7 +21,7 @@ namespace Kilosim
  */
 class LightPattern
 {
-protected:
+private:
   //! Ambient light in the world
   sf::Image m_light_pattern;
   //! Width of the World (in mm), as set at initialization
@@ -54,7 +54,7 @@ public:
    */
   void pattern_init(const double arena_width, const std::string img_src);
 
-  /*
+  /*!
    * Initialize the LightPattern without an image source
    * (This allows you to set a pattern image later with set_light_pattern)
    * @param arena_width Width of the World in mm

@@ -19,13 +19,18 @@ const uint8_t T = 2;
 
 #define SECOND 32
 
-struct rgb
-{
-	double red, green, blue;
-};
-
 namespace Kilosim
 {
+//! Simple representation of red/green/blue color
+struct rgb
+{
+	//! Red component of RGB color
+	double red;
+	//! Green component of RGB color
+	double green;
+	//! Blue component of RGB color
+	double blue;
+};
 
 /*!
  * This class provides an abstract controller interface for robots. It provides
@@ -42,6 +47,9 @@ namespace Kilosim
  * - `Robot`: Controller interface for interacting
  * - `Kilobot`: Implementation of Kilolib, inheriting from `Robot` and serving
  *   as parent class for user code
+ *
+ * In principle, you could create a non-Kilobot robot with this base class, but
+ * this hasn't been tested.
  */
 class Robot
 {
@@ -64,11 +72,9 @@ class Robot
 	double m_forward_speed = 24;
 	//! Base turning speed in rad/s (Will be randomized around this in robot_init())
 	double m_turn_speed = 0.5;
-	//! Battery remaining (to be set in Kilobot.init())
-	//! TODO: Shouldn't this also be set in robot_init()?
+	// TODO: Shouldn't battery also be set in robot_init()?
+	//! Battery remaining (to be set in `Kilobot.init()`)
 	double battery = -1;
-	//! Communication range between robots in mm (3 bodylengths)
-	const double m_comm_range = 6 * 16;
 	//! Flag set to 1 when robot wants to transmit
 	int tx_request;
 
@@ -77,71 +83,108 @@ class Robot
 	uint16_t id;
 	//! (x, y, theta) position in real world. (Don't use these in controller; that's cheating! It's public for logging purposes.)
 	double pos[3];
-	// RGB LED display color, values 0-1
+	//! RGB LED display color, values 0-1 (also used as display color by `Viewer`)
 	double color[3];
 
 	//! Flag set to 1 when new message received
 	// TODO: This doesn't appear to actually be used anymore. Kill it?
 	int incoming_message_flag;
 
+	/*!
+	 * Get a void pointer to the message the robot is sending and handle any
+	 * callbacks for successful message transmission
+	 * @return Pointer to message to transmit
+	 */
 	virtual void *get_message() = 0;
 
   public:
 	/*!
-	 * Must implement an robot initialization
-	 * **IMPORTANT!** Things break (with LightPatterns) if you try to call this
-	 * *before* adding a Robot to a World.
+	 * Initialize a Robot at a position in the world.
+	 *
+	 * @note Things break (with `LightPattern`s) if you try to call this
+	 * *before* adding a `Robot` to a `World`. This also calls the
+	 * child-specific `init()` function.
+	 *
+	 * @warning This currently does **not** check if the specified Robot
+	 * position is within the arena bounds. Robots placed out-of-bounds will not
+	 * produce any errors, but they will be considered constantly in a wall
+	 * collision.
+	 *
+	 * @param x x-position to place the Robot in the World
+	 * @param y y-position to place the Robot in the World
+	 * @param theta rotation/direction of the Robot in radians
+	 * (counterclockwise, where 0 is along positive x-axis)
 	 */
-	void robot_init(double, double, double);
-	virtual void init() = 0;
-
-	virtual void set_color(rgb c)
-	{
-		color[0] = c.red;
-		color[1] = c.green;
-		color[2] = c.blue;
-	}
+	void robot_init(double x, double y, double theta);
 
 	/*!
-	 * Add a pointer to the world that the robot is part of
-	 * @light_pattern Reference to the World's LightPattern
-	 * @dt Seconds per tick (World's simulation step size)
+	 * Run the simulated control of the physical Robot (such as battery, and
+	 * color). This also calls the child-specific `controller()`.
+	 */
+	void robot_controller();
+
+	/*!
+	 * Add a pointer to the world that the robot is part of and set the
+	 * simulation time step size.
+	 *
+	 * This is automatically called by the `World` when a Robot is added to the
+	 * World.
+	 *
+	 * @param light_pattern Reference to the World's LightPattern
+	 * @param dt Seconds per tick (World's simulation step size)
 	 */
 	void add_to_world(LightPattern &light_pattern, const double dt);
 
+	// TODO: Not sure what use this timer is useful for?
 	//! Robot's internal timer
-	// TODO: Not sure what use this is
 	int timer;
 
-	// Must implement the controller
-	void robot_controller();
-	virtual void controller() = 0;
 	/*!
-	 * Compute the next position of the robot if it doesn't run into anything
+	 * Compute the next position of the Robot as if it doesn't run into
+	 * anything, based on its current motor and battery states.
+	 *
+	 * @note This performs no updates to the Robot, but instead returns this
+	 * possible new pose
+	 *
 	 * @return Vector of (x, y, and wrapped theta) to possibly move t
 	 */
 	std::vector<double> robot_compute_next_step() const;
 
+	/*!
+	 * Move the Robot according to the collision-ignorant `new_pose` and any
+	 * `collision`s.
+	 *
+	 * @note This uses fast pseudo-physics to handle collisions with walls and
+	 * other Robots.
+	 *
+	 * @param new_pose Collision-ignorant next-step (x, y, theta) computed by
+	 * `compute_next_step()`
+	 * @param collision Whether there's a collision with a wall (-1), another
+	 * Robot (1), or no collision (0)
+	 */
 	void robot_move(const std::vector<double> &new_pose, const int16_t &collision);
-
-	// TODO: Not used and no idea what it's for
-	// virtual void sensing(int, int[], int[], int[], int[]) = 0;
 
 	virtual char *get_debug_info(char *buffer, char *rt) = 0;
 
-	// TODO: Why is this implemented in Kilobot.h instead of Robot.cpp? Also this implementation seems weird/pointless. It's only used by Kilosim.cpp for determining if communication works in both directions (and it's symmetric) WTF. I don't think I wrote this...
 	/*!
 	 * Determine if another robot is within communication range
-	 * @dist Distance between the robots (in mm)
-	 * @return 0 if out of range; otherwise distance
+	 * This is called by a transmitting (tx) robot to verify if the receiver is
+	 * within range when sending a message OUT. Because of possible
+	 * asymmetries in communication range, both comm_criteria() must be met by
+	 * both the tx and rx robots for a message to be successfully transmitted.
+	 * @param dist Distance between the robots (in mm)
+	 * @return true if robot can communicate with another robot
 	 */
-	virtual double comm_out_criteria(double dist) = 0;
-	/*!
-	 * Check if in communication range?
-	 */
-	virtual bool comm_in_criteria(double dist, void *cd) = 0;
+	virtual bool comm_criteria(double dist) = 0;
 
-	// Useful
+	/*!
+	 * Compute the cartesian distance between two positions (x1, y1) and (x2, y2)
+	 * @param x1 x-position of first point
+	 * @param y1 y-position of first point
+	 * @param x2 x-position of second point
+	 * @param y2 y-position of second point
+	 * @return Straight-line cartesian distance between positions
+	 */
 	static double distance(double x1, double y1, double x2, double y2)
 	{
 		double x = x1 - x2;
@@ -150,6 +193,34 @@ class Robot
 		return sqrt(s);
 	}
 
+	/*!
+	 * This is called by a robot to set a flag for calling the message success
+	 * callback
+	 */
+	virtual void received() = 0;
+
+  protected:
+	/*!
+	 * Perform any one-time initialization for the specific implementation of
+	 * the Robot, such as setting initial battery levels and calling any
+	 * user-implementation setup functions. It is called by `robot_init()`.
+	 */
+	virtual void init() = 0;
+
+	/*
+	 * Internal control loop for the specific Robot subclass implementation.
+	 * This performs any robot-specific controls such as setting motors,
+	 * communication flags, and calling user implementation loop functions.
+	 * It is called every simulation time step by `robot_controller()`
+	 */
+	virtual void controller() = 0;
+
+	/*!
+	 * A accessory function for generating values from a normal distribution,
+	 * used for generating error/noise parameters
+	 * @param timer Seeding for random number generation
+	 * @return Random number drawn from (I think) N(0, 1)
+	 */
 	static double gauss_rand(int timer)
 	{
 		static double pseudogaus_rand[GAUSS + 1];
@@ -165,13 +236,10 @@ class Robot
 		return pseudogaus_rand[timer % GAUSS];
 	}
 
-	virtual void received() = 0;
-
-  protected:
+  private:
 	//! Wrap an angle to be within [0, 2*pi)
 	double wrap_angle(double angle) const;
 
-  private:
 	static double gaussrand()
 	{
 		static double V1, V2, S;

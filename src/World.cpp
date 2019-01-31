@@ -125,9 +125,10 @@ void World::communicate()
                         // Check communication range in both directions
                         // (due to potentially noisy communication range)
                         double dist = tx_r->distance(tx_r->pos[0], tx_r->pos[1], rx_r->pos[0], rx_r->pos[1]);
-                        if (tx_r->comm_out_criteria(dist) &&
-                            rx_r->comm_in_criteria(dist, msg))
+                        if (tx_r->comm_criteria(dist) &&
+                            rx_r->comm_criteria(dist))
                         {
+                            // TODO: I'm not certain this is being called by the correct robot? (See Kilobot.controller())
                             rx_r->received();
                         }
                     }

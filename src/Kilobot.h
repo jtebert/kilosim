@@ -9,17 +9,19 @@
 namespace Kilosim
 {
 
-const uint8_t ir = 1;
 const uint8_t NORMAL = 1;
 
 typedef double distance_measurement_t;
 
-// Communication data struct without distance it should be 9 bytes max
+//! [Kilolib API] Communication data struct without distance (should be 9 bytes max).
 struct message_t
 {
-	unsigned char type = 0;
-	unsigned char data[9];
-	unsigned char crc;
+	//! Type of the message (currently only option is NORMAL)
+	uint8_t type = 0;
+	//! Message payload (9 bytes)
+	uint8_t data[9];
+	//! Message crc for validity check
+	uint16_t crc;
 };
 
 /*!
@@ -41,16 +43,29 @@ struct message_t
  * This means that instead of setting these in a `main()` function, you simply
  * implement the righthand methods in your Kilobot class.
  *
- * **NOTE:** Any values (attributes) that you want to be accessible to your
+ * @note Any values (attributes) that you want to be accessible to your
  * aggregator functions must be declared public.
  */
 class Kilobot : public Robot
 {
-  protected:
+  private:
 	//! Is the left motor ready to move? (aka used spinup_motors())
 	bool left_ready = false;
 	//! Is the right motor ready to move? (aka used spinup_motors())
 	bool right_ready = false;
+	//! Set duty cycle of the right motor
+	int m_turn_right = 0;
+	//! Set duty cycle of the left motor
+	int m_turn_left = 0;
+	//! Communication range between robots in mm (3 bodylengths)
+	const double m_comm_range = 6 * 16;
+
+	double distance_measurement;
+	bool message_sent = false;
+
+  protected:
+	//! [Kilolib API] Kilobot clock variable
+	uint32_t kilo_ticks = 0;
 	//! [Kilolib API] Calibrated straight (left motor) duty cycle
 	const int kilo_straight_left = 50;
 	//! [Kilolib API] Calibrated straight (right motor) duty cycle
@@ -59,27 +74,16 @@ class Kilobot : public Robot
 	const int kilo_turn_left = 50;
 	//! [Kilolib API] Calibrated turn right duty cycle
 	const int kilo_turn_right = 50;
-	//! [Kilolib API] Kilobot clock variable
-	uint32_t kilo_ticks = 0;
-	//! Set duty cycle of the right motor
-	int m_turn_right = 0;
-	//! Set duty cycle of the left motor
-	int m_turn_left = 0;
 
-	double distance_measurement;
-	bool message_sent = false;
-
-	/*!
-	 * [User API] User-implemented setup function that is run once in initialization
-	 */
-	virtual void setup() = 0;
-	/*!
-	 * [User API] User-implemented loop function that is called for the Kilobot on every tick
-	 */
-	virtual void loop() = 0;
+  private:
+	/***************************************************************************
+	 * REQUIRED ROBOT CONTROL FUNCTIONS
+	 **************************************************************************/
 
 	void init()
 	{
+		// Set the Kilobot's battery level (done here because actual battery
+		// life is specific to the Kilobots and not a general property of Robots)
 		double two_hours = SECOND * 60 * 60 * 2;
 		battery = (1 + gauss_rand(rand()) / 5) * two_hours;
 		setup();
@@ -121,18 +125,63 @@ class Kilobot : public Robot
 			left_ready = false;
 		}
 		if (message_tx())
-			tx_request = ir;
+			tx_request = 1;
 		else
 			tx_request = 0;
 	}
 
-	// KILOLIB API FUNCTIONS
+  protected:
+	/***************************************************************************
+	 * REQUIRED USER API FUNCTIONS
+	 **************************************************************************/
+
+	/*!
+	 * [User API] User-implemented setup function that is run once in initialization
+	 */
+	virtual void setup() = 0;
+	/*!
+	 * [User API] User-implemented loop function that is called for the Kilobot on every tick
+	 */
+	virtual void loop() = 0;
+
+	/***************************************************************************
+	 * OPTIONAL USER API FUNCTIONS
+	 **************************************************************************/
+
+	/*!
+	 * [User API] Function that is called when the Kilobot receives a message
+	 * On real robots, this is called as an interrupt, so processing here (outside the loop) should be minimized
+	 * @param message Contents of the received message
+	 * @param distance_measurement Estimated distance (in mm) from the Kilobot sending the message
+	 */
+	void message_rx(message_t *message, distance_measurement_t *distance_measurement){};
+
+	/*!
+	 * [User API] Produce the message to transmit
+	 * By default, it returns NULL, which means no message is transmitted
+	 * @return Contents of the sent message
+	 */
+	message_t *message_tx()
+	{
+		return NULL;
+	};
+
+	/*!
+	 * [User API] Callback for successful message transmission
+	 * (By default, it does nothing)
+	 */
+	void message_tx_success(){};
+
+	/***************************************************************************
+	 * KILOLIB API FUNCTIONS
+	 **************************************************************************/
 
 	/*!
 	 * [KiloLib API] Create an RGB color
-	 * @r Red intensity (0-1)
-	 * @g Green intensity (0-1)
-	 * @b Blue intensity (0-1)
+	 *
+	 * @param r Red intensity (0-1)
+	 * @param g Green intensity (0-1)
+	 * @param b Blue intensity (0-1)
 	 */
 	rgb RGB(double r, double g, double b)
 	{
@@ -143,7 +192,13 @@ class Kilobot : public Robot
 		return c;
 	}
 
-	// TODO: This isn't used but it's part of the Kilolib API. Not even sure of its accuracy...
+	/*!
+	 * [Kilolib API] Estimate distance in mm based on signal strength measurements.
+	 *
+	 * TODO: This isn't used but it's part of the Kilolib API. Not even sure of its accuracy...
+	 * @param d Signal strength measurement for a message
+	 * @return Positive integer distance estimate in mm
+	 */
 	uint8_t estimate_distance(distance_measurement_t *d)
 	{
 		if (*d < 255)
@@ -152,14 +207,24 @@ class Kilobot : public Robot
 			return 255;
 	}
 
-	// TODO: Part of the KiloLib API but does nothing
-	void delay(int i) {}
+	/*!
+	 * [Kilolib API] Pauses the program for a specified amount of time
+	 *
+	 * This function receives as an argument a positive 16-bit integer `ms` that
+	 * represents the number of milliseconds for which to pause the program
+	 *
+	 * TODO: Part of the KiloLib API but does nothing (issue: using kilo_ticks for timing in simulation)
+	 *
+	 * @param ms Number of milliseconds to pause the program (there are 1000
+	 * milliseconds in a second).
+	 */
+	void delay(uint16_t ms) {}
 
 	/*!
 	 * [KiloLib API] Compute a cyclic redundancy check for a message
 	 * Used as error-detecting code for receiving robot to verify the contents
 	 * of the message.
-	 * @m Pointer to the message for which to create a code
+	 * @param m Pointer to the message for which to create a code
 	 * @return Byte hashing the message data contents
 	 */
 	uint16_t message_crc(message_t *m)
@@ -223,8 +288,8 @@ class Kilobot : public Robot
 
 	/*!
 	 * [Kilolib API] Set the rate of both the motors. Set both to go straight
-	 * @l Speed of the motor to turn left
-	 * @r Speed of the motor to turn right
+	 * @param l Speed of the motor to turn left
+	 * @param r Speed of the motor to turn right
 	 */
 	void set_motors(char l, char r)
 	{
@@ -243,7 +308,7 @@ class Kilobot : public Robot
 
 	/*!
 	 * [Kilolib API] Set the Kilobot's LED color
-	 * @c RGB color to set the LED to
+	 * @param c RGB color to set the LED to
 	 */
 	void set_color(rgb c)
 	{
@@ -252,44 +317,11 @@ class Kilobot : public Robot
 		color[2] = c.blue;
 	}
 
-	/*!
-	 * [KiloLib API] Function that is called when the Kilobot receives a message
-	 * On real robots, this is called as an interrupt, so processing here (outside the loop) should be minimized
-	 * @message Contents of the received message
-	 * @distance_measurement Estimated distance (in mm) from the Kilobot sending the message
-	 */
-	void message_rx(message_t *message, distance_measurement_t *distance_measurement){};
-
-	/*!
-	 * [Kilolib API] Callback for message transmission
-	 * (By default, it does nothing)
-	 * @return Contents of the sent message
-	 */
-	message_t *message_tx(){};
-
-	/*!
-	 * [Kilolib API] Callback for successful message transmission
-	 * (By default, it does nothing)
-	 */
-	void message_tx_success(){};
-
-	double comm_out_criteria(double dist)
+	bool comm_criteria(double dist)
 	{
 		// Standard circular transmission area
-		if (dist > m_comm_range)
-			return 0; // it's outside communication range
-		return dist;
+		return dist <= m_comm_range;
 	}
-
-	bool comm_in_criteria(double dist, void *cd)
-	{
-		distance_measurement = dist;
-		message_rx((message_t *)cd, &distance_measurement);
-		return true;
-	}
-
-	// TODO: This *also* isn't used and I have no idea what it was for.
-	// void sensing(int features, int type[], int x[], int y[], int value[]) {}
 
 	void *get_message()
 	{

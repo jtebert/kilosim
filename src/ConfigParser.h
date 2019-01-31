@@ -1,7 +1,7 @@
 /*
-    Kilosim
+  Kilosim
 
-    Created 2018-11 by Julia Ebert
+  Created 2018-11 by Julia Ebert
 */
 
 #ifndef __KILOSIM_CONFIGPARSER_H
@@ -24,7 +24,7 @@ namespace Kilosim
  */
 class ConfigParser
 {
-protected:
+private:
   //! Name/location of the file configuration comes from
   const std::string m_config_file;
   //! Internal JSON representation of the config retrieved from file
@@ -49,11 +49,14 @@ public:
    * relevant type without needing to explicitly specify the type.
    *
    * @param val_name Name/key to get the value for
-   * @returns Wrapped output value. Use .type_name() to get the type
+   * @return Wrapped output value. Use `.type_name()` to get the type
    */
   json get(const std::string val_name) const;
   /*!
-   * Get the whole JSON object from the parser
+   * Get the whole JSON object from the parser. This essentially strips the
+   * ConfigParser wrapping around the contents, which is not necessary for
+   * basic usage.
+   * @return Raw nlohmann/json object
    */
   json get() const;
 };

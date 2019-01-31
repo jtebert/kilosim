@@ -28,7 +28,7 @@ void Robot::robot_controller()
 	}
 	else
 	{
-		// Robot is dead. Stop movement and dont' let it do anything
+		// Robot is dead. Stop movement and don't let it do anything
 		m_forward_speed = 0;
 		m_turn_speed = 0;
 		m_motor_command = 4;
@@ -117,7 +117,7 @@ void Robot::robot_move(const std::vector<double> &new_pose, const int16_t &colli
 	pos[2] = wrap_angle(new_theta);
 };
 
-void Robot::robot_init(double x, double y, double t)
+void Robot::robot_init(double x, double y, double theta)
 {
 	// Pick a direction to randomly turn in event of collisions
 	m_collision_turn_dir = rand() % 2;
@@ -125,7 +125,7 @@ void Robot::robot_init(double x, double y, double t)
 	// Initialize robot variables
 	pos[0] = x;
 	pos[1] = y;
-	pos[2] = t;
+	pos[2] = theta;
 
 	m_motor_command = 0;
 	incoming_message_flag = 0;

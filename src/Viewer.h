@@ -25,7 +25,7 @@ namespace Kilosim
  */
 class Viewer
 {
-protected:
+private:
   //! Width of the display window (in pixels)
   const int m_window_width;
   //! Height of the display window (in pixels)
@@ -65,7 +65,7 @@ public:
    */
   void draw();
 
-protected:
+private:
   //! Draw a single robot onto the scene
   void draw_robot(Robot *robot);
   //! Add the current world time to the display
