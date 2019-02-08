@@ -6,7 +6,7 @@
 namespace KiloSim
 {
 World::World(double arena_width, double arena_height, std::string light_pattern_src, uint num_threads)
-    : m_arena_width(arena_width), m_arena_height(arena_height), cb(arena_width, arena_height, RADIUS)
+    : m_arena_width(arena_width), m_arena_height(arena_height), cb(arena_width, arena_height, 2*RADIUS)
 {
     if (light_pattern_src.size() > 0)
     {
