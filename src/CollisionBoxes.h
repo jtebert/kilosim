@@ -48,7 +48,7 @@ class CollisionBoxes {
     for(unsigned int a=0;a<agents.size();a++){
       const int binx = agents[a].x/diameter;
       const int biny = agents[a].y/diameter;
-      const int idx0 = biny*bwidth+binx;
+      const int idx0 = PSIZE*(biny*bwidth+binx);
       int idx=idx0;
       for(;idx<=idx0+PSIZE;idx++)
         if(agent_positions[idx]==-1)
