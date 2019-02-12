@@ -27,8 +27,6 @@ class CollisionBoxes {
   int    bwidth;  //Width in bins
   int    bheight; //Height in bins
 
-  ivec ret_vec; //Vector of return values
-
  public:
   CollisionBoxes() = default;
 
@@ -61,8 +59,8 @@ class CollisionBoxes {
     }
   }
 
-  const ivec& operator()(const double x, const double y) {
-    ret_vec.clear();
+  const ivec operator()(const double x, const double y) {
+    ivec ret_vec;
     const int cbinx = x/diameter;
     const int cbiny = y/diameter;
 
