@@ -23,7 +23,7 @@ class CollisionBoxes {
   typedef std::vector<int> ivec;
   ivec   agent_positions;
   ivec   cells_used;
-  double radius;  //Collision radius
+  double diameter;  //Collision diameter
   int    bwidth;  //Width in bins
   int    bheight; //Height in bins
 
@@ -32,10 +32,10 @@ class CollisionBoxes {
  public:
   CollisionBoxes() = default;
 
-  CollisionBoxes(const double width0, const double height0, const double radius0){
-    radius  = radius0;
-    bwidth  = std::ceil(width0/radius);
-    bheight = std::ceil(height0/radius);
+  CollisionBoxes(const double width0, const double height0, const double diameter0){
+    diameter = diameter0;
+    bwidth   = std::ceil(width0/diameter);
+    bheight  = std::ceil(height0/diameter);
 
     agent_positions.resize(PSIZE*bwidth*bheight,-1);
   }
@@ -48,8 +48,8 @@ class CollisionBoxes {
     cells_used.clear();
 
     for(unsigned int a=0;a<agents.size();a++){
-      const int binx = agents[a].x/radius;
-      const int biny = agents[a].y/radius;
+      const int binx = agents[a].x/diameter;
+      const int biny = agents[a].y/diameter;
       const int idx0 = biny*bwidth+binx;
       int idx=idx0;
       for(;idx<=idx0+PSIZE;idx++)
@@ -63,8 +63,8 @@ class CollisionBoxes {
 
   const ivec& operator()(const double x, const double y) {
     ret_vec.clear();
-    const int cbinx = x/radius;
-    const int cbiny = y/radius;
+    const int cbinx = x/diameter;
+    const int cbiny = y/diameter;
 
     for(unsigned int nbi=0;nbi<=8;nbi++){
       const int binx = cbinx+cddx[nbi];
