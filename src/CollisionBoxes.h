@@ -68,7 +68,7 @@ class CollisionBoxes {
       const int binx = cbinx+cddx[nbi];
       const int biny = cbiny+cddy[nbi];
 
-      if(binx<0 || biny<y || binx==bwidth || biny==bheight)
+      if(binx<0 || biny<0 || binx==bwidth || biny==bheight)
         continue;
 
       const auto idx0 = &agent_positions[PSIZE*(biny*bwidth+binx)];
