@@ -3,9 +3,9 @@
 
 // Implementation of Kilobot Arena/World
 
-namespace KiloSim
+namespace Kilosim
 {
-World::World(double arena_width, double arena_height, std::string light_pattern_src, uint num_threads)
+World::World(const double arena_width, const double arena_height, const std::string light_pattern_src, const uint num_threads)
     : m_arena_width(arena_width), m_arena_height(arena_height), cb(arena_width, arena_height, 2 * RADIUS)
 {
     if (light_pattern_src.size() > 0)
@@ -38,12 +38,6 @@ World::~World()
     // TODO: Implement World destructor (any destructors, zB)
 }
 
-World::RobotPose::RobotPose() : x(0.0), y(0.0), theta(0.0) {}
-World::RobotPose::RobotPose(double x, double y, double theta)
-    : x(x),
-      y(y),
-      theta(theta) {}
-
 void World::step()
 {
     timer_step.start();
@@ -51,7 +45,6 @@ void World::step()
     timer_step_memory.start();
     // Initialize vectors that are used in parallelism
     std::vector<RobotPose> new_poses((m_robots.size()));
-    // PosesPtr new_poses_ptr = std::make_shared<std::vector<RobotPose>>(new_poses);
     std::vector<int16_t> collisions(m_robots.size(), 0);
     timer_step_memory.stop();
 
@@ -85,15 +78,14 @@ void World::step()
     m_tick++;
 
     timer_step.stop();
+}
 
-} // namespace KiloSim
-
-sf::Image World::get_light_pattern()
+sf::Image World::get_light_pattern() const
 {
     return m_light_pattern.get_light_pattern();
 }
 
-bool World::has_light_pattern()
+bool World::has_light_pattern() const
 {
     return m_light_pattern.has_source();
 }
@@ -105,7 +97,7 @@ void World::set_light_pattern(std::string light_pattern_src)
 
 void World::add_robot(Robot *robot)
 {
-    robot->add_light(&m_light_pattern);
+    robot->add_to_world(m_light_pattern, m_tick_delta_t);
     m_robots.push_back(robot);
 }
 
@@ -150,8 +142,8 @@ void World::communicate()
                         // Check communication range in both directions
                         // (due to potentially noisy communication range)
                         double dist = tx_r.distance(tx_r.x, tx_r.y, rx_r.x, rx_r.y);
-                        if (tx_r.comm_out_criteria(dist) &&
-                            rx_r.comm_in_criteria(dist, msg))
+                        if (tx_r.comm_criteria(dist) &&
+                            rx_r.comm_criteria(dist))
                         {
                             rx_r.received();
                         }
@@ -162,7 +154,7 @@ void World::communicate()
     }
 }
 
-void World::compute_next_step(std::vector<RobotPose> &new_poses_ptr)
+void World::compute_next_step(std::vector<RobotPose> &new_poses)
 {
     // TODO: Implement compute_next_step (and maybe change from pointers)
 
@@ -171,52 +163,11 @@ void World::compute_next_step(std::vector<RobotPose> &new_poses_ptr)
     // #pragma omp parallel for
     for (unsigned int r_i = 0; r_i < m_robots.size(); r_i++)
     {
-        // printf("%d\n", r_i);
-        Robot &r = *m_robots[r_i];
-        double theta = r.theta;
-        double x = r.x;
-        double y = r.y;
-        double temp_x = x;
-
-        double temp_y = y;
-        switch (r.motor_command)
-        {
-        case 1:
-        { // forward
-            //theta += r.motor_error * m_tick_delta_t;
-            const double speed = r.forward_speed * m_tick_delta_t;
-            temp_x = speed * cos(theta) + r.x;
-            temp_y = speed * sin(theta) + r.y;
-            break;
-        }
-        case 2:
-        { // CW rotation
-            const double phi = -r.turn_speed * m_tick_delta_t;
-            theta += phi;
-            const double temp_cos = RADIUS * cos(theta + 4 * PI / 3);
-            const double temp_sin = RADIUS * sin(theta + 4 * PI / 3);
-            temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
-            temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
-            break;
-        }
-        case 3:
-        { // CCW rotation
-            const double phi = r.turn_speed * m_tick_delta_t;
-            theta += phi;
-            const double temp_cos = RADIUS * cos(theta + 2 * PI / 3);
-            const double temp_sin = RADIUS * sin(theta + 2 * PI / 3);
-            temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
-            temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
-            break;
-        }
-        }
-        new_poses_ptr[r_i] = RobotPose(temp_x, temp_y, wrap_angle(theta));
+        new_poses[r_i] = m_robots[r_i]->robot_compute_next_step();
     }
 }
 
-void World::find_collisions(
-    const std::vector<RobotPose> &new_poses_ptr,
-    std::vector<int16_t> &collisions)
+void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector<int16_t> &collisions)
 {
     // Check to see if motion causes robots to collide with their updated positions
 
@@ -224,12 +175,12 @@ void World::find_collisions(
     // -1 = collision w/ wall
     // 1 = collision w/ robot of that ind;
 
-    cb.update(new_poses_ptr);
+    cb.update(new_poses);
 
     // #pragma omp parallel for schedule(static)
     for (unsigned int ci = 0; ci < m_robots.size(); ci++)
     {
-        const auto &cr = new_poses_ptr[ci];
+        const auto &cr = new_poses[ci];
         // Check for collisions with walls
         if (cr.x <= RADIUS || cr.x >= m_arena_width - RADIUS || cr.y <= RADIUS || cr.y >= m_arena_height - RADIUS)
         {
@@ -246,7 +197,7 @@ void World::find_collisions(
             if (ci == ni)
                 continue;
 
-            const auto &nr = new_poses_ptr[ni];
+            const auto &nr = new_poses[ni];
             // Check for collisions with other robots
             // Don't do repeat checks, unless the one you're checking against
             // had a wall collision (and therefore didn't check for robot collisions)
@@ -260,81 +211,29 @@ void World::find_collisions(
             }
         }
     }
-    // return std::make_shared<std::vector<int16_t>>(collisions);
 }
 
-void World::move_robots(
-    std::vector<RobotPose> &new_poses_ptr,
-    const std::vector<int16_t> &collisions)
+void World::move_robots(std::vector<RobotPose> &new_poses, const std::vector<int16_t> &collisions)
 {
     // TODO: Parallelize
     // #pragma omp parallel for
     for (unsigned int ri = 0; ri < m_robots.size(); ri++)
     {
-        // printf("ri=%d\n", ri);
-        Robot &r = *m_robots[ri];
-
-        double new_theta = new_poses_ptr[ri].theta;
-        switch (collisions[ri])
-        {
-        case 0:
-        { // No collisions
-            r.x = new_poses_ptr[ri].x;
-            r.y = new_poses_ptr[ri].y;
-            r.collision_timer = 0;
-            break;
-        }
-        case 1:
-        { // Collision with another robot
-            if (r.collision_turn_dir == 0)
-            {
-                new_theta = r.theta - r.turn_speed * m_tick_delta_t; // left/CCW
-            }
-            else
-            {
-                new_theta = r.theta + r.turn_speed * m_tick_delta_t; // right/CW
-            }
-            if (r.collision_timer > r.max_collision_timer)
-            { // Change turn dir
-                r.collision_turn_dir = (r.collision_turn_dir + 1) % 2;
-                r.collision_timer = 0;
-            }
-            r.collision_timer++;
-            break;
-        }
-        }
-        // If a bot is touching the wall (collision_type == 2), update angle but not position
-        r.theta = wrap_angle(new_theta);
+        m_robots[ri]->robot_move(new_poses[ri], collisions[ri]);
     }
 }
 
-double World::wrap_angle(double angle)
-{
-    // Guarantee that angle will be from 0 to 2*pi
-    // While loop is fastest option when angles are close to correct range
-    // TODO: Should this actually not be in the World class?
-    while (angle > 2 * M_PI)
-    {
-        angle -= 2 * M_PI;
-    }
-    while (angle < 0)
-    {
-        angle += 2 * M_PI;
-    }
-    return angle;
-}
-
-uint16_t World::get_tick_rate()
+uint16_t World::get_tick_rate() const
 {
     return m_tick_rate;
 }
 
-uint32_t World::get_tick()
+uint32_t World::get_tick() const
 {
     return m_tick;
 }
 
-double World::get_time()
+double World::get_time() const
 {
     return (double)m_tick / m_tick_rate;
 }
@@ -343,7 +242,7 @@ std::vector<Robot *> &World::get_robots()
 {
     return m_robots;
 }
-std::vector<double> World::get_dimensions()
+std::vector<double> World::get_dimensions() const
 {
     std::vector<double> dimensions{m_arena_width, m_arena_height};
     return dimensions;
@@ -360,4 +259,4 @@ void World::printTimes() const
     std::cerr << "t timer_move              = " << timer_move.accumulated() << std::endl;
 }
 
-} // namespace KiloSim
+} // namespace Kilosim

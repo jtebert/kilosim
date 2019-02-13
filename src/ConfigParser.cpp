@@ -1,14 +1,14 @@
 /*
-    KiloSim
+    Kilosim
 
     Created 2018-11 by Julia Ebert
 */
 
 #include "ConfigParser.h"
 
-namespace KiloSim
+namespace Kilosim
 {
-ConfigParser::ConfigParser(std::string config_file)
+ConfigParser::ConfigParser(const std::string config_file)
     : m_config_file(config_file)
 {
     // Read from the config file into a JSON object
@@ -24,13 +24,13 @@ ConfigParser::ConfigParser(std::string config_file)
     }
 }
 
-json ConfigParser::get(std::string val_name)
+json ConfigParser::get(const std::string val_name) const
 {
     return m_config[val_name];
 }
-json ConfigParser::get()
+json ConfigParser::get() const
 {
     return m_config;
 }
 
-} // namespace KiloSim
+} // namespace Kilosim

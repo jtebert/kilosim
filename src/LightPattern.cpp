@@ -1,30 +1,30 @@
 /*
-    KiloSim
+    Kilosim
 
     Created 2018-11 by Julia Ebert
 */
 
 #include "LightPattern.h"
 
-namespace KiloSim
+namespace Kilosim
 {
 LightPattern::LightPattern()
 {
     m_has_source = false;
 };
 
-void LightPattern::pattern_init(double arena_width)
+void LightPattern::pattern_init(const double arena_width)
 {
     m_arena_width = arena_width;
     m_has_source = false;
 }
-void LightPattern::pattern_init(double arena_width, std::string img_src)
+void LightPattern::pattern_init(const double arena_width, const std::string img_src)
 {
     m_arena_width = arena_width;
     set_light_pattern(img_src);
 }
 
-uint16_t LightPattern::get_ambientlight(double x, double y)
+uint16_t LightPattern::get_ambientlight(const double x, const double y) const
 {
     if (m_has_source)
     {
@@ -47,17 +47,17 @@ uint16_t LightPattern::get_ambientlight(double x, double y)
     }
 };
 
-sf::Image LightPattern::get_light_pattern()
+sf::Image LightPattern::get_light_pattern() const
 {
     return m_light_pattern;
 };
 
-bool LightPattern::has_source()
+bool LightPattern::has_source() const
 {
     return m_has_source;
 }
 
-void LightPattern::set_light_pattern(std::string img_src)
+void LightPattern::set_light_pattern(const std::string img_src)
 {
     if (!m_light_pattern.loadFromFile(img_src))
     {
@@ -69,4 +69,4 @@ void LightPattern::set_light_pattern(std::string img_src)
     m_scale = (double)m_img_dim.x / m_arena_width;
     m_has_source = true;
 };
-} // namespace KiloSim
+} // namespace Kilosim

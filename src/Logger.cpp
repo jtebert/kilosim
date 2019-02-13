@@ -1,16 +1,17 @@
 /*
+    Kilosim
 
     Created 2018-10 by Julia Ebert
 */
 
 #include <typeinfo>
 #include "Logger.h"
-namespace KiloSim
+namespace Kilosim
 {
 
-Logger::Logger(World *world, std::string file_id, int trial_num, bool overwrite_trials)
-    : m_world(world),
-      m_file_id(file_id),
+Logger::Logger(World &world, std::string const file_id, int const trial_num, bool const overwrite_trials)
+    : m_file_id(file_id),
+      m_world(world),
       m_overwrite_trials(overwrite_trials)
 {
     // Create the HDF5 file if it doesn't already exist
@@ -23,7 +24,7 @@ Logger::~Logger(void)
     std::cout << "TODO: Close the file when out of scope?" << std::endl;
 }
 
-void Logger::set_trial(uint trial_num)
+void Logger::set_trial(uint const trial_num)
 {
     m_trial_num = trial_num;
     // Create group for the trial
@@ -51,7 +52,6 @@ void Logger::set_trial(uint trial_num)
     H5::Group *trialGroup = new H5::Group(m_h5_file->createGroup(m_trial_group_name.c_str()));
     (void)trialGroup; //Suppresses warning abut trialGroup variable not being used
 
-
     // Create the params group if it doesn't already exist
     m_params_group = create_or_open_group(m_h5_file, m_params_group_name);
 
@@ -66,17 +66,17 @@ void Logger::set_trial(uint trial_num)
     m_time_table = H5PacketTablePtr(time_packet_table);
 }
 
-uint Logger::get_trial()
+uint Logger::get_trial() const
 {
     return m_trial_num;
 }
 
-void Logger::add_aggregator(std::string agg_name, aggregatorFunc agg_func)
+void Logger::add_aggregator(std::string const agg_name, aggregatorFunc const agg_func)
 {
     m_aggregators.insert({{agg_name, agg_func}});
 
     // Do a test run of the aggregator to get the length of the output
-    std::vector<double> test_output = (*agg_func)(m_world->get_robots());
+    const std::vector<double> test_output = (*agg_func)(m_world.get_robots());
 
     hsize_t out_len[1] = {test_output.size()};
     H5::ArrayType agg_type(H5::PredType::NATIVE_DOUBLE, 1, out_len);
@@ -93,12 +93,11 @@ void Logger::add_aggregator(std::string agg_name, aggregatorFunc agg_func)
     m_aggregator_dsets.insert({{agg_name, H5PacketTablePtr(agg_packet_table)}});
 }
 
-void Logger::log_state()
+void Logger::log_state() const
 {
     // https://thispointer.com/how-to-iterate-over-an-unordered_map-in-c11/
-
     // Add the current time to the time series
-    double t = m_world->get_time();
+    double t = m_world.get_time();
     herr_t err = m_time_table->AppendPacket(&t);
     if (err < 0)
         fprintf(stderr, "WARNING: Failed to append to time series");
@@ -110,10 +109,10 @@ void Logger::log_state()
     }
 }
 
-void Logger::log_aggregator(std::string agg_name, aggregatorFunc agg_func)
+void Logger::log_aggregator(std::string const agg_name, aggregatorFunc const agg_func) const
 {
     // Call the aggregator function on the robots
-    std::vector<double> agg_val = (*agg_func)(m_world->get_robots());
+    std::vector<double> agg_val = (*agg_func)(m_world.get_robots());
     // TODO: append to the packet table (should be created by add_aggregator)
     herr_t err = m_aggregator_dsets.at(agg_name)->AppendPacket(agg_val.data());
     if (err < 0)
@@ -122,16 +121,16 @@ void Logger::log_aggregator(std::string agg_name, aggregatorFunc agg_func)
     }
 }
 
-void Logger::log_config(ConfigParser *config)
+void Logger::log_config(ConfigParser &config)
 {
-    json j = config->get();
+    const json j = config.get();
     for (auto &mol : j.get<json::object_t>())
     {
         log_param(mol.first, mol.second);
     }
 }
 
-void Logger::log_param(std::string name, json val)
+void Logger::log_param(std::string const name, const json val)
 {
     // Example: https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5group.cpp
     // https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5tutr_crtgrpd.cpp
@@ -189,7 +188,7 @@ void Logger::log_param(std::string name, json val)
     }
 }
 
-H5::PredType Logger::h5_type(json j)
+H5::PredType Logger::h5_type(const json j) const
 {
     return m_json_h5_types.at(j.type());
 }
@@ -211,7 +210,7 @@ Logger::H5FilePtr Logger::create_or_open_file(const std::string &fname)
     return H5FilePtr(file);
 }
 
-Logger::H5GroupPtr Logger::create_or_open_group(H5FilePtr file, std::string &group_name)
+Logger::H5GroupPtr Logger::create_or_open_group(H5FilePtr file, const std::string &group_name)
 {
     // https://stackoverflow.com/q/35668056
     H5::Exception::dontPrint();
@@ -227,4 +226,4 @@ Logger::H5GroupPtr Logger::create_or_open_group(H5FilePtr file, std::string &gro
     (void)group; //Suppresses warning about group variable not being used
 }
 
-} // namespace KiloSim
+} // namespace Kilosim

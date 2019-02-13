@@ -1,5 +1,5 @@
 /*
-    KiloSim
+    Kilosim
 
     Visualizer for the Kilobot simulator to display robots and light pattern
     (OpenGL-based)
@@ -15,23 +15,23 @@
 #include <SFML/Graphics.hpp>
 #include <memory>
 
-namespace KiloSim
+namespace Kilosim
 {
 /*!
- * The Viewer is used to display a KiloSim World. It is instantiated with a
+ * The Viewer is used to display a Kilosim World. It is instantiated with a
  * pointer to a World, which will be displayed whenever the #draw method is
  * called. After constructing your Viewer, this is the only method you need to
  * call to use it.
  */
 class Viewer
 {
-protected:
-  //! Pointer to the World that this Viewer draws
-  World *m_world;
+private:
   //! Width of the display window (in pixels)
-  int m_window_width;
+  const int m_window_width;
   //! Height of the display window (in pixels)
   int m_window_height;
+  //! Reference to the World that this Viewer draws
+  World &m_world;
   //! SFML window in which the world will be drawn
   sf::RenderWindow m_window;
   //! Texture of the World image (will be displayed as background)
@@ -49,12 +49,12 @@ public:
   /*!
    * Create a Viewer with the pointer to the given world
    *
-   * @param world Pointer to the World that will be displayed
+   * @param world Pointe_r to the World that will be displayed
    * @param window_width Width (in pixels) to draw the display window. Height
    * will be automatically determined from the aspect ratio of the World's
    * dimensions.
    */
-  Viewer(World *world, int window_width = 1080);
+  Viewer(World &world, const int window_width = 1080);
   /*!
    * Draw everything in the world at the current state
    *
@@ -65,18 +65,16 @@ public:
    */
   void draw();
 
-protected:
+private:
   //! Draw a single robot onto the scene
   void draw_robot(Robot *robot);
   //! Add the current world time to the display
   void draw_time();
-  //! Draw the world's background light pattern image
-  void draw_light_pattern();
 };
 
 /*! \example example_viewer.cpp
  * Example usage of a Viewer to display a World in a simulation loop.
  */
-} // namespace KiloSim
+} // namespace Kilosim
 
 #endif

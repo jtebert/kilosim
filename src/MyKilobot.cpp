@@ -1,12 +1,11 @@
-/*
-    This is a barebones example implementation of a Kilobot class
-*/
-
 #include "Kilobot.h"
 #include <iostream>
 
-namespace KiloSim
+namespace Kilosim
 {
+/*!
+ * This is a barebones example implementation of a Kilobot class
+*/
 class MyKilobot : public Kilobot
 {
   public:
@@ -128,4 +127,4 @@ class MyKilobot : public Kilobot
 
     void message_tx_success() {}
 };
-} // namespace KiloSim
+} // namespace Kilosim

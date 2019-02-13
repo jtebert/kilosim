@@ -19,88 +19,185 @@ const uint8_t T = 2;
 
 #define SECOND 32
 
+namespace Kilosim
+{
+//! Simple representation of red/green/blue color
 struct rgb
 {
-	double red, green, blue;
+	//! Red component of RGB color
+	double red;
+	//! Green component of RGB color
+	double green;
+	//! Blue component of RGB color
+	double blue;
 };
 
-namespace KiloSim
+struct RobotPose
 {
+	// x, y, and theta (rotation) of a robot
+	double x;
+	double y;
+	double theta;
+	RobotPose() : x(0.0), y(0.0), theta(0.0) {}
+	RobotPose(double x, double y, double theta)
+		: x(x),
+		  y(y),
+		  theta(theta) {}
+};
 
 /*!
- * This matches the Kilobot Library API. For detailed documentation and usage,
- * see the [Kilolib documentation](https://www.kilobotics.com/docs/index.html).
+ * This class provides an abstract controller interface for robots. It provides
+ * functions for movement, communication, and interaction with the simulator
+ * World. It is the abstract base class for the Kilosim, and as such is not
+ * to be directly constructed. It serves as the parent for the Kilobot class,
+ * which provides the [Kilolib](https://www.kilobotics.com/docs/index.html)
+ * Kilobot library. In turn, Kilobot serves as the parent class for user
+ * implementations of Kilobot code (matching what would be written for actual
+ * Kilobot robots.)
+ *
+ * To summarize:
+ *
+ * - `Robot`: Controller interface for interacting
+ * - `Kilobot`: Implementation of Kilolib, inheriting from `Robot` and serving
+ *   as parent class for user code
+ *
+ * In principle, you could create a non-Kilobot robot with this base class, but
+ * this hasn't been tested.
  */
 class Robot
 {
   protected:
 	//! World the robot belongs to (used for getting light pattern data)
 	LightPattern *m_light_pattern;
-
-  public:
-	uint16_t id;
-	//x, y, theta position in real world, don't use these in controller, that's cheating!!
-	double x,y,theta;
-	//value of how motors differ from ideal, don't use these, that's cheating!!
-	double motor_error;
-	// communication range between robots (mm)
-	double comm_range = 6 * 16;
-	// RGB LED display color, values 0-1
-	double color[3];
-
-	uint8_t collision_turn_dir;
-	uint32_t collision_timer;
-	uint32_t max_collision_timer;
-
-	//robot commanded motion 1=forward, 2=cw rotation, 3=ccw rotation, 4=stop
-	int motor_command;
-	virtual void set_color(rgb c)
-	{
-		color[0] = c.red;
-		color[1] = c.green;
-		color[2] = c.blue;
-	}
-
-	// Flag set to 1 when robot wants to transmit
+	//! Time per tick (set when Robot added to World)
+	double m_tick_delta_t;
+	//! When robots collide, which direction this will turn (0 or 1)
+	uint8_t m_collision_turn_dir;
+	//! How long the robot has been turning this way while colliding (will time out and switch direction)
+	uint32_t m_collision_timer = 0;
+	//! How long to turn one way when colliding, before switching (set randomly in robot_init())
+	uint32_t m_max_collision_timer;
+	//! Value of how motors differ from ideal. (Don't use these; that's cheating!) Set in robot_init()
+	double m_motor_error;
+	//! Robot commanded motion 1=forward, 2=cw rotation, 3=ccw rotation, 4=stop
+	int m_motor_command;
+	//! Base forward speed in mm/s (Will be randomized around this in robot_init())
+	double m_forward_speed = 24;
+	//! Base turning speed in rad/s (Will be randomized around this in robot_init())
+	double m_turn_speed = 0.5;
+	// TODO: Shouldn't battery also be set in robot_init()?
+	//! Battery remaining (to be set in `Kilobot.init()`)
+	double battery = -1;
+	//! Flag set to 1 when robot wants to transmit
 	int tx_request;
 
-	// Flag set to 1 when new message received
+  public:
+	//! UUID of the robot, set in robot_init()
+	uint16_t id;
+	//! (x, y, theta) position in real world. (Don't use these in controller; that's cheating! It's public for logging purposes.)
+	double x, y, theta;
+	//! RGB LED display color, values 0-1 (also used as display color by `Viewer`)
+	double color[3];
+
+	//! Flag set to 1 when new message received
+	// TODO: This doesn't appear to actually be used anymore. Kill it?
 	int incoming_message_flag;
 
+	/*!
+	 * Get a void pointer to the message the robot is sending and handle any
+	 * callbacks for successful message transmission
+	 * @return Pointer to message to transmit
+	 */
 	virtual void *get_message() = 0;
-
-	double forward_speed = 24; // mm/s
-	double turn_speed = 0.5;   // rad/s
-
-	double battery = -1;
 
   public:
 	/*!
-	 * Must implement an robot initialization
-	 * **IMPORTANT!** Things break (with LightPatterns) if you try to call this
-	 * *before* adding a Robot to a World.
+	 * Initialize a Robot at a position in the world.
+	 *
+	 * @note Things break (with `LightPattern`s) if you try to call this
+	 * *before* adding a `Robot` to a `World`. This also calls the
+	 * child-specific `init()` function.
+	 *
+	 * @warning This currently does **not** check if the specified Robot
+	 * position is within the arena bounds. Robots placed out-of-bounds will not
+	 * produce any errors, but they will be considered constantly in a wall
+	 * collision.
+	 *
+	 * @param x x-position to place the Robot in the World
+	 * @param y y-position to place the Robot in the World
+	 * @param theta rotation/direction of the Robot in radians
+	 * (counterclockwise, where 0 is along positive x-axis)
 	 */
-	void robot_init(double, double, double);
-	virtual void init() = 0;
+	void robot_init(double x, double y, double theta);
 
-	//! Add a pointer to the world that the robot is part of
-	void add_light(LightPattern *light_pattern);
+	/*!
+	 * Run the simulated control of the physical Robot (such as battery, and
+	 * color). This also calls the child-specific `controller()`.
+	 */
+	void robot_controller();
 
-	// Robot's internal timer
+	/*!
+	 * Add a pointer to the world that the robot is part of and set the
+	 * simulation time step size.
+	 *
+	 * This is automatically called by the `World` when a Robot is added to the
+	 * World.
+	 *
+	 * @param light_pattern Reference to the World's LightPattern
+	 * @param dt Seconds per tick (World's simulation step size)
+	 */
+	void add_to_world(LightPattern &light_pattern, const double dt);
+
+	// TODO: Not sure what use this timer is useful for?
+	//! Robot's internal timer
 	int timer;
 
-	// Must implement the controller
-	void robot_controller();
-	virtual void controller() = 0;
+	/*!
+	 * Compute the next position of the Robot as if it doesn't run into
+	 * anything, based on its current motor and battery states.
+	 *
+	 * @note This performs no updates to the Robot, but instead returns this
+	 * possible new pose
+	 *
+	 * @return Vector of (x, y, and wrapped theta) to possibly move t
+	 */
+	RobotPose robot_compute_next_step() const;
 
-	virtual void sensing(int, int[], int[], int[], int[]) = 0;
+	/*!
+	 * Move the Robot according to the collision-ignorant `new_pose` and any
+	 * `collision`s.
+	 *
+	 * @note This uses fast pseudo-physics to handle collisions with walls and
+	 * other Robots.
+	 *
+	 * @param new_pose Collision-ignorant next-step (x, y, theta) computed by
+	 * `compute_next_step()`
+	 * @param collision Whether there's a collision with a wall (-1), another
+	 * Robot (1), or no collision (0)
+	 */
+	void robot_move(const RobotPose &new_pose, const int16_t &collision);
 
 	virtual char *get_debug_info(char *buffer, char *rt) = 0;
 
-	virtual double comm_out_criteria(double dist) = 0;
-	virtual bool comm_in_criteria(double dist, void *cd) = 0;
+	/*!
+	 * Determine if another robot is within communication range
+	 * This is called by a transmitting (tx) robot to verify if the receiver is
+	 * within range when sending a message OUT. Because of possible
+	 * asymmetries in communication range, both comm_criteria() must be met by
+	 * both the tx and rx robots for a message to be successfully transmitted.
+	 * @param dist Distance between the robots (in mm)
+	 * @return true if robot can communicate with another robot
+	 */
+	virtual bool comm_criteria(double dist) = 0;
 
-	// Useful
+	/*!
+	 * Compute the cartesian distance between two positions (x1, y1) and (x2, y2)
+	 * @param x1 x-position of first point
+	 * @param y1 y-position of first point
+	 * @param x2 x-position of second point
+	 * @param y2 y-position of second point
+	 * @return Straight-line cartesian distance between positions
+	 */
 	static double distance(double x1, double y1, double x2, double y2)
 	{
 		const double x = x1 - x2;
@@ -109,7 +206,31 @@ class Robot
 		return sqrt(s);
 	}
 
+	/*!
+	 * This is called by a robot to set a flag for calling the message success
+	 * callback
+	 */
 	virtual void received() = 0;
+
+  protected:
+	/*!
+	 * Perform any one-time initialization for the specific implementation of
+	 * the Robot, such as setting initial battery levels and calling any
+	 * user-implementation setup functions. It is called by `robot_init()`.
+	 */
+	virtual void init() = 0;
+
+	/*
+	 * Internal control loop for the specific Robot subclass implementation.
+	 * This performs any robot-specific controls such as setting motors,
+	 * communication flags, and calling user implementation loop functions.
+	 * It is called every simulation time step by `robot_controller()`
+	 */
+	virtual void controller() = 0;
+
+  private:
+	//! Wrap an angle to be within [0, 2*pi)
+	double wrap_angle(double angle) const;
 };
-} // namespace KiloSim
+} // namespace Kilosim
 #endif
