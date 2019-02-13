@@ -1,4 +1,4 @@
-#include "KiloSim.h"
+#include "World.h"
 #include "random.hpp"
 
 // Implementation of Kilobot Arena/World
@@ -6,7 +6,7 @@
 namespace KiloSim
 {
 World::World(double arena_width, double arena_height, std::string light_pattern_src, uint num_threads)
-    : m_arena_width(arena_width), m_arena_height(arena_height), cb(arena_width, arena_height, 2*RADIUS)
+    : m_arena_width(arena_width), m_arena_height(arena_height), cb(arena_width, arena_height, 2 * RADIUS)
 {
     if (light_pattern_src.size() > 0)
     {
@@ -17,7 +17,7 @@ World::World(double arena_width, double arena_height, std::string light_pattern_
         m_light_pattern.pattern_init(arena_width);
     }
 
-    #ifdef _OPENMP
+#ifdef _OPENMP
     // OpenMP settings
     if (num_threads != 0)
     {
@@ -30,7 +30,7 @@ World::World(double arena_width, double arena_height, std::string light_pattern_
     {
         omp_set_dynamic(1);
     }
-    #endif
+#endif
 }
 
 World::~World()
@@ -120,7 +120,7 @@ void World::run_controllers()
     // #pragma omp parallel for default(none) //schedule(static)
     for (unsigned int i = 0; i < m_robots.size(); i++)
     {
-        if (uniform_rand_real(0,1) < m_prob_control_execute)
+        if (uniform_rand_real(0, 1) < m_prob_control_execute)
         {
             m_robots[i]->robot_controller();
         }
@@ -167,7 +167,7 @@ void World::compute_next_step(std::vector<RobotPose> &new_poses_ptr)
     // TODO: Implement compute_next_step (and maybe change from pointers)
 
     // printf("\nt = %d\n", m_tick);
-// #pragma omp parallel for schedule(static)
+    // #pragma omp parallel for schedule(static)
     // #pragma omp parallel for
     for (unsigned int r_i = 0; r_i < m_robots.size(); r_i++)
     {
@@ -215,9 +215,9 @@ void World::compute_next_step(std::vector<RobotPose> &new_poses_ptr)
 }
 
 void World::find_collisions(
-    const std::vector<RobotPose> &new_poses_ptr, 
-    std::vector<int16_t> &collisions
-){
+    const std::vector<RobotPose> &new_poses_ptr,
+    std::vector<int16_t> &collisions)
+{
     // Check to see if motion causes robots to collide with their updated positions
 
     // 0 = no collision
@@ -227,7 +227,8 @@ void World::find_collisions(
     cb.update(new_poses_ptr);
 
     // #pragma omp parallel for schedule(static)
-    for (unsigned int ci = 0; ci < m_robots.size(); ci++){
+    for (unsigned int ci = 0; ci < m_robots.size(); ci++)
+    {
         const auto &cr = new_poses_ptr[ci];
         // Check for collisions with walls
         if (cr.x <= RADIUS || cr.x >= m_arena_width - RADIUS || cr.y <= RADIUS || cr.y >= m_arena_height - RADIUS)
@@ -238,10 +239,11 @@ void World::find_collisions(
             continue;
         }
 
-        for(const auto &ni: cb(cr.x,cr.y)){
-            if(collisions[ni]==1)
+        for (const auto &ni : cb(cr.x, cr.y))
+        {
+            if (collisions[ni] == 1)
                 continue;
-            if(ci==ni)
+            if (ci == ni)
                 continue;
 
             const auto &nr = new_poses_ptr[ni];
@@ -263,8 +265,8 @@ void World::find_collisions(
 
 void World::move_robots(
     std::vector<RobotPose> &new_poses_ptr,
-    const std::vector<int16_t>   &collisions
-){
+    const std::vector<int16_t> &collisions)
+{
     // TODO: Parallelize
     // #pragma omp parallel for
     for (unsigned int ri = 0; ri < m_robots.size(); ri++)
@@ -347,14 +349,15 @@ std::vector<double> World::get_dimensions()
     return dimensions;
 }
 
-void World::printTimes() const {
-    std::cerr<<"t timer_step              = " << timer_step.accumulated()<<std::endl;
-    std::cerr<<"t timer_step_memory       = " << timer_step_memory.accumulated()<<std::endl;
-    std::cerr<<"t timer_controllers       = " << timer_controllers.accumulated()<<std::endl;
-    std::cerr<<"t timer_communicate       = " << timer_communicate.accumulated()<<std::endl;
-    std::cerr<<"t timer_compute_next_step = " << timer_compute_next_step.accumulated()<<std::endl;
-    std::cerr<<"t timer_collisions        = " << timer_collisions.accumulated()<<std::endl;
-    std::cerr<<"t timer_move              = " << timer_move.accumulated()<<std::endl;
+void World::printTimes() const
+{
+    std::cerr << "t timer_step              = " << timer_step.accumulated() << std::endl;
+    std::cerr << "t timer_step_memory       = " << timer_step_memory.accumulated() << std::endl;
+    std::cerr << "t timer_controllers       = " << timer_controllers.accumulated() << std::endl;
+    std::cerr << "t timer_communicate       = " << timer_communicate.accumulated() << std::endl;
+    std::cerr << "t timer_compute_next_step = " << timer_compute_next_step.accumulated() << std::endl;
+    std::cerr << "t timer_collisions        = " << timer_collisions.accumulated() << std::endl;
+    std::cerr << "t timer_move              = " << timer_move.accumulated() << std::endl;
 }
 
 } // namespace KiloSim

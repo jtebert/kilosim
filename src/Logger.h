@@ -12,8 +12,7 @@
 
 #include <H5PacketTable.h>
 #include <H5Cpp.h>
-#include "Robot.h"
-#include "KiloSim.h"
+#include "World.h"
 #include "ConfigParser.h"
 #include "../include/json.hpp"
 #include <unordered_map>

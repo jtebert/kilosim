@@ -1,4 +1,4 @@
-#include "KiloSim.h"
+#include "World.h"
 #include "Viewer.h"
 
 int main(int argc, char *argv[])

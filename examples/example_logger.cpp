@@ -1,4 +1,4 @@
-#include "KiloSim.h"
+#include "World.h"
 #include "Logger.h"
 
 std::vector<double> meanAmbientLightFunc(std::vector<Robot *> &robots)
