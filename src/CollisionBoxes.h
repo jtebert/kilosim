@@ -63,7 +63,7 @@ public:
     }
   }
 
-  const ivec operator()(const double x, const double y)
+  ivec operator()(const double x, const double y)
   {
     ivec ret_vec;
     const int cbinx = x / diameter;
