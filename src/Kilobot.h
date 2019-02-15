@@ -241,8 +241,7 @@ class Kilobot : public Robot
 	 */
 	uint8_t rand_hard()
 	{
-		uint8_t x = rand() % 255;
-		return x;
+		return uniform_rand_int(0,255);
 	}
 
 	/*!
@@ -251,7 +250,7 @@ class Kilobot : public Robot
 	 */
 	uint8_t rand_soft()
 	{
-		return rand() * 255 / RAND_MAX;
+		return uniform_rand_int(0,255);
 	}
 
 	/*!
