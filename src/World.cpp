@@ -271,6 +271,7 @@ std::vector<Robot *> &World::get_robots()
 {
     return m_robots;
 }
+
 std::vector<double> World::get_dimensions() const
 {
     std::vector<double> dimensions{m_arena_width, m_arena_height};
