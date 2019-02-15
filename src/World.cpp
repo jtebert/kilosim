@@ -221,7 +221,7 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
         }
     }
 
-    #ifdef DEBUG
+    #ifdef CHECKSANE
         for(unsigned int ci=0;ci<m_robots.size();ci++){
             const auto &cr = new_poses[ci];
             for(unsigned int ni=ci+1;ni<m_robots.size();ni++){

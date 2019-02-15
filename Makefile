@@ -1,6 +1,15 @@
 # Declare phony targets
 .PHONY: static exec clean
 
+#Flag Index:
+# -g            Compile with debug symbols - should always be on, unless using PGI compiler. Does not slow program down.
+# -march=native Compile with full use of machine's special CPU instructions (AVX, &c)
+# -O3           Use full suite of optimizations
+# -Wall         Compile with many code warnings enabled
+# -ffast-math   Allow the compiler to reorder mathematics in ways which are not strictly IEEE754 compliant. This often allows for vectorization and, with it, improved performance.
+# -fopenmp      Compile with OpenMP parallelism enabled
+# -DCHECKSANE   Compile with expensive run-time sanity checks enabled
+
 #Flags
 CXXFLAGS = -std=c++11 -g -march=native -O3 -I /usr/include/hdf5/serial/ -L /usr/lib/x86_64-linux-gnu/hdf5/serial/ -Wall -ffast-math -fopenmp #TODO: Reenable -flto
 LIBS = -lhdf5 -lhdf5_hl_cpp -lhdf5_cpp -lsfml-graphics -lsfml-window -lsfml-system
