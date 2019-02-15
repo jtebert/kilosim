@@ -9,6 +9,7 @@
 # -ffast-math   Allow the compiler to reorder mathematics in ways which are not strictly IEEE754 compliant. This often allows for vectorization and, with it, improved performance.
 # -fopenmp      Compile with OpenMP parallelism enabled
 # -DCHECKSANE   Compile with expensive run-time sanity checks enabled
+# -flto         Compilers with Link-Time Optimization. This special mode can squeeze an additional 10% efficiency out of code by optimizing across files. However, it makes debugging harder.
 
 #Flags
 CXXFLAGS = -std=c++11 -g -march=native -O3 -I /usr/include/hdf5/serial/ -L /usr/lib/x86_64-linux-gnu/hdf5/serial/ -Wall -ffast-math -fopenmp #TODO: Reenable -flto
