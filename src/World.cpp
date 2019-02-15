@@ -199,16 +199,18 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
             continue;
         }
 
+        // Check for collisions with other robots
         for (const auto &ni : cb(cr.x, cr.y))
         {
             if (ci == ni)
                 continue;
 
             const auto &nr = new_poses[ni];
-            // Check for collisions with other robots
-            // Don't do repeat checks, unless the one you're checking against
-            // had a wall collision (and therefore didn't check for robot collisions)
             const double distance = pow(cr.x - nr.x, 2) + pow(cr.y - nr.y, 2);
+            //Check to see if robots' centers are within 2*RADIUS of each other,
+            //since that means their edges would be touching. But we actually
+            //check (2*RADIUS)^2 because we don't take the square root of the
+            //distance above.
             if (distance < 4 * RADIUS * RADIUS)
             {
                 collisions[ci] = 1;
