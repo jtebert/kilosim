@@ -259,4 +259,22 @@ void World::printTimes() const
     std::cerr << "t timer_move              = " << timer_move.accumulated() << std::endl;
 }
 
+
+
+void World::checkValidity() const
+{
+    //Do any of the robots overlap with each other?
+    for(unsigned int ci=0;ci<m_robots.size();ci++){
+        const auto &cr = *m_robots.at(ci);
+        for(unsigned int ni=ci+1;ni<m_robots.size();ni++){
+            const auto &nr = *m_robots.at(ni);
+            const double distance = pow(cr.x - nr.x, 2) + pow(cr.y - nr.y, 2);
+            if(distance<4*RADIUS*RADIUS)
+                throw std::runtime_error("Found overlapping robots!");
+        }
+    }
+
+    std::cerr<<"d World is valid."<<std::endl;
+}
+
 } // namespace Kilosim

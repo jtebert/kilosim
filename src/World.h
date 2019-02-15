@@ -190,6 +190,12 @@ public:
   std::vector<double> get_dimensions() const;
 
   void printTimes() const;
+
+  /*!
+    * Check that the world is in a valid state. Throws an exception if a problem
+    * is found.
+  */
+  void checkValidity() const;
 };
 } // namespace Kilosim
 
