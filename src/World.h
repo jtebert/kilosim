@@ -8,11 +8,7 @@
 #ifndef __KILOSIM_H
 #define __KILOSIM_H
 
-#include <set>
 #include <string>
-#include <iterator>
-#include <memory>
-#include <random>
 #include <SFML/Graphics.hpp>
 #include "Robot.h"
 #include "LightPattern.h"
