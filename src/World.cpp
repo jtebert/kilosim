@@ -1,5 +1,6 @@
 #include "World.h"
 #include "random.hpp"
+#include <stdexcept>
 
 // Implementation of Kilobot Arena/World
 
@@ -219,6 +220,26 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
             }
         }
     }
+
+    #ifdef DEBUG
+        for(unsigned int ci=0;ci<m_robots.size();ci++){
+            const auto &cr = new_poses[ci];
+            for(unsigned int ni=ci+1;ni<m_robots.size();ni++){
+                const auto &nr = new_poses[ni];
+                const double distance = pow(cr.x - nr.x, 2) + pow(cr.y - nr.y, 2);
+                if(distance<4*RADIUS*RADIUS && (collisions[ni]==0 || collisions[ci]==0)){
+                    std::cerr<<"Robots "<<ci<<" and "<<ni<<" overlap!"<<std::endl;
+                    std::cerr<<"collisions["<<ci<<"] = "<<collisions[ci]<<std::endl;
+                    std::cerr<<"collisions["<<ni<<"] = "<<collisions[ni]<<std::endl;
+                    std::cerr<<"Neighbours found: ";
+                    for(const auto &x: cb(cr.x, cr.y))
+                        std::cerr<<x<<" ";
+                    std::cerr<<std::endl;
+                    throw std::runtime_error("Robots overlap in find_collisions!");
+                }
+            }
+        }
+    #endif
 }
 
 void World::move_robots(std::vector<RobotPose> &new_poses, const std::vector<int16_t> &collisions)
