@@ -10,8 +10,8 @@ namespace Kilosim
 {
 
 Logger::Logger(World &world, std::string const file_id, int const trial_num, bool const overwrite_trials)
-    : m_file_id(file_id),
-      m_world(world),
+    : m_world(world),
+      m_file_id(file_id),
       m_overwrite_trials(overwrite_trials)
 {
     // Create the HDF5 file if it doesn't already exist
