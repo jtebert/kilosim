@@ -200,14 +200,12 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
             continue;
         }
 
-        // Check for collisions with other robots
-        for (const auto &ni : cb(cr.x, cr.y))
-        {
-            if (ci == ni)
-                continue;
-
+        const auto func = [&](const unsigned int ni) -> bool {
+            if(ci==ni)
+                return true;     //Look at more neighbours
             const auto &nr = new_poses[ni];
             const double distance = pow(cr.x - nr.x, 2) + pow(cr.y - nr.y, 2);
+            
             //Check to see if robots' centers are within 2*RADIUS of each other,
             //since that means their edges would be touching. But we actually
             //check (2*RADIUS)^2 because we don't take the square root of the
@@ -216,9 +214,13 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
             {
                 collisions[ci] = 1;
                 // Don't need to worry about more than 1 collision
-                break;
+                return false;    //I'm done looking at neighbours
             }
-        }
+
+            return true;         //Look at more neighbours
+        };
+
+        cb(cr.x,cr.y,func);
     }
 
     #ifdef CHECKSANE
@@ -231,10 +233,10 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
                     std::cerr<<"Robots "<<ci<<" and "<<ni<<" overlap!"<<std::endl;
                     std::cerr<<"collisions["<<ci<<"] = "<<collisions[ci]<<std::endl;
                     std::cerr<<"collisions["<<ni<<"] = "<<collisions[ni]<<std::endl;
-                    std::cerr<<"Neighbours found: ";
-                    for(const auto &x: cb(cr.x, cr.y))
-                        std::cerr<<x<<" ";
-                    std::cerr<<std::endl;
+                    // std::cerr<<"Neighbours found: ";
+                    // for(const auto &x: cb(cr.x, cr.y))
+                        // std::cerr<<x<<" ";
+                    // std::cerr<<std::endl;
                     throw std::runtime_error("Robots overlap in find_collisions!");
                 }
             }

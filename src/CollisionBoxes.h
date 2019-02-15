@@ -63,9 +63,9 @@ public:
     }
   }
 
-  ivec operator()(const double x, const double y) const
+  template<class F>
+  void operator()(const double x, const double y, F func) const
   {
-    ivec ret_vec;
     const int cbinx = x / diameter;
     const int cbiny = y / diameter;
 
@@ -78,12 +78,15 @@ public:
         continue;
 
       const auto idx0 = &agent_positions[PSIZE * (biny * bwidth + binx)];
-      for (auto idx = idx0; idx < idx0 + PSIZE; idx++)
-        if (*idx != -1)
-          ret_vec.emplace_back(*idx);
+      for (auto idx = idx0; idx < idx0 + PSIZE; idx++){
+        if (*idx == -1)
+          continue;
+        //If func returns false, that means it doesn't want to look at any more
+        //neighbours
+        if(!func(*idx)) 
+          return;
+      }
     }
-
-    return ret_vec;
   }
 };
 
