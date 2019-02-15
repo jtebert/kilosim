@@ -175,7 +175,16 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
     // -1 = collision w/ wall
     // 1 = collision w/ robot of that ind;
 
+    //This updates a grid structure which enables robots to quickly identify
+    //other robots with whom they might be colliding.
     cb.update(new_poses);
+
+    //The following checks whether a robot is colliding with a wall or any other
+    //robots. Only the collision status of the focal robot is changed. This
+    //means that it is possible to accelerate the code by setting the status of
+    //both of the robots in a collision; however, this requires careful thought
+    //to ensure that wall collisions are still adequately accounted for. It also
+    //reduces the potential for parallelism since it introduces a data race.
 
     // #pragma omp parallel for schedule(static)
     for (unsigned int ci = 0; ci < m_robots.size(); ci++)
@@ -192,8 +201,6 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
 
         for (const auto &ni : cb(cr.x, cr.y))
         {
-            if (collisions[ni] == 1)
-                continue;
             if (ci == ni)
                 continue;
 
@@ -204,7 +211,6 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
             const double distance = pow(cr.x - nr.x, 2) + pow(cr.y - nr.y, 2);
             if (distance < 4 * RADIUS * RADIUS)
             {
-                collisions[ni] = 1; // r is colliding with c
                 collisions[ci] = 1;
                 // Don't need to worry about more than 1 collision
                 break;
