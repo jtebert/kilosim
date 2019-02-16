@@ -64,7 +64,7 @@ public:
   }
 
   template<class F>
-  void operator()(const double x, const double y, F func) const
+  void considerNeighbours(const double x, const double y, F func) const
   {
     const int cbinx = x / diameter;
     const int cbiny = y / diameter;

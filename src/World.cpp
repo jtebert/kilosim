@@ -220,7 +220,7 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
             return true;         //Look at more neighbours
         };
 
-        cb(cr.x,cr.y,func);
+        cb.considerNeighbours(cr.x,cr.y,func);
     }
 
     #ifdef CHECKSANE
