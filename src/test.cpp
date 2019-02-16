@@ -77,8 +77,11 @@ int main(int argc, char *argv[])
         // Create Viewer to visualize the world
         // Kilosim::Viewer viewer(world);
 
+        int step_count = 0;
         while (world.get_time() < trial_duration)
         {
+            step_count++;
+
             // Run a simulation step
             // This automatically increments the tick
             timer_step.start();
@@ -102,6 +105,7 @@ int main(int argc, char *argv[])
             delete robots[n];
 
         printf("Completed trial %d\n\n", trial);
+        std::cerr<<"m Steps taken = "<<step_count<<std::endl;
     }
     printf("Simulations complete\n\n");
 
