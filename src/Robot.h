@@ -6,16 +6,16 @@
 #include <SFML/Graphics.hpp>
 #include "LightPattern.h"
 
-const double motion_error_std = .02;
-const double PI = 3.14159265358979324;
-const uint32_t GAUSS = 10000;
-const uint8_t right = 2;
-const uint8_t left = 3;
-const uint8_t sensor_lightsource = 1;
-const uint8_t RADIUS = 16;
-const uint8_t X = 0;
-const uint8_t Y = 1;
-const uint8_t T = 2;
+constexpr double motion_error_std = .02;
+constexpr double PI = 3.14159265358979324;
+constexpr uint32_t GAUSS = 10000;
+constexpr uint8_t right = 2;
+constexpr uint8_t left = 3;
+constexpr uint8_t sensor_lightsource = 1;
+constexpr uint8_t RADIUS = 16;
+constexpr uint8_t X = 0;
+constexpr uint8_t Y = 1;
+constexpr uint8_t T = 2;
 
 #define SECOND 32
 
