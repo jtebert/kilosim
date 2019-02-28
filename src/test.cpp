@@ -3,8 +3,8 @@
 #include "Viewer.h"
 #include "ConfigParser.h"
 #include "MyKilobot.cpp"
-
-#include <unistd.h>
+#include "random.hpp"
+#include "Timer.hpp"
 
 std::vector<double> mean_colors(std::vector<Kilosim::Robot *> &robots)
 {
@@ -26,9 +26,14 @@ std::vector<double> mean_colors(std::vector<Kilosim::Robot *> &robots)
 
 int main(int argc, char *argv[])
 {
+    Timer timer_overall;
+    Timer timer_step;
+    timer_overall.start();
+
     // Create parser to manage configuration
-    // Kilosim::ConfigParser *config = new Kilosim::ConfigParser("exampleConfig.json");
     Kilosim::ConfigParser config("exampleConfig.json");
+
+    seed_rand(config.get("seed"));
 
     uint start_trial = config.get("start_trial");
     uint num_trials = config.get("num_trials");
@@ -59,6 +64,8 @@ int main(int argc, char *argv[])
             robots[n]->robot_init(floor(n / num_rows) * 100 + 75, (n % num_rows) * 100 + 75, PI * n / 2);
         }
 
+        world.checkValidity();
+
         Kilosim::Logger logger(
             world,
             config.get("log_filename"),
@@ -68,16 +75,21 @@ int main(int argc, char *argv[])
         logger.log_config(config);
 
         // Create Viewer to visualize the world
-        Kilosim::Viewer viewer(world);
+        // Kilosim::Viewer viewer(world);
 
+        int step_count = 0;
         while (world.get_time() < trial_duration)
         {
+            step_count++;
+
             // Run a simulation step
             // This automatically increments the tick
+            timer_step.start();
             world.step();
+            timer_step.stop();
 
             // Draw the world
-            viewer.draw();
+            // viewer.draw();
 
             if ((world.get_tick() % (log_freq * world.get_tick_rate())) == 0)
             {
@@ -87,8 +99,17 @@ int main(int argc, char *argv[])
                 logger.log_state();
             }
         }
+
+        world.printTimes();
+        for (int n = 0; n < num_robots; n++)
+            delete robots[n];
+
         printf("Completed trial %d\n\n", trial);
+        std::cerr << "m Steps taken = " << step_count << std::endl;
     }
     printf("Simulations complete\n\n");
+
+    std::cerr << "t Step    = " << timer_step.accumulated() << " s" << std::endl;
+    std::cerr << "t Overall = " << timer_overall.stop() << " s" << std::endl;
     return 0;
 }

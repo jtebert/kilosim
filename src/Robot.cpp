@@ -1,7 +1,8 @@
-#include <math.h>
+#include <cmath>
 #include <iostream>
 #include <numeric>
 #include "Robot.h"
+#include "random.hpp"
 
 namespace Kilosim
 {
@@ -34,63 +35,59 @@ void Robot::robot_controller()
 		m_motor_command = 4;
 		color[0] = .3;
 		color[1] = .3;
-		color[1] = .3;
+		color[2] = .3;
 		tx_request = 0;
 	}
 }
 
-std::vector<double> Robot::robot_compute_next_step() const
+RobotPose Robot::robot_compute_next_step() const
 {
-	double theta = pos[2];
-	double x = pos[0];
-	double y = pos[1];
 	double temp_x = x;
-
 	double temp_y = y;
-	double temp_cos, temp_sin, phi;
+	double temp_theta = theta;
 	switch (m_motor_command)
 	{
 	case 1:
 	{ // forward
-		double speed = m_forward_speed * m_tick_delta_t;
-		temp_x = speed * cos(theta) + pos[0];
-		temp_y = speed * sin(theta) + pos[1];
+		const double speed = m_forward_speed * m_tick_delta_t;
+		temp_x = speed * cos(temp_theta) + x;
+		temp_y = speed * sin(temp_theta) + y;
 		break;
 	}
 	case 2:
 	{ // CW rotation
-		phi = -m_turn_speed * m_tick_delta_t;
-		theta += phi;
-		temp_cos = RADIUS * cos(theta + 4 * PI / 3);
-		temp_sin = RADIUS * sin(theta + 4 * PI / 3);
+		const double phi = -m_turn_speed * m_tick_delta_t;
+		temp_theta += phi;
+		const double temp_cos = RADIUS * cos(temp_theta + 4 * PI / 3);
+		const double temp_sin = RADIUS * sin(temp_theta + 4 * PI / 3);
 		temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
 		temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
 		break;
 	}
 	case 3:
 	{ // CCW rotation
-		phi = m_turn_speed * m_tick_delta_t;
-		theta += phi;
-		temp_cos = RADIUS * cos(theta + 2 * PI / 3);
-		temp_sin = RADIUS * sin(theta + 2 * PI / 3);
+		const double phi = m_turn_speed * m_tick_delta_t;
+		temp_theta += phi;
+		const double temp_cos = RADIUS * cos(temp_theta + 2 * PI / 3);
+		const double temp_sin = RADIUS * sin(temp_theta + 2 * PI / 3);
 		temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
 		temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
 		break;
 	}
 	}
-	return {temp_x, temp_y, wrap_angle(theta)};
+	return {temp_x, temp_y, wrap_angle(temp_theta)};
 }
 
-void Robot::robot_move(const std::vector<double> &new_pose, const int16_t &collision)
+void Robot::robot_move(const RobotPose &new_pose, const int16_t &collision)
 {
 	// printf("ri=%d\n", ri);
-	double new_theta = new_pose[2];
+	double new_theta = new_pose.theta;
 	switch (collision)
 	{
 	case 0:
 	{ // No collisions
-		pos[0] = new_pose[0];
-		pos[1] = new_pose[1];
+		x = new_pose.x;
+		y = new_pose.y;
 		m_collision_timer = 0;
 		break;
 	}
@@ -98,11 +95,11 @@ void Robot::robot_move(const std::vector<double> &new_pose, const int16_t &colli
 	{ // Collision with another robot
 		if (m_collision_turn_dir == 0)
 		{
-			new_theta = pos[2] - m_turn_speed * m_tick_delta_t; // left/CCW
+			new_theta = theta - m_turn_speed * m_tick_delta_t; // left/CCW
 		}
 		else
 		{
-			new_theta = pos[2] + m_turn_speed * m_tick_delta_t; // right/CW
+			new_theta = theta + m_turn_speed * m_tick_delta_t; // right/CW
 		}
 		if (m_collision_timer > m_max_collision_timer)
 		{ // Change turn dir
@@ -114,30 +111,30 @@ void Robot::robot_move(const std::vector<double> &new_pose, const int16_t &colli
 	}
 	}
 	// If a bot is touching the wall (collision_type == 2), update angle but not position
-	pos[2] = wrap_angle(new_theta);
+	theta = wrap_angle(new_theta);
 };
 
-void Robot::robot_init(double x, double y, double theta)
+void Robot::robot_init(double x0, double y0, double theta0)
 {
 	// Pick a direction to randomly turn in event of collisions
-	m_collision_turn_dir = rand() % 2;
-	m_max_collision_timer = (uint32_t)rand() % (20 * SECOND) + (10 * SECOND) + 1; // Max duration 10-30 seconds
+	m_collision_turn_dir = uniform_rand_int(0, 1);
+	m_collision_timer = 0;
+	m_max_collision_timer = uniform_rand_int(10, 30) * SECOND;
 	// Initialize robot variables
-	pos[0] = x;
-	pos[1] = y;
-	pos[2] = theta;
+	x = x0;
+	y = y0;
+	theta = theta0;
 
 	m_motor_command = 0;
 	incoming_message_flag = 0;
 	tx_request = 0;
-	id = rand();
+	id = uniform_rand_int(0, 2147483640);
 	// Generate CLAMPED motor error (avoid extremes by regenerating)
 	m_motor_error = 100;
 	double motor_error_clamp = motion_error_std * 1.1;
 	while (abs(m_motor_error) > motor_error_clamp)
 	{
-		timer = rand() / 100;
-		m_motor_error = Robot::gauss_rand(timer) * motion_error_std;
+		m_motor_error = normal_rand(0.0, 1.0) * motion_error_std;
 	}
 	// Add random variation to forward/turn speeds
 	double turn_speed_error = 100;
@@ -145,8 +142,7 @@ void Robot::robot_init(double x, double y, double theta)
 	double turn_speed_error_clamp = turn_speed_error_std * 1.1;
 	while (abs(turn_speed_error) > turn_speed_error_clamp)
 	{
-		timer = rand() / 100;
-		turn_speed_error = Robot::gauss_rand(timer) * turn_speed_error_std;
+		turn_speed_error = normal_rand(0.0, 1.0) * turn_speed_error_std;
 	}
 	m_turn_speed = m_turn_speed + turn_speed_error;
 	double forward_speed_error = 100;
@@ -154,8 +150,7 @@ void Robot::robot_init(double x, double y, double theta)
 	double forward_speed_error_clamp = forward_speed_error_std * 1.1;
 	while (abs(forward_speed_error) > forward_speed_error_clamp)
 	{
-		timer = rand() / 100;
-		forward_speed_error = Robot::gauss_rand(timer) * forward_speed_error_std;
+		forward_speed_error = normal_rand(0.0, 1.0) * forward_speed_error_std;
 	}
 	m_forward_speed = m_forward_speed + forward_speed_error;
 	init();

@@ -8,14 +8,16 @@
 #ifndef __KILOSIM_H
 #define __KILOSIM_H
 
-#include <omp.h>
-#include <set>
 #include <string>
-#include <iterator>
-#include <memory>
 #include <SFML/Graphics.hpp>
 #include "Robot.h"
 #include "LightPattern.h"
+#include "CollisionBoxes.h"
+#include "Timer.hpp"
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 namespace Kilosim
 {
@@ -61,30 +63,38 @@ private:
   LightPattern m_light_pattern;
 
 private:
+  CollisionBoxes cb;
+  Timer timer_controllers;
+  Timer timer_collisions;
+  Timer timer_move;
+  Timer timer_compute_next_step;
+  Timer timer_communicate;
+  Timer timer_step;
+  Timer timer_step_memory;
+
+protected:
   //! Run the controllers (kilolib) for all robots
   void run_controllers();
   //! Send messages between robots
   void communicate();
   /*!
    * Compute the next positions of the robots from positions and motor commands
-   * @param new_poses_ptr Shared reference of new positions to compute over all of the robots. (This is passed as a parameter so it can be initialized outside of the parallelization)
+   * @param new_poses Shared reference of new positions to compute over all of the robots. (This is passed as a parameter so it can be initialized outside of the parallelization)
    */
-  void compute_next_step(std::vector<std::vector<double>> &new_poses_ptr);
+  void compute_next_step(std::vector<RobotPose> &new_poses);
   /*!
    * Check to see if motion causes robots to collide
-   * @param new_poses_ptr Check for collisions between these would-be next positions
+   * @param new_poses Check for collisions between these would-be next positions
    * @return For each robot: 0 if no collision; -1 if wall collision; 1 if collision with another robot
    */
-  void find_collisions(std::vector<std::vector<double>> &new_poses_ptr, std::vector<int16_t> &collisions);
+  void find_collisions(const std::vector<RobotPose> &new_poses, std::vector<int16_t> &collisions);
   /*!
    * Move the robots based on new positions and collisions. This modifies the
    * internal positions of all robots in m_robots vector
-   * @param new_poses_ptr Possible next step positions from compute_next_step()
+   * @param new_poses Possible next step positions from compute_next_step()
    * @param collisions Whether or not robots are colliding, from find_collisions()
    */
-  void move_robots(std::vector<std::vector<double>> &new_poses_ptr, std::vector<int16_t> &collisions);
-  //! Wrap an angle to be within [0, 2*pi)
-  // double wrap_angle(double angle) const;
+  void move_robots(std::vector<RobotPose> &new_poses, const std::vector<int16_t> &collisions);
 
 public:
   /*!
@@ -98,7 +108,7 @@ public:
    * @param num_threads How many threads to parallelize the simulation over. If
    * set to 0 (default), dynamic threading will be used.
    */
-  World(const double arena_width, const double arena_height, const std::string light_img_src = "", const uint num_threads = 0);
+  World(const double arena_width, const double arena_height, const std::string light_pattern_src = "", const uint num_threads = 0);
   //! Destructor, destroy all objects within the world
   /*!
    * This does not destroy any Robots that have pointers stored in the world.
@@ -178,6 +188,14 @@ public:
    * @return 2-element [width, height] vector of dimensions in mm
    */
   std::vector<double> get_dimensions() const;
+
+  void printTimes() const;
+
+  /*!
+    * Check that the world is in a valid state. Throws an exception if a problem
+    * is found.
+  */
+  void checkValidity() const;
 };
 } // namespace Kilosim
 

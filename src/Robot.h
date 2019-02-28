@@ -2,20 +2,20 @@
 #define ROBOT_H
 
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include <SFML/Graphics.hpp>
 #include "LightPattern.h"
 
-const double motion_error_std = .02;
-const double PI = 3.14159265358979324;
-const uint32_t GAUSS = 10000;
-const uint8_t right = 2;
-const uint8_t left = 3;
-const uint8_t sensor_lightsource = 1;
-const uint8_t RADIUS = 16;
-const uint8_t X = 0;
-const uint8_t Y = 1;
-const uint8_t T = 2;
+constexpr double motion_error_std = .02;
+constexpr double PI = 3.14159265358979324;
+constexpr uint32_t GAUSS = 10000;
+constexpr uint8_t right = 2;
+constexpr uint8_t left = 3;
+constexpr uint8_t sensor_lightsource = 1;
+constexpr uint8_t RADIUS = 16;
+constexpr uint8_t X = 0;
+constexpr uint8_t Y = 1;
+constexpr uint8_t T = 2;
 
 #define SECOND 32
 
@@ -30,6 +30,19 @@ struct rgb
 	double green;
 	//! Blue component of RGB color
 	double blue;
+};
+
+struct RobotPose
+{
+	// x, y, and theta (rotation) of a robot
+	double x;
+	double y;
+	double theta;
+	RobotPose() : x(0.0), y(0.0), theta(0.0) {}
+	RobotPose(double x, double y, double theta)
+		: x(x),
+		  y(y),
+		  theta(theta) {}
 };
 
 /*!
@@ -82,7 +95,7 @@ class Robot
 	//! UUID of the robot, set in robot_init()
 	uint16_t id;
 	//! (x, y, theta) position in real world. (Don't use these in controller; that's cheating! It's public for logging purposes.)
-	double pos[3];
+	double x, y, theta;
 	//! RGB LED display color, values 0-1 (also used as display color by `Viewer`)
 	double color[3];
 
@@ -98,6 +111,8 @@ class Robot
 	virtual void *get_message() = 0;
 
   public:
+	virtual ~Robot() = default;
+
 	/*!
 	 * Initialize a Robot at a position in the world.
 	 *
@@ -148,7 +163,7 @@ class Robot
 	 *
 	 * @return Vector of (x, y, and wrapped theta) to possibly move t
 	 */
-	std::vector<double> robot_compute_next_step() const;
+	RobotPose robot_compute_next_step() const;
 
 	/*!
 	 * Move the Robot according to the collision-ignorant `new_pose` and any
@@ -162,7 +177,7 @@ class Robot
 	 * @param collision Whether there's a collision with a wall (-1), another
 	 * Robot (1), or no collision (0)
 	 */
-	void robot_move(const std::vector<double> &new_pose, const int16_t &collision);
+	void robot_move(const RobotPose &new_pose, const int16_t &collision);
 
 	virtual char *get_debug_info(char *buffer, char *rt) = 0;
 
@@ -187,9 +202,9 @@ class Robot
 	 */
 	static double distance(double x1, double y1, double x2, double y2)
 	{
-		double x = x1 - x2;
-		double y = y1 - y2;
-		double s = pow(x, 2) + pow(y, 2);
+		const double x = x1 - x2;
+		const double y = y1 - y2;
+		const double s = pow(x, 2) + pow(y, 2);
 		return sqrt(s);
 	}
 
@@ -215,57 +230,9 @@ class Robot
 	 */
 	virtual void controller() = 0;
 
-	/*!
-	 * A accessory function for generating values from a normal distribution,
-	 * used for generating error/noise parameters
-	 * @param timer Seeding for random number generation
-	 * @return Random number drawn from (I think) N(0, 1)
-	 */
-	static double gauss_rand(int timer)
-	{
-		static double pseudogaus_rand[GAUSS + 1];
-		if (pseudogaus_rand[GAUSS] == 1)
-		{
-			return pseudogaus_rand[timer % GAUSS];
-		}
-		for (int i = 0; i < GAUSS; i++)
-		{
-			pseudogaus_rand[i] = gaussrand();
-		};
-		pseudogaus_rand[GAUSS] = 1;
-		return pseudogaus_rand[timer % GAUSS];
-	}
-
   private:
 	//! Wrap an angle to be within [0, 2*pi)
 	double wrap_angle(double angle) const;
-
-	static double gaussrand()
-	{
-		static double V1, V2, S;
-		static int phase = 0;
-		double x;
-
-		if (phase == 0)
-		{
-			do
-			{
-				double U1 = (double)rand() / RAND_MAX;
-				double U2 = (double)rand() / RAND_MAX;
-
-				V1 = 2 * U1 - 1;
-				V2 = 2 * U2 - 1;
-				S = V1 * V1 + V2 * V2;
-			} while (S >= 1 || S == 0);
-
-			x = V1 * sqrt(-2 * log(S) / S);
-		}
-		else
-			x = V2 * sqrt(-2 * log(S) / S);
-
-		phase = 1 - phase;
-		return x;
-	}
 };
 } // namespace Kilosim
 #endif

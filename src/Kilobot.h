@@ -2,9 +2,8 @@
 #define KILOLIB_H
 #undef RGB
 
-#include <math.h>
-#include <omp.h>
 #include "Robot.h"
+#include "random.hpp"
 
 namespace Kilosim
 {
@@ -85,7 +84,7 @@ class Kilobot : public Robot
 		// Set the Kilobot's battery level (done here because actual battery
 		// life is specific to the Kilobots and not a general property of Robots)
 		double two_hours = SECOND * 60 * 60 * 2;
-		battery = (1 + gauss_rand(rand()) / 5) * two_hours;
+		battery = (1 + normal_rand(0.0, 1.0) / 5) * two_hours;
 		setup();
 	}
 
@@ -98,10 +97,9 @@ class Kilobot : public Robot
 			message_tx_success();
 		}
 		kilo_ticks++;
-		int rand_tick = rand();
-		if (rand_tick < RAND_MAX * .1)
+		if (uniform_rand_real(0, 1) < 0.1)
 		{
-			if (rand_tick < RAND_MAX * .05)
+			if (uniform_rand_real(0, 1) < 0.05)
 				kilo_ticks--;
 			else
 				kilo_ticks++;
@@ -243,8 +241,7 @@ class Kilobot : public Robot
 	 */
 	uint8_t rand_hard()
 	{
-		uint8_t x = rand() % 255;
-		return x;
+		return uniform_rand_int(0, 255);
 	}
 
 	/*!
@@ -253,7 +250,7 @@ class Kilobot : public Robot
 	 */
 	uint8_t rand_soft()
 	{
-		return rand() * 255 / RAND_MAX;
+		return uniform_rand_int(0, 255);
 	}
 
 	/*!
@@ -271,8 +268,8 @@ class Kilobot : public Robot
 		if (m_light_pattern)
 		{
 			// Get point at front/nose of robot
-			int pos_x = pos[0] + RADIUS * 1 * cos(pos[2]);
-			int pos_y = pos[1] + RADIUS * 1 * sin(pos[2]);
+			int pos_x = x + RADIUS * 1 * cos(theta);
+			int pos_y = y + RADIUS * 1 * sin(theta);
 			// Get the 10-bit light intensity from the robot
 			return m_light_pattern->get_ambientlight(pos_x, pos_y);
 		}

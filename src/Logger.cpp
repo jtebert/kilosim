@@ -10,8 +10,8 @@ namespace Kilosim
 {
 
 Logger::Logger(World &world, std::string const file_id, int const trial_num, bool const overwrite_trials)
-    : m_file_id(file_id),
-      m_world(world),
+    : m_world(world),
+      m_file_id(file_id),
       m_overwrite_trials(overwrite_trials)
 {
     // Create the HDF5 file if it doesn't already exist
@@ -33,6 +33,7 @@ void Logger::set_trial(uint const trial_num)
     try
     {
         H5::Group *trialGroup = new H5::Group(m_h5_file->openGroup(m_trial_group_name.c_str()));
+        (void)trialGroup; //Suppresses warning abut trialGroup variable not being used
         if (m_overwrite_trials)
         {
             m_h5_file->unlink(m_trial_group_name.c_str());
@@ -49,6 +50,7 @@ void Logger::set_trial(uint const trial_num)
     {
     }
     H5::Group *trialGroup = new H5::Group(m_h5_file->createGroup(m_trial_group_name.c_str()));
+    (void)trialGroup; //Suppresses warning abut trialGroup variable not being used
 
     // Create the params group if it doesn't already exist
     m_params_group = create_or_open_group(m_h5_file, m_params_group_name);
@@ -221,6 +223,7 @@ Logger::H5GroupPtr Logger::create_or_open_group(H5FilePtr file, const std::strin
     {
         group = new H5::Group(file->createGroup(group_name));
     }
+    (void)group; //Suppresses warning about group variable not being used
 }
 
 } // namespace Kilosim
