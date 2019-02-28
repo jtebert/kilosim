@@ -1,7 +1,7 @@
 /*
-    KiloSim
+  Kilosim
 
-    Created 2018-11 by Julia Ebert
+  Created 2018-11 by Julia Ebert
 */
 
 #ifndef __KILOSIM_CONFIGPARSER_H
@@ -15,7 +15,7 @@
 // for convenience
 using json = nlohmann::json;
 
-namespace KiloSim
+namespace Kilosim
 {
 /*!
  * A ConfigParser is used to parse and process JSON configuration files for
@@ -24,16 +24,16 @@ namespace KiloSim
  */
 class ConfigParser
 {
-protected:
+private:
   //! Name/location of the file configuration comes from
-  std::string m_config_file;
+  const std::string m_config_file;
   //! Internal JSON representation of the config retrieved from file
   json m_config;
 
 public:
   /*!
    * Create a parser to handle the values in the given JSON file
-  * This will automatically load the contents into the parser
+   * This will automatically load the contents into the parser
    * @param config_file Name/location of JSON file for config.
    */
   ConfigParser(std::string config_file);
@@ -49,14 +49,17 @@ public:
    * relevant type without needing to explicitly specify the type.
    *
    * @param val_name Name/key to get the value for
-   * @returns Wrapped output value. Use .type_name() to get the type
+   * @return Wrapped output value. Use `.type_name()` to get the type
    */
-  json get(std::string val_name);
+  json get(const std::string val_name) const;
   /*!
-   * Get the whole JSON object from the parser
+   * Get the whole JSON object from the parser. This essentially strips the
+   * ConfigParser wrapping around the contents, which is not necessary for
+   * basic usage.
+   * @return Raw nlohmann/json object
    */
-  json get();
+  json get() const;
 };
-} // namespace KiloSim
+} // namespace Kilosim
 
 #endif
