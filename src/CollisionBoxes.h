@@ -63,7 +63,7 @@ public:
     }
   }
 
-  template<class F>
+  template <class F>
   void considerNeighbours(const double x, const double y, F func) const
   {
     const int cbinx = x / diameter;
@@ -78,12 +78,13 @@ public:
         continue;
 
       const auto idx0 = &agent_positions[PSIZE * (biny * bwidth + binx)];
-      for (auto idx = idx0; idx < idx0 + PSIZE; idx++){
+      for (auto idx = idx0; idx < idx0 + PSIZE; idx++)
+      {
         if (*idx == -1)
           continue;
         //If func returns false, that means it doesn't want to look at any more
         //neighbours
-        if(!func(*idx)) 
+        if (!func(*idx))
           return;
       }
     }

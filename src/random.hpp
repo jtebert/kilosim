@@ -7,11 +7,11 @@
 #define PRNG_THREAD_MAX 32
 
 #ifdef _OPENMP
-  #include <omp.h>
+#include <omp.h>
 #else
-  #define omp_get_thread_num()  0
-  #define omp_get_num_threads() 1
-  #define omp_get_max_threads() 1
+#define omp_get_thread_num() 0
+#define omp_get_num_threads() 1
+#define omp_get_max_threads() 1
 #endif
 
 #include <random>
@@ -19,7 +19,7 @@
 typedef std::mt19937 our_random_engine;
 
 //Returns a PRNG engine specific to the calling thread
-our_random_engine& rand_engine();
+our_random_engine &rand_engine();
 
 //Seeds the PRNG engines using entropy from the computer's random device
 void seed_rand(unsigned long seed);
@@ -36,11 +36,12 @@ double uniform_rand_real(double from, double thru);
 //deviation. Thread-safe
 double normal_rand(double mean, double stddev);
 
-template<class T>
-T uniform_bits(){
-  std::uniform_int_distribution<T> 
-    dist(std::numeric_limits<T>::lowest(),std::numeric_limits<T>::max());
-  return dist( rand_engine() );
+template <class T>
+T uniform_bits()
+{
+  std::uniform_int_distribution<T>
+      dist(std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max());
+  return dist(rand_engine());
 }
 
 #endif

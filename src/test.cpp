@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
             delete robots[n];
 
         printf("Completed trial %d\n\n", trial);
-        std::cerr<<"m Steps taken = "<<step_count<<std::endl;
+        std::cerr << "m Steps taken = " << step_count << std::endl;
     }
     printf("Simulations complete\n\n");
 

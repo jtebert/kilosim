@@ -111,7 +111,7 @@ class Robot
 	virtual void *get_message() = 0;
 
   public:
-  virtual ~Robot() = default;
+	virtual ~Robot() = default;
 
 	/*!
 	 * Initialize a Robot at a position in the world.
