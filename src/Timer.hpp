@@ -10,9 +10,11 @@
 #include <chrono>
 #include <stdexcept>
 
-///@brief Used to time how intervals in code.
-///
-///Such as how long it takes a given function to run, or how long I/O has taken.
+/*!
+ * Used to time how intervals in code.
+ *
+ * Such as how long it takes a given function to run, or how long I/O has taken.
+ */
 class Timer
 {
 private:
@@ -23,17 +25,17 @@ private:
   double accumulated_time = 0;               ///< Accumulated running time since creation
   bool running = false;                      ///< True when the timer is running
 
-  ///Number of (fractional) seconds between two time objects
+  //! Number of (fractional) seconds between two time objects
   double timediff(const std::chrono::time_point<clock> &start, const std::chrono::time_point<clock> &end)
   {
     return std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
   }
 
 public:
-  ///Creates a Timer which is not running and has no accumulated time
+  //! Creates a Timer which is not running and has no accumulated time
   Timer() = default;
 
-  ///Start the timers. Throws an exception if timer was already running.
+  //! Start the timers. Throws an exception if timer was already running.
   void start()
   {
     if (running)
@@ -42,10 +44,12 @@ public:
     start_time = clock::now();
   }
 
-  ///Stop the timer. Throws an exception if timer was already stopped.
-  ///Calling this adds to the timer's accumulated time.
-  ///
-  ///@return The accumulated time in seconds.
+  /*!
+   * Stop the timer. Throws an exception if timer was already stopped.
+   *
+   * Calling this adds to the timer's accumulated time.
+   * @return The accumulated time in seconds
+   */
   double stop()
   {
     if (!running)
@@ -59,10 +63,12 @@ public:
     return accumulated_time;
   }
 
-  ///Returns the timer's accumulated time. Throws an exception if the timer is
-  ///running.
-  ///
-  ///@return The timer's accumulated time, in seconds.
+  /*!
+   * Returns the timer's accumulated time. Throws an exception if the timer is
+   * running.
+   *
+   * @return The timer's accumulated time, in seconds.
+   */
   double accumulated() const
   {
     if (running)
@@ -70,10 +76,12 @@ public:
     return accumulated_time;
   }
 
-  ///Returns the time between when the timer was started and the current
-  ///moment. Throws an exception if the timer is not running.
-  ///
-  ///@return Time since the timer was started and current moment, in seconds.
+  /*!
+   * Returns the time between when the timer was started and the current
+   * moment. Throws an exception if the timer is not running.
+   *
+   * @return Time since the timer was started and current moment, in seconds.
+   */
   double lap()
   {
     if (!running)
@@ -82,8 +90,10 @@ public:
     return timediff(start_time, lap_time);
   }
 
-  ///Stops the timer and resets its accumulated time. No exceptions are thrown
-  ///ever.
+  /*!
+   * Stops the timer and resets its accumulated time. No exceptions are thrown
+   * ever.
+   */
   void reset()
   {
     accumulated_time = 0;

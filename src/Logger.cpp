@@ -9,7 +9,8 @@
 namespace Kilosim
 {
 
-Logger::Logger(World &world, std::string const file_id, int const trial_num, bool const overwrite_trials)
+Logger::Logger(World &world, std::string const file_id, int const trial_num,
+               bool const overwrite_trials)
     : m_world(world),
       m_file_id(file_id),
       m_overwrite_trials(overwrite_trials)
@@ -32,7 +33,8 @@ void Logger::set_trial(uint const trial_num)
     m_params_group_name = m_trial_group_name + "/params";
     try
     {
-        H5::Group *trialGroup = new H5::Group(m_h5_file->openGroup(m_trial_group_name.c_str()));
+        H5::Group *trialGroup = new H5::Group(
+            m_h5_file->openGroup(m_trial_group_name.c_str()));
         (void)trialGroup; //Suppresses warning abut trialGroup variable not being used
         if (m_overwrite_trials)
         {
@@ -49,8 +51,9 @@ void Logger::set_trial(uint const trial_num)
     catch (H5::FileIException &)
     {
     }
-    H5::Group *trialGroup = new H5::Group(m_h5_file->createGroup(m_trial_group_name.c_str()));
-    (void)trialGroup; //Suppresses warning abut trialGroup variable not being used
+    H5::Group *trialGroup =
+        new H5::Group(m_h5_file->createGroup(m_trial_group_name.c_str()));
+    (void)trialGroup; // Suppresses warning abut trialGroup variable not being used
 
     // Create the params group if it doesn't already exist
     m_params_group = create_or_open_group(m_h5_file, m_params_group_name);
@@ -58,7 +61,9 @@ void Logger::set_trial(uint const trial_num)
     // Create a packet table dataset for the timeseries
     m_time_dset_name = m_trial_group_name + "/time";
     FL_PacketTable *time_packet_table = new FL_PacketTable(
-        m_h5_file->getId(), (char *)m_time_dset_name.c_str(), H5T_NATIVE_DOUBLE, 1);
+        m_h5_file->getId(),
+        (char *)m_time_dset_name.c_str(),
+        H5T_NATIVE_DOUBLE, 1);
     if (!time_packet_table->IsValid())
     {
         fprintf(stderr, "WARNING: Failed to create time series");
@@ -71,7 +76,8 @@ uint Logger::get_trial() const
     return m_trial_num;
 }
 
-void Logger::add_aggregator(std::string const agg_name, aggregatorFunc const agg_func)
+void Logger::add_aggregator(std::string const agg_name,
+                            aggregatorFunc const agg_func)
 {
     m_aggregators.insert({{agg_name, agg_func}});
 
@@ -109,7 +115,8 @@ void Logger::log_state() const
     }
 }
 
-void Logger::log_aggregator(std::string const agg_name, aggregatorFunc const agg_func) const
+void Logger::log_aggregator(std::string const agg_name,
+                            aggregatorFunc const agg_func) const
 {
     // Call the aggregator function on the robots
     std::vector<double> agg_val = (*agg_func)(m_world.get_robots());
@@ -140,12 +147,14 @@ void Logger::log_param(std::string const name, const json val)
     // Get the type of the parameter
     if (val.type() == json::value_t::object)
     {
-        printf("WARNING: Cannot save param '%s' (currently no support for JSON 'object' type)\n", name.c_str());
+        printf("WARNING: Cannot save param '%s' (currently no support for JSON 'object' type)\n",
+               name.c_str());
     }
     else if (val.type() == json::value_t::array)
     {
         // TODO: Implement non-scalar parameters
-        printf("WARNING: Cannot save param '%s' (currently no support for JSON 'array' type)\n", name.c_str());
+        printf("WARNING: Cannot save param '%s' (currently no support for JSON 'array' type)\n",
+               name.c_str());
     }
     else
     {
@@ -156,12 +165,14 @@ void Logger::log_param(std::string const name, const json val)
             std::string str_val = val.get<std::string>();
             hid_t strtype = H5Tcopy(H5T_C_S1);
             H5Tset_size(strtype, H5T_VARIABLE);
-            H5::DataSet dataset = m_h5_file->createDataSet(dset_name, strtype, *dataspace);
+            H5::DataSet dataset =
+                m_h5_file->createDataSet(dset_name, strtype, *dataspace);
             dataset.write(&str_val, strtype);
         }
         else
         {
-            H5::DataSet *dataset = new H5::DataSet(m_h5_file->createDataSet(dset_name, val_type, *dataspace));
+            H5::DataSet *dataset = new H5::DataSet(
+                m_h5_file->createDataSet(dset_name, val_type, *dataspace));
             // Save scalar...
 
             if (val_type == H5::PredType::NATIVE_HBOOL)
@@ -210,7 +221,8 @@ Logger::H5FilePtr Logger::create_or_open_file(const std::string &fname)
     return H5FilePtr(file);
 }
 
-Logger::H5GroupPtr Logger::create_or_open_group(H5FilePtr file, const std::string &group_name)
+Logger::H5GroupPtr Logger::create_or_open_group(H5FilePtr file,
+                                                const std::string &group_name)
 {
     // https://stackoverflow.com/q/35668056
     H5::Exception::dontPrint();

@@ -79,22 +79,30 @@ protected:
   void communicate();
   /*!
    * Compute the next positions of the robots from positions and motor commands
-   * @param new_poses Shared reference of new positions to compute over all of the robots. (This is passed as a parameter so it can be initialized outside of the parallelization)
+   * @param new_poses Shared reference of new positions to compute over all of
+   * the robots. (This is passed as a parameter so it can be initialized outside
+   * of the parallelization)
    */
   void compute_next_step(std::vector<RobotPose> &new_poses);
   /*!
    * Check to see if motion causes robots to collide
    * @param new_poses Check for collisions between these would-be next positions
-   * @return For each robot: 0 if no collision; -1 if wall collision; 1 if collision with another robot
+   * @param collisions Vector of whether/how each Robot is colliding (to be
+   * filled by this function)
+   * @return For each robot: 0 if no collision; -1 if wall collision; 1 if
+   * collision with another robot
    */
-  void find_collisions(const std::vector<RobotPose> &new_poses, std::vector<int16_t> &collisions);
+  void find_collisions(const std::vector<RobotPose> &new_poses,
+                       std::vector<int16_t> &collisions);
   /*!
    * Move the robots based on new positions and collisions. This modifies the
    * internal positions of all robots in m_robots vector
    * @param new_poses Possible next step positions from compute_next_step()
-   * @param collisions Whether or not robots are colliding, from find_collisions()
+   * @param collisions Whether or not robots are colliding, from
+   * find_collisions()
    */
-  void move_robots(std::vector<RobotPose> &new_poses, const std::vector<int16_t> &collisions);
+  void move_robots(std::vector<RobotPose> &new_poses,
+                   const std::vector<int16_t> &collisions);
 
 public:
   /*!
@@ -102,13 +110,15 @@ public:
    *
    * @param arena_width Width of the rectangular World/arena in mm
    * @param arena_height Height of the rectangular World/arena in mm
-   * @param light_img_src Name of image file of the light pattern to use. Aspect
-   * ratio should match the arena, but no specific resolution is mandated. If no
-   * light_img_src is provided (empty string), the background will be black.
+   * @param light_pattern_src Name of image file of the light pattern to use.
+   * Aspect ratio should match the arena, but no specific resolution is
+   * mandated. If no light_pattern_src is provided (empty string), the
+   * background will be black.
    * @param num_threads How many threads to parallelize the simulation over. If
    * set to 0 (default), dynamic threading will be used.
    */
-  World(const double arena_width, const double arena_height, const std::string light_pattern_src = "", const uint num_threads = 0);
+  World(const double arena_width, const double arena_height,
+        const std::string light_pattern_src = "", const uint num_threads = 0);
   //! Destructor, destroy all objects within the world
   /*!
    * This does not destroy any Robots that have pointers stored in the world.
@@ -140,7 +150,8 @@ public:
    * Set the world's light pattern using the given image file.
    * The image type must be supported by SFML's [Image::loadFromFile](https://www.sfml-dev.org/documentation/2.5.1/classsf_1_1Image.php#a9e4f2aa8e36d0cabde5ed5a4ef80290b)
    *
-   * @param light_img_src Name and location of the image file to use for light pattern
+   * @param light_img_src Name and location of the image file to use for light
+   * pattern
    */
   void set_light_pattern(const std::string light_img_src);
 
@@ -160,7 +171,8 @@ public:
 
   /*!
    * Get the tick rate (should be 32)
-   * @return Number of simulation ticks per second of real-world (wall clock) time
+   * @return Number of simulation ticks per second of real-world (wall clock)
+   * time
    */
   uint16_t get_tick_rate() const;
 

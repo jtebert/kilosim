@@ -35,8 +35,11 @@ struct rgb
 struct RobotPose
 {
 	// x, y, and theta (rotation) of a robot
+	//! Robot's x-position
 	double x;
+	//! Robot's y-position
 	double y;
+	//! Robot's rotation, where 0 points along x-axis and positive is CCW
 	double theta;
 	RobotPose() : x(0.0), y(0.0), theta(0.0) {}
 	RobotPose(double x, double y, double theta)
@@ -73,17 +76,22 @@ class Robot
 	double m_tick_delta_t;
 	//! When robots collide, which direction this will turn (0 or 1)
 	uint8_t m_collision_turn_dir;
-	//! How long the robot has been turning this way while colliding (will time out and switch direction)
+	//! How long the robot has been turning this way while colliding
+	//! (will time out and switch direction)
 	uint32_t m_collision_timer = 0;
-	//! How long to turn one way when colliding, before switching (set randomly in robot_init())
+	//! How long to turn one way when colliding, before switching
+	//! (set randomly in robot_init())
 	uint32_t m_max_collision_timer;
-	//! Value of how motors differ from ideal. (Don't use these; that's cheating!) Set in robot_init()
+	//! Value of how motors differ from ideal.
+	//! (Don't use these; that's cheating!) Set in robot_init()
 	double m_motor_error;
 	//! Robot commanded motion 1=forward, 2=cw rotation, 3=ccw rotation, 4=stop
 	int m_motor_command;
-	//! Base forward speed in mm/s (Will be randomized around this in robot_init())
+	//! Base forward speed in mm/s
+	//! (Will be randomized around this in robot_init())
 	double m_forward_speed = 24;
-	//! Base turning speed in rad/s (Will be randomized around this in robot_init())
+	//! Base turning speed in rad/s
+	//! (Will be randomized around this in robot_init())
 	double m_turn_speed = 0.5;
 	// TODO: Shouldn't battery also be set in robot_init()?
 	//! Battery remaining (to be set in `Kilobot.init()`)
@@ -94,8 +102,18 @@ class Robot
   public:
 	//! UUID of the robot, set in robot_init()
 	uint16_t id;
-	//! (x, y, theta) position in real world. (Don't use these in controller; that's cheating! It's public for logging purposes.)
-	double x, y, theta;
+	//! Robot's x-position
+	//! (Don't use these in controller; that's cheating! It's public for logging
+	//! purposes.)
+	double x;
+	//! Robot's y-position
+	//! (Don't use these in controller; that's cheating! It's public for logging
+	//! purposes.)
+	double y;
+	//! Robot's rotation, where 0 points along x-axis and positive is CCW
+	//! (Don't use these in controller; that's cheating! It's public for logging
+	//! purposes.)
+	double theta;
 	//! RGB LED display color, values 0-1 (also used as display color by `Viewer`)
 	double color[3];
 
@@ -222,7 +240,7 @@ class Robot
 	 */
 	virtual void init() = 0;
 
-	/*
+	/*!
 	 * Internal control loop for the specific Robot subclass implementation.
 	 * This performs any robot-specific controls such as setting motors,
 	 * communication flags, and calling user implementation loop functions.

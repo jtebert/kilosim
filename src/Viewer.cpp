@@ -11,7 +11,8 @@
 
 namespace Kilosim
 {
-Viewer::Viewer(World &world, const int window_width) : m_world(world), m_window_width(window_width)
+Viewer::Viewer(World &world, const int window_width)
+    : m_world(world), m_window_width(window_width)
 {
     std::vector<double> world_dim = world.get_dimensions();
     m_scale = m_window_width / world_dim[0];
@@ -85,8 +86,11 @@ void Viewer::draw_robot(Robot *r)
     sf::Sprite sprite;
     sprite.setOrigin(RADIUS * m_scale, RADIUS * m_scale);
     sprite.setTexture(m_robot_texture.getTexture());
-    sprite.setColor(sf::Color(r->color[0] * 255, r->color[1] * 255, r->color[2] * 255));
-    sprite.setPosition(sf::Vector2f(r->x * m_scale, m_window_height - (r->y * m_scale)));
+    sprite.setColor(sf::Color(r->color[0] * 255,
+                              r->color[1] * 255,
+                              r->color[2] * 255));
+    sprite.setPosition(sf::Vector2f(r->x * m_scale,
+                                    m_window_height - (r->y * m_scale)));
     sprite.setRotation(r->theta * -180 / PI);
 
     m_window.draw(sprite);

@@ -19,7 +19,8 @@ ConfigParser::ConfigParser(const std::string config_file)
     }
     catch (nlohmann::detail::parse_error)
     {
-        std::cout << "ERROR: Invalid or nonexistent config file: " << config_file << std::endl;
+        std::cout << "ERROR: Invalid or nonexistent config file: "
+                  << config_file << std::endl;
         exit(EXIT_FAILURE);
     }
 }

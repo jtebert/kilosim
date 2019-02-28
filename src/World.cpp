@@ -6,8 +6,10 @@
 
 namespace Kilosim
 {
-World::World(const double arena_width, const double arena_height, const std::string light_pattern_src, const uint num_threads)
-    : m_arena_width(arena_width), m_arena_height(arena_height), cb(arena_width, arena_height, 2 * RADIUS)
+World::World(const double arena_width, const double arena_height,
+             const std::string light_pattern_src, const uint num_threads)
+    : m_arena_width(arena_width), m_arena_height(arena_height),
+      cb(arena_width, arena_height, 2 * RADIUS)
 {
     if (light_pattern_src.size() > 0)
     {
@@ -192,7 +194,10 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
     {
         const auto &cr = new_poses[ci];
         // Check for collisions with walls
-        if (cr.x <= RADIUS || cr.x >= m_arena_width - RADIUS || cr.y <= RADIUS || cr.y >= m_arena_height - RADIUS)
+        if (cr.x <= RADIUS ||
+            cr.x >= m_arena_width - RADIUS ||
+            cr.y <= RADIUS ||
+            cr.y >= m_arena_height - RADIUS)
         {
             // There's a collision with the wall.
             // Don't even bother to check for collisions with other robots
@@ -247,7 +252,8 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
 #endif
 }
 
-void World::move_robots(std::vector<RobotPose> &new_poses, const std::vector<int16_t> &collisions)
+void World::move_robots(std::vector<RobotPose> &new_poses,
+                        const std::vector<int16_t> &collisions)
 {
     // TODO: Parallelize
     // #pragma omp parallel for

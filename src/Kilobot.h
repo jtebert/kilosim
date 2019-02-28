@@ -211,7 +211,8 @@ class Kilobot : public Robot
 	 * This function receives as an argument a positive 16-bit integer `ms` that
 	 * represents the number of milliseconds for which to pause the program
 	 *
-	 * TODO: Part of the KiloLib API but does nothing (issue: using kilo_ticks for timing in simulation)
+	 * TODO: Part of the KiloLib API but does nothing (issue: using kilo_ticks
+	 * for timing in simulation)
 	 *
 	 * @param ms Number of milliseconds to pause the program (there are 1000
 	 * milliseconds in a second).
@@ -260,7 +261,8 @@ class Kilobot : public Robot
 	void rand_seed(char seed) {}
 
 	/*!
-	 * [Kilolib API] Get the 10-bit light intensity from the Kilobot's light sensor (from World's LightPattern)
+	 * [Kilolib API] Get the 10-bit light intensity from the Kilobot's light
+	 * sensor (from World's LightPattern)
 	 * @return 10-bit monochrome light intensity
 	 */
 	int16_t get_ambientlight()

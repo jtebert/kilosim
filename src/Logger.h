@@ -145,7 +145,8 @@ public:
    * in the log file. If set to `false`, the program will exit if the trial
    * already exists.
    */
-  Logger(World &world, const std::string file_id, const int trial_num, const bool overwrite_trials = false);
+  Logger(World &world, const std::string file_id, const int trial_num,
+         const bool overwrite_trials = false);
   //! Destructor: closes the file when it goes out of scope
   ~Logger();
 
