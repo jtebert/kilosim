@@ -22,7 +22,7 @@ Logger::Logger(World &world, std::string const file_id, int const trial_num,
 
 Logger::~Logger(void)
 {
-    std::cout << "TODO: Close the file when out of scope?" << std::endl;
+    m_h5_file->close();
 }
 
 void Logger::set_trial(uint const trial_num)
@@ -124,7 +124,7 @@ void Logger::log_aggregator(std::string const agg_name,
     herr_t err = m_aggregator_dsets.at(agg_name)->AppendPacket(agg_val.data());
     if (err < 0)
     {
-        fprintf(stderr, "WARNING: Failled to append data to aggregator table");
+        fprintf(stderr, "WARNING: Failed to append data to aggregator table");
     }
 }
 
@@ -235,7 +235,7 @@ Logger::H5GroupPtr Logger::create_or_open_group(H5FilePtr file,
     {
         group = new H5::Group(file->createGroup(group_name));
     }
-    (void)group; //Suppresses warning about group variable not being used
+    return H5GroupPtr(group);
 }
 
 } // namespace Kilosim
