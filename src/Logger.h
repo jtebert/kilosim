@@ -199,11 +199,25 @@ public:
    */
   void log_config(ConfigParser &config);
 
+  /*!
+   * Log a single parameter name and value
+   *
+   * To log the contents loaded from a configuration file, use `log_config`;
+   * this is for logging additional/computed parameters that are not part of a
+   * `ConfigParser`.
+   *
+   * @note This only supports atomic datatypes (`bool`, `int`, `uint`, `float`,
+   * `double`, `string`). Any non-atomic data (arrays and objects) will be
+   * skipped (with a warning in the terminal).
+   *
+   * @param name Key/variable name to save the data under in the log file
+   * @param val Atomic data value to save as a parameter
+   */
+  void log_param(const std::string name, const json val);
+
 private:
   //! Log data for this specific aggregator
   void log_aggregator(const std::string agg_name, const aggregatorFunc agg_func) const;
-  //! Log a single parameter name and value (supports atomic datatypes only)
-  void log_param(const std::string name, const json val);
   //! Get the H5 data type (for saving) from the JSON
   H5::PredType h5_type(const json j) const;
   //! Create or open an HDF5 file
