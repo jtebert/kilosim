@@ -47,7 +47,7 @@ struct message_t
  */
 class Kilobot : public Robot
 {
-  private:
+private:
 	//! Is the left motor ready to move? (aka used spinup_motors())
 	bool left_ready = false;
 	//! Is the right motor ready to move? (aka used spinup_motors())
@@ -62,7 +62,7 @@ class Kilobot : public Robot
 	double distance_measurement;
 	bool message_sent = false;
 
-  protected:
+protected:
 	//! [Kilolib API] Kilobot clock variable
 	uint32_t kilo_ticks = 0;
 	//! [Kilolib API] Calibrated straight (left motor) duty cycle
@@ -74,15 +74,23 @@ class Kilobot : public Robot
 	//! [Kilolib API] Calibrated turn right duty cycle
 	const int kilo_turn_right = 50;
 
-  private:
+private:
 	/***************************************************************************
 	 * REQUIRED ROBOT CONTROL FUNCTIONS
 	 **************************************************************************/
 
+	/*!
+	 * Set the Kilobot's battery level and run the child implementation's
+	 * `setup` function
+	 *
+	 * Battery life is randomized around 2 hours of continuous movement
+	 *
+	 * @note Battery is set here because actual battery life is
+	 * specific to the Kilobots and not a general property of `Robot`s
+	 *
+	 */
 	void init()
 	{
-		// Set the Kilobot's battery level (done here because actual battery
-		// life is specific to the Kilobots and not a general property of Robots)
 		double two_hours = SECOND * 60 * 60 * 2;
 		battery = (1 + normal_rand(0.0, 1.0) / 5) * two_hours;
 		setup();
@@ -128,7 +136,7 @@ class Kilobot : public Robot
 			tx_request = 0;
 	}
 
-  protected:
+protected:
 	/***************************************************************************
 	 * REQUIRED USER API FUNCTIONS
 	 **************************************************************************/

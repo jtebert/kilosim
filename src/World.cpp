@@ -300,7 +300,7 @@ void World::printTimes() const
     std::cerr << "t timer_move              = " << timer_move.accumulated() << std::endl;
 }
 
-void World::checkValidity() const
+void World::check_validity() const
 {
     //Do any of the robots overlap with each other?
     for (unsigned int ci = 0; ci < m_robots.size(); ci++)

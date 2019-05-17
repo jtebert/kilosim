@@ -22,7 +22,9 @@ Logger::Logger(World &world, std::string const file_id, int const trial_num,
 
 Logger::~Logger(void)
 {
+    printf("Logger destructor...\n");
     m_h5_file->close();
+    printf("Closed file\n");
 }
 
 void Logger::set_trial(uint const trial_num)
@@ -171,32 +173,48 @@ void Logger::log_param(std::string const name, const json val)
         }
         else
         {
-            H5::DataSet *dataset = new H5::DataSet(
-                m_h5_file->createDataSet(dset_name, val_type, *dataspace));
+            H5::DataSet dataset =
+                m_h5_file->createDataSet(dset_name, val_type, *dataspace);
             // Save scalar...
 
             if (val_type == H5::PredType::NATIVE_HBOOL)
             {
                 bool bool_val = val.get<bool>();
-                dataset->write(&bool_val, val_type);
+                dataset.write(&bool_val, val_type);
             }
             else if (val_type == H5::PredType::NATIVE_INT)
             {
                 int int_val = val.get<int>();
-                dataset->write(&int_val, val_type);
+                dataset.write(&int_val, val_type);
             }
             else if (val_type == H5::PredType::NATIVE_UINT)
             {
                 uint uint_val = val.get<uint>();
-                dataset->write(&uint_val, val_type);
+                dataset.write(&uint_val, val_type);
             }
             else if (val_type == H5::PredType::NATIVE_DOUBLE)
             {
                 double double_val = val.get<double>();
-                dataset->write(&double_val, val_type);
+                dataset.write(&double_val, val_type);
             }
         }
     }
+}
+
+void Logger::log_vector(const std::string vec_name, const std::vector<double> vec_val)
+{
+    std::string dset_name = m_trial_group_name + "/" + vec_name;
+    hsize_t out_len[1] = {vec_val.size()};
+    // H5::ArrayType agg_type(H5::PredType::NATIVE_DOUBLE, 1, out_len);
+    // std::make_shared<H5::ArrayType>(agg_type);
+
+    H5::DataType datatype(H5::PredType::NATIVE_DOUBLE);
+    H5::DataSpace dataspace(1, out_len);
+    H5::DataSet dataset = m_h5_file->createDataSet(dset_name, datatype, dataspace);
+    dataset.write(vec_val.data(), datatype);
+    // H5::DataSet *dataset = new H5::DataSet(
+    //     m_h5_file->createDataSet(vec_name, H5::PredType::NATIVE_DOUBLE, *dataspace));
+    // dataset->write(vec_val.data(), H5::PredType::NATIVE_DOUBLE);
 }
 
 H5::PredType Logger::h5_type(const json j) const
@@ -206,7 +224,6 @@ H5::PredType Logger::h5_type(const json j) const
 
 Logger::H5FilePtr Logger::create_or_open_file(const std::string &fname)
 {
-    // TODO: Not sure if I'm gonna keep this. Might only be used once and I don't understand the shared pointer thing
     // From: https://stackoverflow.com/a/13849946
     H5::Exception::dontPrint();
     H5::H5File *file;

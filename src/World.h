@@ -207,7 +207,7 @@ public:
     * Check that the world is in a valid state. Throws an exception if a problem
     * is found.
   */
-  void checkValidity() const;
+  void check_validity() const;
 };
 } // namespace Kilosim
 

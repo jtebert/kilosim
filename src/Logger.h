@@ -215,6 +215,9 @@ public:
    */
   void log_param(const std::string name, const json val);
 
+  //! Save a vector (TODO: DEBUGGING; integrate into log_param)
+  void log_vector(const std::string name, const std::vector<double> val_vec);
+
 private:
   //! Log data for this specific aggregator
   void log_aggregator(const std::string agg_name, const aggregatorFunc agg_func) const;

@@ -69,7 +69,7 @@ struct RobotPose
  */
 class Robot
 {
-  protected:
+protected:
 	//! World the robot belongs to (used for getting light pattern data)
 	LightPattern *m_light_pattern;
 	//! Time per tick (set when Robot added to World)
@@ -94,12 +94,19 @@ class Robot
 	//! (Will be randomized around this in robot_init())
 	double m_turn_speed = 0.5;
 	// TODO: Shouldn't battery also be set in robot_init()?
-	//! Battery remaining (to be set in `Kilobot.init()`)
+	/*!
+	 * Battery remaining (to be set in `Kilobot.init()`).
+	 * This is decremented by 0.5 every tick in which a motor is running. (No
+	 * battery reduction occurs when robots are not moving.) At 32 ticks/sec, a
+	 * battery life of 2 hours of constant movement is 230400.
+	 *
+	 * The default value of -1 signifies an artificially infinite battery life.
+	 */
 	double battery = -1;
 	//! Flag set to 1 when robot wants to transmit
 	int tx_request;
 
-  public:
+public:
 	//! UUID of the robot, set in robot_init()
 	uint16_t id;
 	//! Robot's x-position
@@ -128,15 +135,16 @@ class Robot
 	 */
 	virtual void *get_message() = 0;
 
-  public:
+public:
 	virtual ~Robot() = default;
 
 	/*!
 	 * Initialize a Robot at a position in the world.
 	 *
+	 * This also calls the child-specific `init()` function.
+	 *
 	 * @note Things break (with `LightPattern`s) if you try to call this
-	 * *before* adding a `Robot` to a `World`. This also calls the
-	 * child-specific `init()` function.
+	 * *before* adding a `Robot` to a `World`.
 	 *
 	 * @warning This currently does **not** check if the specified Robot
 	 * position is within the arena bounds. Robots placed out-of-bounds will not
@@ -232,11 +240,14 @@ class Robot
 	 */
 	virtual void received() = 0;
 
-  protected:
+protected:
 	/*!
 	 * Perform any one-time initialization for the specific implementation of
 	 * the Robot, such as setting initial battery levels and calling any
 	 * user-implementation setup functions. It is called by `robot_init()`.
+	 *
+	 * If you want to change the robot's battery life, do so here by setting
+	 * the `battery` member variable.
 	 */
 	virtual void init() = 0;
 
@@ -248,7 +259,7 @@ class Robot
 	 */
 	virtual void controller() = 0;
 
-  private:
+private:
 	//! Wrap an angle to be within [0, 2*pi)
 	double wrap_angle(double angle) const;
 };
