@@ -145,10 +145,15 @@ void World::communicate()
                         // Check communication range in both directions
                         // (due to potentially noisy communication range)
                         double dist = tx_r.distance(tx_r.x, tx_r.y, rx_r.x, rx_r.y);
+                        // Only communicate if robots are within each others'
+                        // communication ranges. (Range may be asymmetric/noisy)
                         if (tx_r.comm_criteria(dist) &&
                             rx_r.comm_criteria(dist))
                         {
-                            rx_r.received();
+                            // Receiving robot processes incoming message
+                            rx_r.receive_msg(msg, dist);
+                            // Tell the sender that the message sent successfully
+                            tx_r.received();
                         }
                     }
                 }
@@ -315,7 +320,7 @@ void World::check_validity() const
         }
     }
 
-    std::cerr << "d World is valid." << std::endl;
+    std::cerr << "World is valid." << std::endl;
 }
 
 } // namespace Kilosim

@@ -151,7 +151,7 @@ protected:
 	virtual void loop() = 0;
 
 	/***************************************************************************
-	 * OPTIONAL USER API FUNCTIONS
+	 * USER API FUNCTIONS (replacing kilo_* functions in API)
 	 **************************************************************************/
 
 	/*!
@@ -160,23 +160,26 @@ protected:
 	 * @param message Contents of the received message
 	 * @param distance_measurement Estimated distance (in mm) from the Kilobot sending the message
 	 */
-	void message_rx(message_t *message, distance_measurement_t *distance_measurement){};
+	// void message_rx(message_t *message, distance_measurement_t *distance_measurement){};
+	virtual void message_rx(message_t *message, distance_measurement_t *distance_measurement) = 0;
 
 	/*!
 	 * [User API] Produce the message to transmit
 	 * By default, it returns NULL, which means no message is transmitted
 	 * @return Contents of the sent message
 	 */
-	message_t *message_tx()
-	{
-		return NULL;
-	};
+	virtual message_t *message_tx() = 0;
+	// message_t *message_tx()
+	// {
+	// 	printf("Running this\n");
+	// 	return NULL;
+	// };
 
 	/*!
 	 * [User API] Callback for successful message transmission
 	 * (By default, it does nothing)
 	 */
-	void message_tx_success(){};
+	virtual void message_tx_success() = 0;
 
 	/***************************************************************************
 	 * KILOLIB API FUNCTIONS
@@ -343,6 +346,11 @@ protected:
 	void received()
 	{
 		message_sent = true;
+	}
+
+	void receive_msg(void *msg, double dist)
+	{
+		message_rx((message_t *)msg, &dist);
 	}
 
 	char *get_debug_info(char *buffer, char *rt)

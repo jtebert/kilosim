@@ -235,10 +235,17 @@ public:
 	}
 
 	/*!
-	 * This is called by a robot to set a flag for calling the message success
-	 * callback
+	 * This is called by a transmitting robot (tx) to set a flag for calling the
+	 * message success callback (message_tx_success)
 	 */
 	virtual void received() = 0;
+
+	/*!
+	 * This is called when a robot (rx) receives a message. It calls some
+	 * message handling function (e.g., message_rx) specific to the
+	 * implementation.
+	 */
+	virtual void receive_msg(void *msg, double dist) = 0;
 
 protected:
 	/*!

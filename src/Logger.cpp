@@ -22,9 +22,7 @@ Logger::Logger(World &world, std::string const file_id, int const trial_num,
 
 Logger::~Logger(void)
 {
-    printf("Logger destructor...\n");
     m_h5_file->close();
-    printf("Closed file\n");
 }
 
 void Logger::set_trial(uint const trial_num)
@@ -130,16 +128,21 @@ void Logger::log_aggregator(std::string const agg_name,
     }
 }
 
-void Logger::log_config(ConfigParser &config)
+void Logger::log_config(ConfigParser &config, const bool show_warnings)
 {
     const json j = config.get();
     for (auto &mol : j.get<json::object_t>())
     {
-        log_param(mol.first, mol.second);
+        log_param(mol.first, mol.second, show_warnings);
     }
 }
 
-void Logger::log_param(std::string const name, const json val)
+void Logger::log_param(const std::string name, const json val)
+{
+    log_param(name, val, true);
+}
+
+void Logger::log_param(const std::string name, const json val, const bool show_warnings)
 {
     // Example: https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5group.cpp
     // https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5tutr_crtgrpd.cpp
@@ -149,14 +152,16 @@ void Logger::log_param(std::string const name, const json val)
     // Get the type of the parameter
     if (val.type() == json::value_t::object)
     {
-        printf("WARNING: Cannot save param '%s' (currently no support for JSON 'object' type)\n",
-               name.c_str());
+        if (show_warnings)
+            printf("WARNING: Cannot save param '%s' (currently no support for JSON 'object' type)\n",
+                   name.c_str());
     }
     else if (val.type() == json::value_t::array)
     {
         // TODO: Implement non-scalar parameters
-        printf("WARNING: Cannot save param '%s' (currently no support for JSON 'array' type)\n",
-               name.c_str());
+        if (show_warnings)
+            printf("WARNING: Cannot save param '%s' (currently no support for JSON 'array' type)\n",
+                   name.c_str());
     }
     else
     {
