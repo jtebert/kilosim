@@ -1,5 +1,10 @@
 //This file contains a number of functions for getting seeding random number
 //generators and pulling numbers from them in a thread-safe manner.
+
+//Note: This is a generaly poor way of getting pseudorandom numbers in parallel
+//since the sequences might be more correlated than would be expected by chance.
+//Nonetheless, it should be sufficient for most applications. Good parallel
+//PRNGs are rare, so this is probably not easily ameliorated.
 #ifndef _prng_header
 #define _prng_header
 
