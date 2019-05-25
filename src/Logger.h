@@ -144,6 +144,11 @@ public:
    * @param overwrite_trials Whether to overwrite data if the trial is already
    * in the log file. If set to `false`, the program will exit if the trial
    * already exists.
+   *
+   * @warning You must create any directories in the filepath to your `file_id`
+   * before attempting to create a file with this constructor. If you attempt to
+   * create a log file in a location (directory) that does not exist, your
+   * program will terminate with an `H5::FileIException`.
    */
   Logger(World &world, const std::string file_id, const int trial_num,
          const bool overwrite_trials = false);
@@ -196,8 +201,10 @@ public:
    * skipped (with a warning in the terminal).
    *
    * @param config Loaded configuration for this experiment/trial
+   * @param show_warnings Whether or not to print out warnings when there are
+   * non-atomic datatypes in the config that cannot be saved
    */
-  void log_config(ConfigParser &config);
+  void log_config(ConfigParser &config, const bool show_warnings = true);
 
   /*!
    * Log a single parameter name and value
@@ -215,6 +222,9 @@ public:
    */
   void log_param(const std::string name, const json val);
 
+  //! Save a vector (TODO: DEBUGGING; integrate into log_param)
+  void log_vector(const std::string name, const std::vector<double> val_vec);
+
 private:
   //! Log data for this specific aggregator
   void log_aggregator(const std::string agg_name, const aggregatorFunc agg_func) const;
@@ -224,6 +234,8 @@ private:
   H5FilePtr create_or_open_file(const std::string &fname);
   //! Create or open a group in an HDF5 file
   H5GroupPtr create_or_open_group(H5FilePtr file, const std::string &group_name);
+  //! Version of log_param (for use by log_config) with warnings optional
+  void log_param(const std::string name, const json val, const bool show_warnings);
 };
 
 /*! \example example_logger.cpp

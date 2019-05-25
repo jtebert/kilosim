@@ -128,16 +128,21 @@ void Logger::log_aggregator(std::string const agg_name,
     }
 }
 
-void Logger::log_config(ConfigParser &config)
+void Logger::log_config(ConfigParser &config, const bool show_warnings)
 {
     const json j = config.get();
     for (auto &mol : j.get<json::object_t>())
     {
-        log_param(mol.first, mol.second);
+        log_param(mol.first, mol.second, show_warnings);
     }
 }
 
-void Logger::log_param(std::string const name, const json val)
+void Logger::log_param(const std::string name, const json val)
+{
+    log_param(name, val, true);
+}
+
+void Logger::log_param(const std::string name, const json val, const bool show_warnings)
 {
     // Example: https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5group.cpp
     // https://support.hdfgroup.org/ftp/HDF5/current/src/unpacked/c++/examples/h5tutr_crtgrpd.cpp
@@ -147,14 +152,16 @@ void Logger::log_param(std::string const name, const json val)
     // Get the type of the parameter
     if (val.type() == json::value_t::object)
     {
-        printf("WARNING: Cannot save param '%s' (currently no support for JSON 'object' type)\n",
-               name.c_str());
+        if (show_warnings)
+            printf("WARNING: Cannot save param '%s' (currently no support for JSON 'object' type)\n",
+                   name.c_str());
     }
     else if (val.type() == json::value_t::array)
     {
         // TODO: Implement non-scalar parameters
-        printf("WARNING: Cannot save param '%s' (currently no support for JSON 'array' type)\n",
-               name.c_str());
+        if (show_warnings)
+            printf("WARNING: Cannot save param '%s' (currently no support for JSON 'array' type)\n",
+                   name.c_str());
     }
     else
     {
@@ -171,32 +178,48 @@ void Logger::log_param(std::string const name, const json val)
         }
         else
         {
-            H5::DataSet *dataset = new H5::DataSet(
-                m_h5_file->createDataSet(dset_name, val_type, *dataspace));
+            H5::DataSet dataset =
+                m_h5_file->createDataSet(dset_name, val_type, *dataspace);
             // Save scalar...
 
             if (val_type == H5::PredType::NATIVE_HBOOL)
             {
                 bool bool_val = val.get<bool>();
-                dataset->write(&bool_val, val_type);
+                dataset.write(&bool_val, val_type);
             }
             else if (val_type == H5::PredType::NATIVE_INT)
             {
                 int int_val = val.get<int>();
-                dataset->write(&int_val, val_type);
+                dataset.write(&int_val, val_type);
             }
             else if (val_type == H5::PredType::NATIVE_UINT)
             {
                 uint uint_val = val.get<uint>();
-                dataset->write(&uint_val, val_type);
+                dataset.write(&uint_val, val_type);
             }
             else if (val_type == H5::PredType::NATIVE_DOUBLE)
             {
                 double double_val = val.get<double>();
-                dataset->write(&double_val, val_type);
+                dataset.write(&double_val, val_type);
             }
         }
     }
+}
+
+void Logger::log_vector(const std::string vec_name, const std::vector<double> vec_val)
+{
+    std::string dset_name = m_trial_group_name + "/" + vec_name;
+    hsize_t out_len[1] = {vec_val.size()};
+    // H5::ArrayType agg_type(H5::PredType::NATIVE_DOUBLE, 1, out_len);
+    // std::make_shared<H5::ArrayType>(agg_type);
+
+    H5::DataType datatype(H5::PredType::NATIVE_DOUBLE);
+    H5::DataSpace dataspace(1, out_len);
+    H5::DataSet dataset = m_h5_file->createDataSet(dset_name, datatype, dataspace);
+    dataset.write(vec_val.data(), datatype);
+    // H5::DataSet *dataset = new H5::DataSet(
+    //     m_h5_file->createDataSet(vec_name, H5::PredType::NATIVE_DOUBLE, *dataspace));
+    // dataset->write(vec_val.data(), H5::PredType::NATIVE_DOUBLE);
 }
 
 H5::PredType Logger::h5_type(const json j) const
@@ -206,7 +229,6 @@ H5::PredType Logger::h5_type(const json j) const
 
 Logger::H5FilePtr Logger::create_or_open_file(const std::string &fname)
 {
-    // TODO: Not sure if I'm gonna keep this. Might only be used once and I don't understand the shared pointer thing
     // From: https://stackoverflow.com/a/13849946
     H5::Exception::dontPrint();
     H5::H5File *file;

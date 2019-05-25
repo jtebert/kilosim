@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
             robots[n]->robot_init(floor(n / num_rows) * 100 + 75, (n % num_rows) * 100 + 75, PI * n / 2);
         }
 
-        world.checkValidity();
+        world.check_validity();
 
         Kilosim::Logger logger(
             world,
