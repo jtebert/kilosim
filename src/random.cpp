@@ -29,7 +29,7 @@ void seed_rand(unsigned long seed)
       rand_engine().seed(q);
     }
     else
-      rand_engine().seed(seed * omp_get_thread_num());
+      rand_engine().seed(seed * (1+omp_get_thread_num()));
   }
 }
 
