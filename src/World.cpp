@@ -9,7 +9,8 @@ namespace Kilosim
 World::World(const double arena_width, const double arena_height,
              const std::string light_pattern_src, const uint num_threads)
     : m_arena_width(arena_width), m_arena_height(arena_height),
-      cb(arena_width, arena_height, 2 * RADIUS)
+      cb(arena_width, arena_height, 2 * RADIUS, 4),
+      comm_grid(arena_width, arena_height, 12 * RADIUS, 144)
 {
     if (light_pattern_src.size() > 0)
     {
@@ -56,11 +57,6 @@ void World::step()
     run_controllers();
     timer_controllers.stop();
 
-    // Communication between all robot pairs
-    timer_communicate.start();
-    communicate();
-    timer_communicate.stop();
-
     // Compute potential movement for all robots
     timer_compute_next_step.start();
     compute_next_step(new_poses);
@@ -76,6 +72,11 @@ void World::step()
     timer_move.start();
     move_robots(new_poses, collisions);
     timer_move.stop();
+
+    // Communication between all robot pairs
+    timer_communicate.start();
+    communicate(new_poses);
+    timer_communicate.stop();
 
     // Increment time
     m_tick++;
@@ -122,43 +123,52 @@ void World::run_controllers()
     }
 }
 
-void World::communicate()
+void World::communicate(const std::vector<RobotPose> &new_poses)
 {
     // TODO: Is the shuffling necessary? (I killed it)
 
-    if (m_tick % m_comm_rate == 0)
+    if (m_tick % m_comm_rate != 0)
+        return;
+
+    comm_grid.update(new_poses);
+
+    //The following checks whether a robot is colliding with a wall or any other
+    //robots. Only the collision status of the focal robot is changed. This
+    //means that it is possible to accelerate the code by setting the status of
+    //both of the robots in a collision; however, this requires careful thought
+    //to ensure that wall collisions are still adequately accounted for. It also
+    //reduces the potential for parallelism since it introduces a data race.
+
+    // #pragma omp parallel for schedule(static)
+    for (unsigned int ci = 0; ci < m_robots.size(); ci++)
     {
-        // #pragma omp parallel for
-        for (unsigned int tx_i = 0; tx_i < m_robots.size(); tx_i++)
-        {
-            Robot &tx_r = *m_robots[tx_i];
-            // Loop over all transmitting robots
-            void *msg = tx_r.get_message();
-            if (msg)
-            {
-                for (unsigned int rx_i = 0; rx_i < m_robots.size(); rx_i++)
-                {
-                    Robot &rx_r = *m_robots[rx_i];
-                    // Loop over receivers if transmitting robot is sending a message
-                    if (rx_i != tx_i)
-                    {
-                        // Check communication range in both directions
-                        // (due to potentially noisy communication range)
-                        double dist = tx_r.distance(tx_r.x, tx_r.y, rx_r.x, rx_r.y);
-                        // Only communicate if robots are within each others'
-                        // communication ranges. (Range may be asymmetric/noisy)
-                        if (tx_r.comm_criteria(dist) &&
-                            rx_r.comm_criteria(dist))
-                        {
-                            // Receiving robot processes incoming message
-                            rx_r.receive_msg(msg, dist);
-                            // Tell the sender that the message sent successfully
-                            tx_r.received();
-                        }
-                    }
-                }
-            }
-        }
+        auto &tx_r = *m_robots[ci];
+
+        void *msg = tx_r.get_message();
+        if (!msg)
+            continue;
+
+        const auto func = [&](const unsigned int ni) -> bool {
+            if (ci == ni)
+                return true; //Look at more neighbours
+            auto &rx_r = *m_robots[ni];
+            const double distance = pow(tx_r.x - rx_r.x, 2) + pow(tx_r.y - rx_r.y, 2);
+
+            //Check to see if robots' centers are within 2*RADIUS of each other,
+            //since that means their edges would be touching. But we actually
+            //check (2*RADIUS)^2 because we don't take the square root of the
+            //distance above.
+            if (distance > 144 * RADIUS * RADIUS)
+                return true;
+
+            rx_r.receive_msg(msg, distance);
+            // Tell the sender that the message sent successfully
+            tx_r.received();
+
+            return true; //Look at more neighbours
+        };
+
+        comm_grid.considerNeighbours(tx_r.x, tx_r.y, func);
     }
 }
 

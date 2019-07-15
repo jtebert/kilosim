@@ -64,6 +64,7 @@ private:
 
 private:
   CollisionBoxes cb;
+  CollisionBoxes comm_grid;
   Timer timer_controllers;
   Timer timer_collisions;
   Timer timer_move;
@@ -76,7 +77,7 @@ protected:
   //! Run the controllers (kilolib) for all robots
   void run_controllers();
   //! Send messages between robots
-  void communicate();
+  void communicate(const std::vector<RobotPose> &new_poses);
   /*!
    * Compute the next positions of the robots from positions and motor commands
    * @param new_poses Shared reference of new positions to compute over all of

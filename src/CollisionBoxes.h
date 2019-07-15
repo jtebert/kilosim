@@ -20,7 +20,7 @@ class CollisionBoxes
 private:
   const int cddx[9] = {0, -1, -1, 0, 1, 1, 1, 0, -1};
   const int cddy[9] = {0, 0, -1, -1, -1, 0, 1, 1, 1};
-  const int PSIZE = 4;
+  const int psize = 4;
   typedef std::vector<int> ivec;
   ivec agent_positions;
   ivec cells_used;
@@ -29,15 +29,15 @@ private:
   int bheight;     //Height in bins
 
 public:
-  CollisionBoxes() = default;
+  CollisionBoxes() = delete;
 
-  CollisionBoxes(const double width0, const double height0, const double diameter0)
+  CollisionBoxes(const double width0, const double height0, const double diameter0, const int psize0) : psize(psize0)
   {
     diameter = diameter0;
     bwidth = std::ceil(width0 / diameter);
     bheight = std::ceil(height0 / diameter);
 
-    agent_positions.resize(PSIZE * bwidth * bheight, -1);
+    agent_positions.resize(psize * bwidth * bheight, -1);
   }
 
   template <class T>
@@ -52,12 +52,12 @@ public:
     {
       const int binx = agents[a].x / diameter;
       const int biny = agents[a].y / diameter;
-      const int idx0 = PSIZE * (biny * bwidth + binx);
+      const int idx0 = psize * (biny * bwidth + binx);
       int idx = idx0;
-      for (; idx <= idx0 + PSIZE; idx++)
+      for (; idx <= idx0 + psize; idx++)
         if (agent_positions[idx] == -1)
           break;
-      assert(idx != idx0 + PSIZE);
+      assert(idx != idx0 + psize);
       agent_positions[idx] = a;
       cells_used.emplace_back(idx);
     }
@@ -77,8 +77,8 @@ public:
       if (binx < 0 || biny < 0 || binx == bwidth || biny == bheight)
         continue;
 
-      const auto idx0 = &agent_positions[PSIZE * (biny * bwidth + binx)];
-      for (auto idx = idx0; idx < idx0 + PSIZE; idx++)
+      const auto idx0 = &agent_positions[psize * (biny * bwidth + binx)];
+      for (auto idx = idx0; idx < idx0 + psize; idx++)
       {
         if (*idx == -1)
           continue;
