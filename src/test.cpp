@@ -47,7 +47,8 @@ int main(int argc, char *argv[])
             config.get("world_width"),
             config.get("world_height"),
             config.get("light_pattern_filename"),
-            config.get("num_threads"));
+            config.get("num_threads"),
+            50);
 
         // Create robot(s)
         // Creates a grid of 23x23 robots (can handle up to 529 robots)

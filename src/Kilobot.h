@@ -56,8 +56,6 @@ private:
 	int m_turn_right = 0;
 	//! Set duty cycle of the left motor
 	int m_turn_left = 0;
-	//! Communication range between robots in mm (3 bodylengths)
-	const double m_comm_range = 6 * 16;
 
 	double distance_measurement;
 	bool message_sent = false;
@@ -325,12 +323,6 @@ protected:
 		color[0] = c.red;
 		color[1] = c.green;
 		color[2] = c.blue;
-	}
-
-	bool comm_criteria(double dist)
-	{
-		// Standard circular transmission area
-		return dist <= m_comm_range;
 	}
 
 	void *get_message()

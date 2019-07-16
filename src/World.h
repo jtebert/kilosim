@@ -63,7 +63,9 @@ private:
   LightPattern m_light_pattern;
 
 private:
+  //! Grid of robots for linear collision detection
   CollisionBoxes cb;
+  //! Grid of robots for linearizing communication time
   CollisionBoxes comm_grid;
   Timer timer_controllers;
   Timer timer_collisions;
@@ -117,9 +119,12 @@ public:
    * background will be black.
    * @param num_threads How many threads to parallelize the simulation over. If
    * set to 0 (default), dynamic threading will be used.
+   * @param max_comm_density Maximum expected number or robots within a robot's
+   * communication range (defaults to 144). Larger values result in slower
+   * simulations, but setting it smaller than what occurs will kill the program.
    */
   World(const double arena_width, const double arena_height,
-        const std::string light_pattern_src = "", const uint num_threads = 0);
+        const std::string light_pattern_src = "", const uint num_threads = 0, const uint max_comm_density = 144);
   //! Destructor, destroy all objects within the world
   /*!
    * This does not destroy any Robots that have pointers stored in the world.
