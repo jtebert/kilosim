@@ -125,43 +125,37 @@ void World::run_controllers()
 
 void World::communicate(const std::vector<RobotPose> &new_poses)
 {
+    // Communication doesn't happen every tick
     if (m_tick % m_comm_rate != 0)
         return;
-
+    // Place robot's new positions on the grid
     comm_grid.update(new_poses);
 
-    // The following checks whether a robot is colliding with a wall or any
-    // other robots. Only the collision status of the focal robot is changed.
-    // This means that it is possible to accelerate the code by setting the
-    // status of both of the robots in a collision; however, this requires
-    // careful thought to ensure that wall collisions are still adequately
-    // accounted for. It also reduces the potential for parallelism since it
-    // introduces a data race.
-
 #pragma omp parallel for schedule(static)
-    for (unsigned int ci = 0; ci < m_robots.size(); ci++)
+    for (unsigned int tx_i = 0; tx_i < m_robots.size(); tx_i++)
     {
-        auto &tx_r = *m_robots[ci];
-
+        // Get the message for the sending robot
+        auto &tx_r = *m_robots[tx_i];
         void *msg = tx_r.get_message();
+        // Skip sending stuff if the robot doesn't have a message to send
         if (!msg)
             continue;
 
-        const auto func = [&](const unsigned int ni) -> bool {
-            if (ci == ni)
-                return true; //Look at more neighbours
-            auto &rx_r = *m_robots[ni];
-            const double distance = pow(tx_r.x - rx_r.x, 2) + pow(tx_r.y - rx_r.y, 2);
+        const auto func = [&](const unsigned int rx_i) -> bool {
+            if (tx_i == rx_i)
+                return true; // This is me; look at more neighbors
+            auto &rx_r = *m_robots[rx_i];
+            const double distance_sqr = pow(tx_r.x - rx_r.x, 2) + pow(tx_r.y - rx_r.y, 2);
 
             // Check to see if robots' centers are within 2*RADIUS of each
             // other, since that means their edges would be touching. But we
             // actually check (2*RADIUS)^2 because we don't take the square root
             // of the distance above.
-            const double comm_range = std::min(rx_r.comm_range, tx_r.comm_range);
-            if (distance > comm_range * comm_range)
+            //const double comm_range = std::min(rx_r.comm_range, tx_r.comm_range);
+            if (distance_sqr > rx_r.comm_range * rx_r.comm_range)
                 return true;
 
-            rx_r.receive_msg(msg, distance);
+            rx_r.receive_msg(msg, sqrt(distance_sqr));
             // Tell the sender that the message sent successfully
             tx_r.received();
 
@@ -174,10 +168,10 @@ void World::communicate(const std::vector<RobotPose> &new_poses)
 
 void World::compute_next_step(std::vector<RobotPose> &new_poses)
 {
-    // TODO: Implement compute_next_step (and maybe change from pointers)
+// TODO: Implement compute_next_step (and maybe change from pointers)
 
-    // printf("\nt = %d\n", m_tick);
-    #pragma omp parallel for schedule(static)
+// printf("\nt = %d\n", m_tick);
+#pragma omp parallel for schedule(static)
     // #// pragma omp parallel for
     for (unsigned int r_i = 0; r_i < m_robots.size(); r_i++)
     {
