@@ -9,12 +9,12 @@ namespace Kilosim
 void Robot::robot_controller()
 {
 	// A battery value of -1 artificially defines an infinite-life battery
-	if (-1 < battery && battery > 0)
+	if (battery <= -1 || battery > 0)
 	{
 		timer++;
 		// Run the Kilobot functionality: set sending/receiving messages, setting motor states, and running loop() function
 		controller();
-		if (m_motor_command)
+		if (m_motor_command && battery > 0)
 		{
 			// 0 is not moving; otherwise discount battery by fixed amount
 			battery -= 0.5;
