@@ -1,3 +1,5 @@
+Gabe: Currently adding noise to get\_ambientlight().
+
 # Kilosim: Kilobot Simulator
 
 [![Build Status](https://travis-ci.com/jtebert/kilosim.svg?token=s6ZVW1bvfNjgbZQh2x9M&branch=master)](https://travis-ci.com/jtebert/kilosim)
