@@ -10,6 +10,7 @@
 #include <string>
 #include <iostream>
 #include <SFML/Graphics.hpp>
+#include "random.hpp"
 
 namespace Kilosim
 {

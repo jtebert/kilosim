@@ -39,7 +39,10 @@ uint16_t LightPattern::get_ambientlight(const double x, const double y) const
         // Convert the color from RGB to grayscale using approximate luminosity
         // Each value is 8-bit, so the resulting value is in the scale [0-255]
         double luminosity = (0.3 * c.r) + (0.59 * c.g) + (0.11 * c.b);
-        // Scale to 10-bit [0-1023]
+        double std_dev = -0.0001123*luminosity*luminosity + 0.2197*luminosity + 0.8684; // polynomial std_dev
+        //double std_dev = 0.13*luminosity + 6.1; // linear std_dev
+        luminosity = normal_rand(luminosity, std_dev);
+
         uint16_t lum_10bit = (uint16_t)luminosity * 4;
         return lum_10bit;
     }
