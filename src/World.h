@@ -52,7 +52,7 @@ private:
   //! Duration (seconds) of a tick
   const double m_tick_delta_t = 1.0 / m_tick_rate;
   //! Number of ticks between messages (eg, 3 means 10 messages per second)
-  const uint m_comm_rate = 3;
+  const uint32_t m_comm_rate = 3;
   //! Height of the arena in mm
   const double m_arena_width;
   //! Width of the arena in mm
@@ -118,7 +118,7 @@ public:
    * set to 0 (default), dynamic threading will be used.
    */
   World(const double arena_width, const double arena_height,
-        const std::string light_pattern_src = "", const uint num_threads = 0);
+        const std::string light_pattern_src = "", const uint32_t num_threads = 0);
   //! Destructor, destroy all objects within the world
   /*!
    * This does not destroy any Robots that have pointers stored in the world.

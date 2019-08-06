@@ -30,8 +30,8 @@ uint16_t LightPattern::get_ambientlight(const double x, const double y) const
     if (m_has_source)
     {
         // Transform from world coordinates to image coordinates
-        uint x_in_img = x * m_scale;
-        uint y_in_img = y * m_scale;
+        uint32_t x_in_img = x * m_scale;
+        uint32_t y_in_img = y * m_scale;
 
         // Get the Color with the y-axis coordinate flip (each is 8-bit)
         sf::Color c = m_light_pattern.getPixel(x_in_img,
