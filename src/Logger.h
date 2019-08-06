@@ -15,7 +15,7 @@
 #include "Robot.h"
 #include "World.h"
 #include "ConfigParser.h"
-#include "../include/json.hpp"
+#include <nlohmann/json.hpp>
 #include <unordered_map>
 #include <string>
 #include <memory>

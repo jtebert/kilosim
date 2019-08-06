@@ -10,7 +10,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-#include "../include/json.hpp"
+#include <nlohmann/json.hpp>
 
 // for convenience
 using json = nlohmann::json;
