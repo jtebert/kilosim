@@ -8,10 +8,10 @@ project (kilosim
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
-find_package(HDF5 REQUIRED)
+find_package(HDF5 COMPONENTS CXX HL REQUIRED)
 find_package(OpenMP)
 find_package(Sanitizers)
-find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
+find_package(SFML 2.5 COMPONENTS graphics)
 
 if (NOT TARGET OpenMP::OpenMP_CXX AND APPLE)
     add_library(OpenMP_TARGET INTERFACE)
@@ -32,6 +32,9 @@ if (NOT TARGET OpenMP::OpenMP_CXX AND APPLE)
     endif()
 endif()
 
+if (NOT SFML_FOUND)
+  find_package(SFMLold REQUIRED)
+endif()
 
 
 add_library(kilosim
@@ -48,6 +51,7 @@ add_library(kilosim
 target_include_directories(kilosim
 PUBLIC
   submodules
+  ${HDF5_INCLUDE_DIRS}
 )
 
 target_link_libraries(kilosim
@@ -67,11 +71,11 @@ PRIVATE
 
 target_compile_features(kilosim PUBLIC cxx_std_11)
 
-add_executable(test
+add_executable(kilosim_test
   src/test.cpp
 )
 
-target_link_libraries(test
+target_link_libraries(kilosim_test
 PUBLIC
   kilosim
 )
