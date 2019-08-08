@@ -17,7 +17,7 @@ ConfigParser::ConfigParser(const std::string config_file)
     {
         in_json >> m_config;
     }
-    catch (nlohmann::detail::parse_error)
+    catch (nlohmann::detail::parse_error&)
     {
         std::cerr << "ERROR: Invalid or nonexistent config file: "
                   << config_file << std::endl;
@@ -31,7 +31,7 @@ json ConfigParser::get(const std::string val_name) const
     {
         return m_config.at(val_name);
     }
-    catch (nlohmann::detail::out_of_range)
+    catch (nlohmann::detail::out_of_range&)
     {
         std::cerr << "[ConfigParser.get()] ERROR: Invalid or nonexistent key: " << val_name << std::endl;
         exit(EXIT_FAILURE);
