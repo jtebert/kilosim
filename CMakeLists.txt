@@ -68,6 +68,7 @@ PRIVATE
   -march=native
   -ffast-math
   -Wall
+  -Wextra
 )
 
 target_compile_features(kilosim PUBLIC cxx_std_14)
