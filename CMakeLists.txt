@@ -69,7 +69,7 @@ PRIVATE
   -Wall
 )
 
-target_compile_features(kilosim PUBLIC cxx_std_11)
+target_compile_features(kilosim PUBLIC cxx_std_14)
 
 add_executable(kilosim_test
   src/test.cpp
