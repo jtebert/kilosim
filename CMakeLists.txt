@@ -50,6 +50,7 @@ add_library(kilosim
 
 target_include_directories(kilosim
 PUBLIC
+  src
   submodules
   ${HDF5_INCLUDE_DIRS}
 )
@@ -71,7 +72,7 @@ PRIVATE
   -Wextra
 )
 
-target_compile_features(kilosim PUBLIC cxx_std_14)
+target_compile_features(kilosim PRIVATE cxx_std_14)
 
 add_executable(kilosim_test
   src/test.cpp
