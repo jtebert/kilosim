@@ -57,6 +57,7 @@ PUBLIC
 target_link_libraries(kilosim
 PUBLIC
   ${HDF5_LIBRARIES}
+  ${HDF5_CXX_HL_LIBRARIES}
   OpenMP::OpenMP_CXX
   sfml-graphics
 )
