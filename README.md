@@ -51,6 +51,14 @@ Alternatively, you can run:
     make kilosim                        #Build library
     make test                           #Build test executable
 
+Flags:
+
+ * `-DBUILD_EXAMPLES=ON`: Build the example programs
+
+Use flags like so:
+
+    cmake -GNinja -DBUILD_EXAMPLES=ON ..
+
 **NOTE:** This is tested with g++ 7.3 but currently fails (for as-of-yet unclear reasons) with g++ 8.1
 
 ### Run
