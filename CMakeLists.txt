@@ -11,7 +11,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 find_package(HDF5 COMPONENTS CXX HL REQUIRED)
 find_package(OpenMP)
 find_package(Sanitizers)
-find_package(SFML 2.5 COMPONENTS graphics)
+find_package(SFML 2.5 COMPONENTS graphics QUIET)
 
 if (NOT TARGET OpenMP::OpenMP_CXX AND APPLE)
     add_library(OpenMP_TARGET INTERFACE)
