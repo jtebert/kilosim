@@ -9,10 +9,14 @@ project (kilosim
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 find_package(HDF5 COMPONENTS CXX HL REQUIRED)
-find_package(OpenMP)
 find_package(Sanitizers)
-find_package(SFML 2.5 COMPONENTS graphics QUIET)
 
+find_package(SFML 2.5 COMPONENTS graphics QUIET)
+if (NOT SFML_FOUND)
+  find_package(SFMLold REQUIRED)
+endif()
+
+find_package(OpenMP)
 if (NOT TARGET OpenMP::OpenMP_CXX AND APPLE)
     add_library(OpenMP_TARGET INTERFACE)
     add_library(OpenMP::OpenMP_CXX ALIAS OpenMP_TARGET)
@@ -32,9 +36,6 @@ if (NOT TARGET OpenMP::OpenMP_CXX AND APPLE)
     endif()
 endif()
 
-if (NOT SFML_FOUND)
-  find_package(SFMLold REQUIRED)
-endif()
 
 
 add_library(kilosim
