@@ -17,24 +17,6 @@ if (NOT SFML_FOUND)
 endif()
 
 find_package(OpenMP)
-if (NOT TARGET OpenMP::OpenMP_CXX AND APPLE)
-    add_library(OpenMP_TARGET INTERFACE)
-    add_library(OpenMP::OpenMP_CXX ALIAS OpenMP_TARGET)
-
-    if (ENABLE_MAC_OPENMP)
-        message(STATUS "Enabling OpenMP for macOS. NOTE: THIS IS INCOMPATIBLE WITH DISTCC AND PARTLY INCOMPATIBLE WITH CCACHE")
-        find_package(Threads REQUIRED)
-        set(OpenMP_CXX_FLAGS -Xpreprocessor -fopenmp)
-        set(OpenMP_EXE_LINKER_FLAGS -lomp)
-        target_compile_options(OpenMP_TARGET INTERFACE ${OpenMP_CXX_FLAGS})
-
-        target_link_libraries(OpenMP_TARGET INTERFACE
-            ${OpenMP_CXX_FLAGS}
-            ${OpenMP_EXE_LINKER_FLAGS}
-            Threads::Threads
-        )
-    endif()
-endif()
 
 
 
@@ -60,6 +42,7 @@ target_link_libraries(kilosim
 PUBLIC
   ${HDF5_LIBRARIES}
   ${HDF5_CXX_HL_LIBRARIES}
+  ${HDF5_CXX_LIBRARIES}
   OpenMP::OpenMP_CXX
   sfml-graphics
 )
