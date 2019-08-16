@@ -42,9 +42,9 @@ You can either [clone the repository from GitHub](https://github.com/jtebert/kil
 
 To compile, copy and paste the following:
 
-    mkdir build                         #Create a build directory
-    cmake -DCMAKE_BUILD_TYPE=Release .. #Configure for your system
-    make                                #Build all
+    mkdir build                                #Create a build directory
+    cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .. #Configure for your system
+    make                                       #Build all
 
 Alternatively, you can run:
 
