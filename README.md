@@ -60,7 +60,11 @@ Use flags like so:
 
     cmake -GNinja -DBUILD_EXAMPLES=ON ..
 
-**NOTE:** This is tested with g++ 7.3 but currently fails (for as-of-yet unclear reasons) with g++ 8.1
+Compatibility:
+
+ * g++ 7.3 - works
+ * g++ 8.1 - fails due to compiler issue(?)
+ * g++ 8.3 - works 
 
 ### Run
 
