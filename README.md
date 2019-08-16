@@ -54,6 +54,7 @@ Alternatively, you can run:
 Flags:
 
  * `-DBUILD_EXAMPLES=ON`: Build the example programs
+ * `-DSANITIZE_ADDRESS=On`: Use address sanitizer to check memory safety
 
 Use flags like so:
 
