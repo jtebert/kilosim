@@ -94,4 +94,7 @@ PRIVATE
   -Wall
   -Wextra
 )
+
+target_compile_features(kilosim_test PRIVATE cxx_std_14)
+
 endif()
