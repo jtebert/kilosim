@@ -105,9 +105,10 @@ private:
 			message_tx_success();
 		}
 		kilo_ticks++;
-		if (uniform_rand_real(0, 1) < 0.1)
+		const double tick_rand = uniform_rand_real(0, 1);
+		if (tick_rand < 0.1)
 		{
-			if (uniform_rand_real(0, 1) < 0.05)
+			if (tick_rand < 0.05)
 				kilo_ticks--;
 			else
 				kilo_ticks++;
