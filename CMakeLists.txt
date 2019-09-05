@@ -17,6 +17,7 @@ if (NOT SFML_FOUND)
 endif()
 
 find_package(OpenMP)
+find_package(Doxygen)
 
 
 
@@ -58,7 +59,21 @@ PRIVATE
 
 target_compile_features(kilosim PRIVATE cxx_std_14)
 
+set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/docs)
+doxygen_add_docs(kilosim_docs 
+  src/
+)
 
+install(
+  TARGETS kilosim
+  ARCHIVE DESTINATION ${CMAKE_SOURCE_DIR}/lib
+)
+
+# install(
+#   FILES common.py districtplot.py
+#   DESTINATION ${CMAKE_SOURCE_DIR}/bin
+#   PERMISSIONS OWNER_READ
+# )
 
 if(BUILD_EXAMPLES)
 add_executable(kilosim_test
@@ -79,5 +94,10 @@ PRIVATE
 )
 
 target_compile_features(kilosim_test PRIVATE cxx_std_14)
+
+install(
+  TARGETS kilosim_test
+  RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin
+)
 
 endif()
