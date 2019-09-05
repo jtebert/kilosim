@@ -43,13 +43,17 @@ You can either [clone the repository from GitHub](https://github.com/jtebert/kil
 To compile, copy and paste the following:
 
     mkdir build                                #Create a build directory
+    cd build                                   #Move into build directory
     cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .. #Configure for your system
     make                                       #Build all
+    make install                               #Install files
+    cd ..                                      #Move back to source directory
 
 Alternatively, you can run:
 
     make kilosim                        #Build library
     make test                           #Build test executable
+    make kilosim_docs                   #Build documentation
 
 Flags:
 
