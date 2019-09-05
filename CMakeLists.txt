@@ -74,31 +74,27 @@ install(
 #   PERMISSIONS OWNER_READ
 # )
 
-if(BUILD_EXAMPLES)
-add_executable(kilosim_test
-  examples/test.cpp
-)
+add_executable(kilosim_example EXCLUDE_FROM_ALL examples/test.cpp)
+# add_executable(example_viewer examples/example_viewer.cpp)
+# add_executable(example_logger examples/example_logger.cpp)
 
-target_include_directories(kilosim_test PRIVATE examples)
+target_include_directories(kilosim_example PRIVATE examples)
+target_link_libraries(kilosim_example PUBLIC kilosim)
+target_compile_options(kilosim_example PRIVATE -g -march=native -Wall -Wextra)
+target_compile_features(kilosim_example PRIVATE cxx_std_14)
+install(TARGETS kilosim_example RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 
-target_link_libraries(kilosim_test
-PUBLIC
-  kilosim
-)
+# target_include_directories(example_viewer PRIVATE examples)
+# target_link_libraries(example_viewer PUBLIC kilosim)
+# target_compile_options(example_viewer PRIVATE -g -march=native -Wall -Wextra)
+# target_compile_features(example_viewer PRIVATE cxx_std_14)
+# install(TARGETS example_viewer RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 
-target_compile_options(kilosim_test
-PRIVATE
-  -g
-  -march=native
-  -Wall
-  -Wextra
-)
+# target_include_directories(example_logger PRIVATE examples)
+# target_link_libraries(example_logger PUBLIC kilosim)
+# target_compile_options(example_logger PRIVATE -g -march=native -Wall -Wextra)
+# target_compile_features(example_logger PRIVATE cxx_std_14)
+# install(TARGETS example_logger RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 
-target_compile_features(kilosim_test PRIVATE cxx_std_14)
-
-install(
-  TARGETS kilosim_test
-  RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin
-)
-
-endif()
+add_custom_target( examples )
+add_dependencies( examples kilosim_example )
