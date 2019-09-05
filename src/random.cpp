@@ -1,4 +1,4 @@
-#include <kilosim/random.hpp>
+#include <kilosim/Random.h>
 
 #include <cassert>
 #include <random>

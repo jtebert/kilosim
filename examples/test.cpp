@@ -3,8 +3,8 @@
 #include <kilosim/ConfigParser.h>
 #include <kilosim/Kilobot.h>
 #include <kilosim/Logger.h>
-#include <kilosim/random.hpp>
-#include <kilosim/Timer.hpp>
+#include <kilosim/Random.h>
+#include <kilosim/Timer.h>
 #include <kilosim/Viewer.h>
 
 

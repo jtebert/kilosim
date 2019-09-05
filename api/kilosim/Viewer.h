@@ -10,9 +10,11 @@
 #ifndef __KILOSIM_VIEWER_H
 #define __KILOSIM_VIEWER_H
 
-#include "World.h"
-#include "Robot.h"
+#include <kilosim/World.h>
+#include <kilosim/Robot.h>
+
 #include <SFML/Graphics.hpp>
+
 #include <memory>
 
 namespace Kilosim

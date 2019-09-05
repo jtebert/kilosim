@@ -1,5 +1,5 @@
 #include <kilosim/Robot.h>
-#include <kilosim/random.hpp>
+#include <kilosim/Random.h>
 
 #include <cmath>
 #include <iostream>

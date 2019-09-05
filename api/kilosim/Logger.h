@@ -10,15 +10,17 @@
 #ifndef __KILOSIM_LOGGER_H
 #define __KILOSIM_LOGGER_H
 
+#include <kilosim/Robot.h>
+#include <kilosim/World.h>
+#include <kilosim/ConfigParser.h>
+
 #include <H5PacketTable.h>
 #include <H5Cpp.h>
-#include "Robot.h"
-#include "World.h"
-#include "ConfigParser.h"
 #include <nlohmann/json.hpp>
-#include <unordered_map>
-#include <string>
+
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 using json = nlohmann::json;

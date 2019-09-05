@@ -8,12 +8,14 @@
 #ifndef __KILOSIM_H
 #define __KILOSIM_H
 
-#include <string>
+#include <kilosim/Robot.h>
+#include <kilosim/LightPattern.h>
+#include <kilosim/CollisionBoxes.h>
+#include <kilosim/Timer.h>
+
 #include <SFML/Graphics.hpp>
-#include "Robot.h"
-#include "LightPattern.h"
-#include "CollisionBoxes.h"
-#include "Timer.hpp"
+
+#include <string>
 
 #ifdef _OPENMP
 #include <omp.h>

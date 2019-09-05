@@ -7,10 +7,11 @@
 #ifndef __KILOSIM_CONFIGPARSER_H
 #define __KILOSIM_CONFIGPARSER_H
 
-#include <string>
+#include <nlohmann/json.hpp>
+
 #include <fstream>
 #include <iostream>
-#include <nlohmann/json.hpp>
+#include <string>
 
 // for convenience
 using json = nlohmann::json;

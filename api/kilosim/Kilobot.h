@@ -2,8 +2,8 @@
 #define KILOLIB_H
 #undef RGB
 
-#include "Robot.h"
-#include "random.hpp"
+#include <kilosim/Robot.h>
+#include <kilosim/Random.h>
 
 namespace Kilosim
 {
