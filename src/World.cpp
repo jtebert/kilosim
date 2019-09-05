@@ -1,5 +1,6 @@
-#include "World.h"
-#include "random.hpp"
+#include <kilosim/World.h>
+#include <kilosim/random.hpp>
+
 #include <stdexcept>
 
 // Implementation of Kilobot Arena/World

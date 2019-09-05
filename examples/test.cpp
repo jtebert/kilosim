@@ -1,10 +1,12 @@
-#include "Kilobot.h"
-#include "Logger.h"
-#include "Viewer.h"
-#include "ConfigParser.h"
-#include "MyKilobot.cpp"
-#include "random.hpp"
-#include "Timer.hpp"
+#include <MyKilobot.h>
+
+#include <kilosim/ConfigParser.h>
+#include <kilosim/Kilobot.h>
+#include <kilosim/Logger.h>
+#include <kilosim/random.hpp>
+#include <kilosim/Timer.hpp>
+#include <kilosim/Viewer.h>
+
 
 std::vector<double> mean_colors(std::vector<Kilosim::Robot *> &robots)
 {

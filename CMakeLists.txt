@@ -25,7 +25,6 @@ add_library(kilosim
   src/ConfigParser.cpp
   src/LightPattern.cpp
   src/Logger.cpp
-  src/MyKilobot.cpp
   src/Robot.cpp
   src/Viewer.cpp
   src/World.cpp
@@ -34,7 +33,7 @@ add_library(kilosim
 
 target_include_directories(kilosim
 PUBLIC
-  src
+  api
   submodules
   ${HDF5_INCLUDE_DIRS}
 )
@@ -77,8 +76,10 @@ install(
 
 if(BUILD_EXAMPLES)
 add_executable(kilosim_test
-  src/test.cpp
+  examples/test.cpp
 )
+
+target_include_directories(kilosim_test PRIVATE examples)
 
 target_link_libraries(kilosim_test
 PUBLIC

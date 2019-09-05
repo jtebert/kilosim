@@ -1,4 +1,5 @@
-#include "random.hpp"
+#include <kilosim/random.hpp>
+
 #include <cassert>
 #include <random>
 #include <cstdint>

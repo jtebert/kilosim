@@ -1,8 +1,9 @@
+#include <kilosim/Robot.h>
+#include <kilosim/random.hpp>
+
 #include <cmath>
 #include <iostream>
 #include <numeric>
-#include "Robot.h"
-#include "random.hpp"
 
 namespace Kilosim
 {

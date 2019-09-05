@@ -1,4 +1,5 @@
-#include "Kilobot.h"
+#include <kilosim/Kilobot.h>
+
 #include <iostream>
 
 namespace Kilosim

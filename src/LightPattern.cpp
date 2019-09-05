@@ -4,7 +4,7 @@
     Created 2018-11 by Julia Ebert
 */
 
-#include "LightPattern.h"
+#include <kilosim/LightPattern.h>
 
 namespace Kilosim
 {

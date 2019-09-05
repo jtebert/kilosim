@@ -4,8 +4,10 @@
     Created 2018-10 by Julia Ebert
 */
 
+#include <kilosim/Logger.h>
+
 #include <typeinfo>
-#include "Logger.h"
+
 namespace Kilosim
 {
 

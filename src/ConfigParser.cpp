@@ -4,7 +4,7 @@
     Created 2018-11 by Julia Ebert
 */
 
-#include "ConfigParser.h"
+#include <kilosim/ConfigParser.h>
 
 namespace Kilosim
 {
