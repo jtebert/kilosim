@@ -18,13 +18,15 @@ Kilosim is a fast, lightweight, pseudo-physical* C++ simulator for Kilobot robot
 - Included `Logger` to easily to save experiment parameters in log continuous state data
 - Cross-platform `Viewer` for debugging and recording simulations
 - Easy configuration with JSON files to run multiple trials and varied experiments
-- *[In progress]* Parallelized with OpenMP
+- *[In progress]* Parallelization with OpenMP
 
 \* *Pseudo-physical means that it is spatial and handles issues like collisions in a functional but hand-wavy manner. We make no attempt to accurately model true physical interactions. If you want to see what this means, run an example simulation with the Viewer.*
 
+Note that this project is currently in a pre-release state and may still contain bugs, incomplete documentation, and missing features. If you have issues using the code, contact the developers or [open an issue](https://github.com/jtebert/kilosim/issues/new).
+
 ## Installing and Using
 
-**NOTE:** At this time, we only support Kilosim on Linux.
+**NOTE:** At this time, we only support Kilosim on Linux. Other operating systems will be supported by a full release.
 
 You can either [clone the repository from GitHub](https://github.com/jtebert/kilosim) or [download the latest release](https://github.com/jtebert/kilosim/releases).
 
@@ -81,7 +83,7 @@ We welcome contributions to the repository. To find things we're currently looki
 
 If you discover a bug or have an idea, for an improvement, [open an issue](https://github.com/jtebert/kilosim/issues/new).
 
-If you add something you think would be useful to others, submit a pull request. We expect all code to be [fully documented](http://www.doxygen.nl/manual/docblocks.html). You can check your documentation by [building the documentation locally](#build-documentation) Code reviews will be required for all pull requests, but we currently do not perform unit testing.
+If you add something you think would be useful to others, submit a pull request. All code should be [fully documented](http://www.doxygen.nl/manual/docblocks.html). You can check your documentation by [building the documentation locally](#build-documentation) Code reviews will be required for all pull requests, but we currently do not perform unit testing.
 
 See a [full list of the contributors and their contributions here](CONTRIBUTORS.md).
 
@@ -95,7 +97,6 @@ This will automatically use the settings in `Doxyfile` and save the results to `
 
 ## License
 
-**TBD**
+This software is released under the [MIT License](LICENSE).
 
-This shouldn't be publicly used or shared until a license has been set for this software.
-We welcome contributions to the simulator.
+If you use this software for a publication, please cite it.
