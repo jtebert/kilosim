@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.com/jtebert/kilosim.svg?token=s6ZVW1bvfNjgbZQh2x9M&branch=master)](https://travis-ci.com/jtebert/kilosim)
 [![GitHub Issues](https://img.shields.io/github/issues/jtebert/kilosim.svg)](https://github.com/jtebert/kilosim/issues)
 [![GitHub release](https://img.shields.io/github/release-pre/jtebert/kilosim?color=yellow)](https://github.com/jtebert/kilosim/releases)
+[![DOI](https://zenodo.org/badge/151430556.svg)](https://zenodo.org/badge/latestdoi/151430556)
+
 
 This is maintained on GitHub in the [kilosim repository](https://github.com/jtebert/kilosim). You can [submit any issues or questions here](https://github.com/jtebert/kilosim/issues).
 
@@ -76,6 +78,28 @@ If you are having issues installing or using the simulator, [open an issue](http
 
 - Fails with GCC 8 (We suspect this is a GCC bug; see [issue #23](https://github.com/jtebert/kilosim/issues/23).) **Workaround:** Change your GCC version.
 - Viewer does not work over SSH
+
+## Citing
+
+If you use this software, please cite it as follows:
+
+**DOI (v0.3):** [10.5281/zenodo.3406865](https://doi.org/10.5281/zenodo.3406865)
+
+**DOI (all/latest version):** [10.5281/zenodo.3406864](https://doi.org/10.5281/zenodo.3406864)
+
+**BibTeX:**
+
+```bibtex
+@misc{julia_ebert_2019_3406865,
+  author       = {Julia Ebert and
+                  Richard Barnes},
+  title        = {Kilosim},
+  month        = sep,
+  year         = 2019,
+  doi          = {10.5281/zenodo.3406865},
+  url          = {https://doi.org/10.5281/zenodo.3406865}
+}
+```
 
 ## Contributing
 
