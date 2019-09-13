@@ -6,7 +6,7 @@ project (kilosim
   LANGUAGES C CXX
 )
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 find_package(HDF5 COMPONENTS CXX HL REQUIRED)
 find_package(Sanitizers)
