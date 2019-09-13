@@ -31,7 +31,11 @@ addons:
 
 # Build your code e.g. by calling make
 script:
-  - doxygen Doxyfile
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make kilosim_docs
+  - make install
 
 # Deploy using travis builtin GitHub Pages support
 deploy:
