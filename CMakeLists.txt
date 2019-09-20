@@ -10,6 +10,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 find_package(HDF5 COMPONENTS CXX HL REQUIRED)
 find_package(Sanitizers)
+find_package(Doxygen)
 
 find_package(SFML 2.5 COMPONENTS graphics QUIET)
 if (NOT SFML_FOUND)
@@ -56,6 +57,16 @@ PRIVATE
 )
 
 target_compile_features(kilosim PRIVATE cxx_std_14)
+
+
+
+add_custom_target(
+  kilosim_docs
+  COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Generating API documentation with Doxygen"
+  VERBATIM
+)
 
 
 
