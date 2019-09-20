@@ -60,13 +60,17 @@ target_compile_features(kilosim PRIVATE cxx_std_14)
 
 
 
-add_custom_target(
-  kilosim_docs
-  COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMENT "Generating API documentation with Doxygen"
-  VERBATIM
-)
+if (DOXYGEN_FOUND)
+  add_custom_target(
+    kilosim_docs
+    COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Generating API documentation with Doxygen"
+    VERBATIM
+  )
+else(DOXYGEN_FOUND)
+  message("Doxygen needs to be installed to generate the doxygen documentation")
+endif(DOXYGEN_FOUND)
 
 
 
