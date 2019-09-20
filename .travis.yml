@@ -29,11 +29,12 @@ addons:
       - doxygen-gui
       - graphviz
 
+compiler:
+  - gcc
+
 # Build your code e.g. by calling make
 script:
-  - mkdir build
-  - cd build
-  - cmake ..
+  - cmake .
   - make kilosim_docs
   - make install
 
