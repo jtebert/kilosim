@@ -33,7 +33,14 @@ int main(int argc, char *argv[])
     timer_overall.start();
 
     // Create parser to manage configuration
-    Kilosim::ConfigParser config("exampleConfig.json");
+    // Get config file name
+    std::vector<std::string> args(argv, argv + argc);
+    if (args.size() < 2)
+    {
+        std::cout << "ERROR: You must provide a config file name" << std::endl;
+        exit(1);
+    }
+    Kilosim::ConfigParser config(args[1]);
 
     seed_rand(config.get("seed"));
 
