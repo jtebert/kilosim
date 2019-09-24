@@ -56,7 +56,7 @@ PRIVATE
   -Wextra
 )
 
-target_compile_features(kilosim PRIVATE cxx_std_14)
+target_compile_features(kilosim PRIVATE cxx_std_11)
 
 install(TARGETS kilosim ARCHIVE DESTINATION ${CMAKE_SOURCE_DIR}/lib)
 
@@ -83,7 +83,7 @@ add_executable(kilosim_example EXCLUDE_FROM_ALL examples/test.cpp)
 target_include_directories(kilosim_example PRIVATE examples)
 target_link_libraries(kilosim_example PUBLIC kilosim)
 target_compile_options(kilosim_example PRIVATE -g -march=native -Wall -Wextra)
-target_compile_features(kilosim_example PRIVATE cxx_std_14)
+target_compile_features(kilosim_example PRIVATE cxx_std_11)
 install(TARGETS kilosim_example RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin OPTIONAL)
 
 # target_include_directories(example_viewer PRIVATE examples)
