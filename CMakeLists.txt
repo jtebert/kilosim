@@ -58,6 +58,8 @@ PRIVATE
 
 target_compile_features(kilosim PRIVATE cxx_std_14)
 
+install(TARGETS kilosim ARCHIVE DESTINATION ${CMAKE_SOURCE_DIR}/lib)
+
 
 
 if (DOXYGEN_FOUND)
@@ -82,7 +84,7 @@ target_include_directories(kilosim_example PRIVATE examples)
 target_link_libraries(kilosim_example PUBLIC kilosim)
 target_compile_options(kilosim_example PRIVATE -g -march=native -Wall -Wextra)
 target_compile_features(kilosim_example PRIVATE cxx_std_14)
-install(TARGETS kilosim_example RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(TARGETS kilosim_example RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin OPTIONAL)
 
 # target_include_directories(example_viewer PRIVATE examples)
 # target_link_libraries(example_viewer PUBLIC kilosim)
