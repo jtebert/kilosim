@@ -3,7 +3,7 @@
     "world_height": 2400,
     "num_robots": 500,
     "num_threads": 3,
-    "light_pattern_filename": "test-bg.png",
+    "light_pattern_filename": "examples/test-bg.png",
     "show_scene": false,
     "trial_duration": 6000,
     "log_filename": "test-log.h5",

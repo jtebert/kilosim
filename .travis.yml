@@ -28,6 +28,9 @@ addons:
       - doxygen-latex
       - doxygen-gui
       - graphviz
+      - libsfml-dev
+      - libhdf5-dev
+      - libomp-dev
 
 compiler:
   - gcc
