@@ -7,6 +7,8 @@
 # This will run on Travis' 'new' container-based infrastructure
 sudo: false
 
+dist: bionic
+
 # Blacklist
 branches:
   only:
