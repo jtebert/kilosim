@@ -45,17 +45,17 @@ To compile, copy and paste the following:
     mkdir build                                #Create a build directory
     cd build                                   #Move into build directory
     cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .. #Configure for your system
-    make                                       #Build all
-    make install                               #Install files
+    make                                       #Build the library
+    make install                               #Install the library to the source directory
     cd ..                                      #Move back to source directory
 
 Alternatively, you can run:
 
     make kilosim                        #Build library
-    make examples                       #Build examples
-    make kilosim_docs                   #Build documentation
+    make examples                       #Build examples (optional)
+    make kilosim_docs                   #Build documentation (optional)
 
-To clean up the build run:
+To clean up the build enter the source directory and run:
 
     rm -rf build bin lib
 
@@ -69,6 +69,7 @@ Use flags like so:
 
 Compatibility:
 
+ * g++ 5   - doesn't work
  * g++ 7.3 - works
  * g++ 8.1 - fails due to compiler issue(?)
  * g++ 8.3 - works 
