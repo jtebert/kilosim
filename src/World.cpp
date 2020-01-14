@@ -7,9 +7,10 @@
 namespace Kilosim
 {
 World::World(const double arena_width, const double arena_height,
-             const std::string light_pattern_src, const uint num_threads)
+             const std::string light_pattern_src, const uint num_threads, const uint max_comm_density)
     : m_arena_width(arena_width), m_arena_height(arena_height),
-      cb(arena_width, arena_height, 2 * RADIUS)
+      cb(arena_width, arena_height, 2 * RADIUS, 4),
+      comm_grid(arena_width, arena_height, 12 * RADIUS, max_comm_density)
 {
     if (light_pattern_src.size() > 0)
     {
@@ -56,11 +57,6 @@ void World::step()
     run_controllers();
     timer_controllers.stop();
 
-    // Communication between all robot pairs
-    timer_communicate.start();
-    communicate();
-    timer_communicate.stop();
-
     // Compute potential movement for all robots
     timer_compute_next_step.start();
     compute_next_step(new_poses);
@@ -76,6 +72,11 @@ void World::step()
     timer_move.start();
     move_robots(new_poses, collisions);
     timer_move.stop();
+
+    // Communication between all robot pairs
+    timer_communicate.start();
+    communicate(new_poses);
+    timer_communicate.stop();
 
     // Increment time
     m_tick++;
@@ -112,7 +113,7 @@ void World::remove_robot(Robot *robot)
 
 void World::run_controllers()
 {
-    // #pragma omp parallel for default(none) //schedule(static)
+#pragma omp parallel for default(none) //schedule(static)
     for (unsigned int i = 0; i < m_robots.size(); i++)
     {
         if (uniform_rand_real(0, 1) < m_prob_control_execute)
@@ -122,53 +123,56 @@ void World::run_controllers()
     }
 }
 
-void World::communicate()
+void World::communicate(const std::vector<RobotPose> &new_poses)
 {
-    // TODO: Is the shuffling necessary? (I killed it)
+    // Communication doesn't happen every tick
+    if (m_tick % m_comm_rate != 0)
+        return;
+    // Place robot's new positions on the grid
+    comm_grid.update(new_poses);
 
-    if (m_tick % m_comm_rate == 0)
+#pragma omp parallel for schedule(static)
+    for (unsigned int tx_i = 0; tx_i < m_robots.size(); tx_i++)
     {
-        // #pragma omp parallel for
-        for (unsigned int tx_i = 0; tx_i < m_robots.size(); tx_i++)
-        {
-            Robot &tx_r = *m_robots[tx_i];
-            // Loop over all transmitting robots
-            void *msg = tx_r.get_message();
-            if (msg)
-            {
-                for (unsigned int rx_i = 0; rx_i < m_robots.size(); rx_i++)
-                {
-                    Robot &rx_r = *m_robots[rx_i];
-                    // Loop over receivers if transmitting robot is sending a message
-                    if (rx_i != tx_i)
-                    {
-                        // Check communication range in both directions
-                        // (due to potentially noisy communication range)
-                        double dist = tx_r.distance(tx_r.x, tx_r.y, rx_r.x, rx_r.y);
-                        // Only communicate if robots are within each others'
-                        // communication ranges. (Range may be asymmetric/noisy)
-                        if (tx_r.comm_criteria(dist) &&
-                            rx_r.comm_criteria(dist))
-                        {
-                            // Receiving robot processes incoming message
-                            rx_r.receive_msg(msg, dist);
-                            // Tell the sender that the message sent successfully
-                            tx_r.received();
-                        }
-                    }
-                }
-            }
-        }
+        // Get the message for the sending robot
+        auto &tx_r = *m_robots[tx_i];
+        void *msg = tx_r.get_message();
+        // Skip sending stuff if the robot doesn't have a message to send
+        if (!msg)
+            continue;
+
+        const auto func = [&](const unsigned int rx_i) -> bool {
+            if (tx_i == rx_i)
+                return true; // This is me; look at more neighbors
+            auto &rx_r = *m_robots[rx_i];
+            const double distance_sqr = pow(tx_r.x - rx_r.x, 2) + pow(tx_r.y - rx_r.y, 2);
+
+            // Check to see if robots' centers are within 2*RADIUS of each
+            // other, since that means their edges would be touching. But we
+            // actually check (2*RADIUS)^2 because we don't take the square root
+            // of the distance above.
+            //const double comm_range = std::min(rx_r.comm_range, tx_r.comm_range);
+            if (distance_sqr > rx_r.comm_range * rx_r.comm_range)
+                return true;
+
+            rx_r.receive_msg(msg, sqrt(distance_sqr));
+            // Tell the sender that the message sent successfully
+            tx_r.received();
+
+            return true; //Look at more neighbours
+        };
+
+        comm_grid.considerNeighbours(tx_r.x, tx_r.y, func);
     }
 }
 
 void World::compute_next_step(std::vector<RobotPose> &new_poses)
 {
-    // TODO: Implement compute_next_step (and maybe change from pointers)
+// TODO: Implement compute_next_step (and maybe change from pointers)
 
-    // printf("\nt = %d\n", m_tick);
-    // #pragma omp parallel for schedule(static)
-    // #pragma omp parallel for
+// printf("\nt = %d\n", m_tick);
+#pragma omp parallel for schedule(static)
+    // #// pragma omp parallel for
     for (unsigned int r_i = 0; r_i < m_robots.size(); r_i++)
     {
         new_poses[r_i] = m_robots[r_i]->robot_compute_next_step();
@@ -194,7 +198,7 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
     //to ensure that wall collisions are still adequately accounted for. It also
     //reduces the potential for parallelism since it introduces a data race.
 
-    // #pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(static)
     for (unsigned int ci = 0; ci < m_robots.size(); ci++)
     {
         const auto &cr = new_poses[ci];
@@ -260,8 +264,8 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
 void World::move_robots(std::vector<RobotPose> &new_poses,
                         const std::vector<int16_t> &collisions)
 {
-    // TODO: Parallelize
-    // #pragma omp parallel for
+// TODO: Parallelize
+#pragma omp parallel for
     for (unsigned int ri = 0; ri < m_robots.size(); ri++)
     {
         m_robots[ri]->robot_move(new_poses[ri], collisions[ri]);

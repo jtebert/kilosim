@@ -123,6 +123,8 @@ public:
 	double theta;
 	//! RGB LED display color, values 0-1 (also used as display color by `Viewer`)
 	double color[3];
+	//! Communication range between robots in mm (3 bodylengths)
+	const double comm_range = 6 * 16;
 
 	//! Flag set to 1 when new message received
 	// TODO: This doesn't appear to actually be used anymore. Kill it?
@@ -206,33 +208,6 @@ public:
 	void robot_move(const RobotPose &new_pose, const int16_t &collision);
 
 	virtual char *get_debug_info(char *buffer, char *rt) = 0;
-
-	/*!
-	 * Determine if another robot is within communication range
-	 * This is called by a transmitting (tx) robot to verify if the receiver is
-	 * within range when sending a message OUT. Because of possible
-	 * asymmetries in communication range, both comm_criteria() must be met by
-	 * both the tx and rx robots for a message to be successfully transmitted.
-	 * @param dist Distance between the robots (in mm)
-	 * @return true if robot can communicate with another robot
-	 */
-	virtual bool comm_criteria(double dist) = 0;
-
-	/*!
-	 * Compute the cartesian distance between two positions (x1, y1) and (x2, y2)
-	 * @param x1 x-position of first point
-	 * @param y1 y-position of first point
-	 * @param x2 x-position of second point
-	 * @param y2 y-position of second point
-	 * @return Straight-line cartesian distance between positions
-	 */
-	static double distance(double x1, double y1, double x2, double y2)
-	{
-		const double x = x1 - x2;
-		const double y = y1 - y2;
-		const double s = pow(x, 2) + pow(y, 2);
-		return sqrt(s);
-	}
 
 	/*!
 	 * This is called by a transmitting robot (tx) to set a flag for calling the
