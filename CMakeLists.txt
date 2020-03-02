@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.9)
 
 project (kilosim
-  VERSION 0.0.1
+  VERSION 0.4
   DESCRIPTION "TODO"
   LANGUAGES C CXX
 )
@@ -60,7 +60,7 @@ PRIVATE
 
 target_compile_features(kilosim PRIVATE cxx_std_11)
 
-install(TARGETS kilosim ARCHIVE DESTINATION ${CMAKE_SOURCE_DIR}/lib)
+install(TARGETS kilosim ARCHIVE DESTINATION lib)
 
 
 
@@ -86,7 +86,7 @@ target_include_directories(kilosim_example PRIVATE examples)
 target_link_libraries(kilosim_example PUBLIC kilosim)
 target_compile_options(kilosim_example PRIVATE -g -march=native -Wall -Wextra)
 target_compile_features(kilosim_example PRIVATE cxx_std_11)
-install(TARGETS kilosim_example RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin OPTIONAL)
+install(TARGETS kilosim_example RUNTIME DESTINATION bin OPTIONAL)
 
 # target_include_directories(example_viewer PRIVATE examples)
 # target_link_libraries(example_viewer PUBLIC kilosim)

@@ -44,9 +44,9 @@ To compile, copy and paste the following:
 
     mkdir build                                #Create a build directory
     cd build                                   #Move into build directory
-    cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .. #Configure for your system
+    cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=../ .. #Configure for your system
     make                                       #Build the library
-    make install                               #Install the library to the source directory
+    make install                               #Install the library to that indicated by `CMAKE_INSTALL_PREFIX` above
     cd ..                                      #Move back to source directory
 
 Alternatively, you can run:
@@ -54,6 +54,7 @@ Alternatively, you can run:
     make kilosim                        #Build library
     make examples                       #Build examples (optional)
     make kilosim_docs                   #Build documentation (optional)
+    make install
 
 To clean up the build enter the source directory and run:
 
@@ -73,6 +74,7 @@ Compatibility:
  * g++ 7.3 - works
  * g++ 8.1 - fails due to compiler issue(?)
  * g++ 8.3 - works 
+ * g++ 9.2.1 - works
 
 ### Run
 
@@ -87,7 +89,7 @@ If your project uses `cmake`, then incorporating kilosim is easy!
 Just add the following lines:
 
     add_subdirectory(path/to/kilosim)
-    target_link_libraries(your_executable_target PUBLIC kilosim)
+    target_link_libraries(your_executable_target PRIVATE kilosim)
 
 And everything will just work.
 
