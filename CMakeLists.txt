@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.9)
 
 project (kilosim
-  VERSION 0.4
+  VERSION 0.4.0
   DESCRIPTION "TODO"
   LANGUAGES C CXX
 )

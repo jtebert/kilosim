@@ -1,4 +1,6 @@
-# ![Kilosim logo](docs/logo.svg) Kilosim: Kilobot Simulator
+# Kilosim: Kilobot Simulator
+
+![Kilosim logo](docs/logo.svg)
 
 [![Build Status](https://travis-ci.com/jtebert/kilosim.svg?token=s6ZVW1bvfNjgbZQh2x9M&branch=master)](https://travis-ci.com/jtebert/kilosim)
 [![GitHub Issues](https://img.shields.io/github/issues/jtebert/kilosim.svg)](https://github.com/jtebert/kilosim/issues)
@@ -73,7 +75,7 @@ Compatibility:
  * g++ 5   - doesn't work
  * g++ 7.3 - works
  * g++ 8.1 - fails due to compiler issue(?)
- * g++ 8.3 - works 
+ * g++ 8.3 - works
  * g++ 9.2.1 - works
 
 ### Run
@@ -119,12 +121,12 @@ If you use this software, please cite it as follows:
 **BibTeX:**
 
 ```bibtex
-@misc{julia_ebert_2019_3406865,
-  author       = {Julia Ebert and
-                  Richard Barnes},
+@misc{kilosim_3406865,
+  author       = {Ebert, Julia and
+                  Barnes, Richard},
   title        = {Kilosim},
-  month        = sep,
-  year         = 2019,
+  month        = mar,
+  year         = 20120,
   doi          = {10.5281/zenodo.3406865},
   url          = {https://doi.org/10.5281/zenodo.3406865}
 }
@@ -138,7 +140,7 @@ If you discover a bug or have an idea, for an improvement, [open an issue](https
 
 If you add something you think would be useful to others, submit a pull request. All code should be [fully documented](http://www.doxygen.nl/manual/docblocks.html). You can check your documentation by [building the documentation locally](#build-documentation) Code reviews will be required for all pull requests, but we currently do not perform unit testing.
 
-See a [full list of the contributors and their contributions here](CONTRIBUTORS.md).
+See a [full list of the contributors and their contributions here]([CONTRIBUTORS.md](https://github.com/jtebert/kilosim/blob/master/CONTRIBUTORS.md)).
 
 ### Build Documentation
 
@@ -150,6 +152,6 @@ This will automatically build the documentation and save the results to `docs/`.
 
 ## License
 
-This software is released under the [MIT License](LICENSE).
+This software is released under the [MIT License](https://github.com/jtebert/kilosim/blob/master/LICENSE).
 
 If you use this software for a publication, please cite it.
