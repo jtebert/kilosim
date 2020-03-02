@@ -7,7 +7,6 @@
 #include <kilosim/Timer.h>
 #include <kilosim/Viewer.h>
 
-
 std::vector<double> mean_colors(std::vector<Kilosim::Robot *> &robots)
 {
     // Get the mean color for all 3 LED color components
@@ -84,7 +83,7 @@ int main(int argc, char *argv[])
         logger.log_config(config);
 
         // Create Viewer to visualize the world
-        // Kilosim::Viewer viewer(world);
+        Kilosim::Viewer viewer(world);
 
         int step_count = 0;
         while (world.get_time() < trial_duration)
@@ -98,7 +97,7 @@ int main(int argc, char *argv[])
             timer_step.stop();
 
             // Draw the world
-            // viewer.draw();
+            viewer.draw();
 
             if ((world.get_tick() % (log_freq * world.get_tick_rate())) == 0)
             {

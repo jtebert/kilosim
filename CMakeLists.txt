@@ -45,6 +45,8 @@ PUBLIC
   ${HDF5_CXX_LIBRARIES}
   OpenMP::OpenMP_CXX
   sfml-graphics
+  sfml-window
+  sfml-system
 )
 
 target_compile_options(kilosim
