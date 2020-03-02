@@ -4,8 +4,6 @@
 # Based on the example at: https://gist.github.com/vidavidorra/548ffbcdae99d752da02
 # And particularly this comment: https://gist.github.com/vidavidorra/548ffbcdae99d752da02#gistcomment-1958817
 
-# This will run on Travis' 'new' container-based infrastructure
-sudo: false
 
 dist: bionic
 
@@ -40,7 +38,7 @@ compiler:
 # Build your code e.g. by calling make
 script:
   - mkdir build
-  - cd mkdir
+  - cd build
   - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=../ ..
   - make kilosim_docs
   - make install
@@ -49,7 +47,6 @@ script:
 # Deploy using travis builtin GitHub Pages support
 deploy:
   provider: pages
-  skip_cleanup: true
   local_dir: $TRAVIS_BUILD_DIR/docs/html
   github_token: $GH_REPO_TOKEN
   on:
