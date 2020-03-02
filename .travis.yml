@@ -39,9 +39,12 @@ compiler:
 
 # Build your code e.g. by calling make
 script:
-  - cmake .
+  - mkdir build
+  - cd mkdir
+  - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=../ ..
   - make kilosim_docs
   - make install
+  - make examples
 
 # Deploy using travis builtin GitHub Pages support
 deploy:
