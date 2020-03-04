@@ -80,6 +80,11 @@ namespace Kilosim
  */
 class Logger
 {
+
+  /*! @example example_logger.cpp
+   * Example minimal usage of a Logger
+   */
+
 public:
   /*!
    * A function mapping Robots to values
@@ -126,11 +131,11 @@ private:
   H5PacketTablePtr m_time_table;
   //! Conversion from JSON types to HDF5 types (NOTE: only works for atomic datatypes)
   std::unordered_map<json::value_t, H5::PredType> m_json_h5_types = {
-      {json::value_t::boolean,         H5::PredType::NATIVE_HBOOL},
-      {json::value_t::number_integer,  H5::PredType::NATIVE_INT},
+      {json::value_t::boolean, H5::PredType::NATIVE_HBOOL},
+      {json::value_t::number_integer, H5::PredType::NATIVE_INT},
       {json::value_t::number_unsigned, H5::PredType::NATIVE_UINT},
-      {json::value_t::number_float,    H5::PredType::NATIVE_DOUBLE},
-      {json::value_t::string,          H5::PredType::C_S1},
+      {json::value_t::number_float, H5::PredType::NATIVE_DOUBLE},
+      {json::value_t::string, H5::PredType::C_S1},
   };
 
 public:
@@ -240,9 +245,6 @@ private:
   void log_param(const std::string name, const json val, const bool show_warnings);
 };
 
-/*! \example example_logger.cpp
- * Example minimal usage of a Logger
- */
 } // namespace Kilosim
 
 #endif

@@ -47,6 +47,13 @@ struct message_t
  */
 class Kilobot : public Robot
 {
+
+	/*! @example example_kilobot.cpp
+ 	 * Example of a minimal custom Kilobot implementation
+ 	 * @example CMakeLists.txt
+	 * Example for how to use the compiled kilosim library in another project
+	 */
+
 private:
 	//! Is the left motor ready to move? (aka used spinup_motors())
 	bool left_ready = false;
@@ -360,9 +367,6 @@ protected:
 	}
 };
 
-/*! \example example_kilobot.cpp
- * Example of a minimal custom Kilobot implementation
- */
 } // namespace Kilosim
 
 #endif

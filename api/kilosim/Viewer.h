@@ -27,6 +27,11 @@ namespace Kilosim
  */
 class Viewer
 {
+
+  /*! @example example_viewer.cpp
+   * Example usage of a Viewer to display a World in a simulation loop.
+   */
+
 private:
   //! Reference to the World that this Viewer draws
   World &m_world;
@@ -74,9 +79,6 @@ private:
   void draw_time();
 };
 
-/*! \example example_viewer.cpp
- * Example usage of a Viewer to display a World in a simulation loop.
- */
 } // namespace Kilosim
 
 #endif
