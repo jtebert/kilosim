@@ -8,7 +8,6 @@
 #include <iostream>
 #include <cmath>
 
-constexpr double motion_error_std = .02;
 constexpr double PI = 3.14159265358979324;
 constexpr uint32_t GAUSS = 10000;
 constexpr uint8_t right = 2;
@@ -75,6 +74,8 @@ protected:
 	LightPattern *m_light_pattern;
 	//! Time per tick (set when Robot added to World)
 	double m_tick_delta_t;
+
+	// FOR COLLISIONS
 	//! When robots collide, which direction this will turn (0 or 1)
 	uint8_t m_collision_turn_dir;
 	//! How long the robot has been turning this way while colliding
@@ -83,19 +84,11 @@ protected:
 	//! How long to turn one way when colliding, before switching
 	//! (set randomly in robot_init())
 	uint32_t m_max_collision_timer;
-	//! Value of how motors differ from ideal.
-	//! (Don't use these; that's cheating!) Set in robot_init()
-	double m_motor_error;
+	//! Turning speed during collisions in rad/s
+	double m_collision_turn_speed = 0.5;
 
-	//! Base forward speed in mm/s
-	//! (Will be randomized around this in robot_init())
-	double m_forward_speed = 24;
-	//! Base turning speed in rad/s
-	//! (Will be randomized around this in robot_init())
-	double m_turn_speed = 0.5;
-	// TODO: Shouldn't battery also be set in robot_init()?
 	/*!
-	 * Battery remaining (to be set in `Kilobot.init()`).
+	 * Battery remaining (to be set in `init()`).
 	 * This is decremented by 0.5 every tick in which a motor is running. (No
 	 * battery reduction occurs when robots are not moving.) At 32 ticks/sec, a
 	 * battery life of 2 hours of constant movement is 230400.
@@ -103,8 +96,6 @@ protected:
 	 * The default value of -1 signifies an artificially infinite battery life.
 	 */
 	double battery = -1;
-	//! Flag set to 1 when robot wants to transmit
-	int tx_request;
 
 public:
 	//! UUID of the robot, set in robot_init()
@@ -123,10 +114,6 @@ public:
 	double theta;
 	//! RGB LED display color, values 0-1 (also used as display color by `Viewer`)
 	double color[3];
-
-	//! Flag set to 1 when new message received
-	// TODO: This doesn't appear to actually be used anymore. Kill it?
-	int incoming_message_flag;
 
 	/*!
 	 * Get a void pointer to the message the robot is sending and handle any

@@ -53,6 +53,9 @@ class Kilobot : public Robot
 	 */
 
 private:
+	// FOR MOVEMENT
+	//! Robot commanded motion 1=forward, 2=cw rotation, 3=ccw rotation, 4=stop
+	int m_motor_command = 0;
 	//! Is the left motor ready to move? (aka used spinup_motors())
 	bool left_ready = false;
 	//! Is the right motor ready to move? (aka used spinup_motors())
@@ -61,18 +64,23 @@ private:
 	int m_turn_right = 0;
 	//! Set duty cycle of the left motor
 	int m_turn_left = 0;
+
+	//! Base forward speed in mm/s (Will be randomized around this in init())
+	double m_forward_speed = 24;
+	//! Base turning speed in rad/s (Will be randomized around this in init())
+	double m_turn_speed = 0.5;
+
+	// FOR COMMUNICATION
 	//! Communication range between robots in mm (3 bodylengths)
 	const double m_comm_range = 6 * 16;
-
+	//! Flag set to 1 when robot wants to transmit
+	int tx_request = 0;
 	double distance_measurement;
 	//! Did this robot successfully send its message?
 	bool message_sent = false;
 
 	//! Radius of the robot in mm (get with get_radius)
 	const double m_radius = 16;
-
-	//! Robot commanded motion 1=forward, 2=cw rotation, 3=ccw rotation, 4=stop
-	int m_motor_command = 0;
 
 protected:
 	//! [Kilolib API] Kilobot clock variable
@@ -103,8 +111,30 @@ private:
 	 */
 	void init()
 	{
+		// Generate CLAMPED motor error (avoid extremes by regenerating)
+		// Add random variation to forward/turn speeds
+		double turn_speed_error = 100;
+		double turn_speed_error_std = m_turn_speed * 0.1; // 5% of turn speed
+		double turn_speed_error_clamp = turn_speed_error_std * 1.1;
+		while (abs(turn_speed_error) > turn_speed_error_clamp)
+		{
+			turn_speed_error = normal_rand(0.0, 1.0) * turn_speed_error_std;
+		}
+		m_turn_speed = m_turn_speed + turn_speed_error;
+		double forward_speed_error = 100;
+		double forward_speed_error_std = m_forward_speed * 0.1; // 5% of turn speed
+		double forward_speed_error_clamp = forward_speed_error_std * 1.1;
+		while (abs(forward_speed_error) > forward_speed_error_clamp)
+		{
+			forward_speed_error = normal_rand(0.0, 1.0) * forward_speed_error_std;
+		}
+		m_forward_speed = m_forward_speed + forward_speed_error;
+
+		// Initialize randomized battery life
 		double two_hours = SECOND * 60 * 60 * 2;
 		battery = (1 + normal_rand(0.0, 1.0) / 5) * two_hours;
+
+		// Call user's setup function
 		setup();
 	}
 
