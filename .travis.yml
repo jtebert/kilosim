@@ -40,9 +40,10 @@ script:
   - mkdir build
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=../ ..
+  - make
   - make kilosim_docs
-  - make install
   - make examples
+  - make install
   - cd ..
 
 # Deploy using travis builtin GitHub Pages support

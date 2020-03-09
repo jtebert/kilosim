@@ -5,7 +5,7 @@
 [![Build Status](https://travis-ci.com/jtebert/kilosim.svg?token=s6ZVW1bvfNjgbZQh2x9M&branch=master)](https://travis-ci.com/jtebert/kilosim)
 [![GitHub Issues](https://img.shields.io/github/issues/jtebert/kilosim.svg)](https://github.com/jtebert/kilosim/issues)
 [![GitHub release](https://img.shields.io/github/release-pre/jtebert/kilosim?color=yellow)](https://github.com/jtebert/kilosim/releases)
-[![DOI](https://zenodo.org/badge/151430556.svg)](https://zenodo.org/badge/latestdoi/151430556)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3406864.svg)](https://doi.org/10.5281/zenodo.3406864)
 
 
 This is maintained on GitHub in the [kilosim repository](https://github.com/jtebert/kilosim). You can [submit any issues or questions here](https://github.com/jtebert/kilosim/issues).
