@@ -30,7 +30,7 @@ Note that this project is currently in a pre-release state and may still contain
 
 ## Installing and Using
 
-**NOTE:** At this time, we only support Kilosim on Linux. Other operating systems will be supported by a full release.
+**NOTE:** We have tested Kilosim primarily on Ubuntu. Although CMake makes it possible to use across operating systems, we have not thoroughly tested this beyond Linux. Installation of dependencies will differ depending on your system.
 
 You can either [clone the repository from GitHub](https://github.com/jtebert/kilosim) or [download the latest release](https://github.com/jtebert/kilosim/releases).
 

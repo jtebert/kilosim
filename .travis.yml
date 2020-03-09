@@ -51,5 +51,6 @@ deploy:
   provider: pages
   local_dir: $TRAVIS_BUILD_DIR/docs/html
   github_token: $GH_REPO_TOKEN
+  skip_cleanup: true
   on:
     branch: master
