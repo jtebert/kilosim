@@ -7,71 +7,13 @@
 
 namespace Kilosim
 {
-void Robot::robot_controller()
-{
-	// A battery value of -1 artificially defines an infinite-life battery
-	if (-1 < battery && battery > 0)
-	{
-		timer++;
-		// Run the Kilobot functionality: set sending/receiving messages, setting motor states, and running loop() function
-		controller();
-		if (m_motor_command)
-		{
-			// 0 is not moving; otherwise discount battery by fixed amount
-			battery -= 0.5;
-		}
-	}
-	else
-	{
-		// Robot is dead. Stop movement and don't let it do anything
-		m_forward_speed = 0;
-		m_turn_speed = 0;
-		m_motor_command = 4;
-		color[0] = .3;
-		color[1] = .3;
-		color[2] = .3;
-		tx_request = 0;
-	}
-}
-
-RobotPose Robot::robot_compute_next_step() const
-{
-	double radius = get_radius();
-	double temp_x = x;
-	double temp_y = y;
-	double temp_theta = theta;
-	switch (m_motor_command)
-	{
-	case 1:
-	{ // forward
-		const double speed = m_forward_speed * m_tick_delta_t;
-		temp_x = speed * cos(temp_theta) + x;
-		temp_y = speed * sin(temp_theta) + y;
-		break;
-	}
-	case 2:
-	{ // CW rotation
-		const double phi = -m_turn_speed * m_tick_delta_t;
-		temp_theta += phi;
-		const double temp_cos = radius * cos(temp_theta + 4 * PI / 3);
-		const double temp_sin = radius * sin(temp_theta + 4 * PI / 3);
-		temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
-		temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
-		break;
-	}
-	case 3:
-	{ // CCW rotation
-		const double phi = m_turn_speed * m_tick_delta_t;
-		temp_theta += phi;
-		const double temp_cos = radius * cos(temp_theta + 2 * PI / 3);
-		const double temp_sin = radius * sin(temp_theta + 2 * PI / 3);
-		temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
-		temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
-		break;
-	}
-	}
-	return {temp_x, temp_y, wrap_angle(temp_theta)};
-}
+// void Robot::robot_controller()
+// {
+// 	// Run the user's code
+// 	loop();
+// 	// Run the robot control code
+// 	controller()
+// }
 
 void Robot::robot_move(const RobotPose &new_pose, const int16_t &collision)
 {
@@ -120,7 +62,6 @@ void Robot::robot_init(double x0, double y0, double theta0)
 	y = y0;
 	theta = theta0;
 
-	m_motor_command = 0;
 	incoming_message_flag = 0;
 	tx_request = 0;
 	id = uniform_rand_int(0, 2147483640);

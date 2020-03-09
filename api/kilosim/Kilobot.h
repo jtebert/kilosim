@@ -65,10 +65,14 @@ private:
 	const double m_comm_range = 6 * 16;
 
 	double distance_measurement;
+	//! Did this robot successfully send its message?
 	bool message_sent = false;
 
 	//! Radius of the robot in mm (get with get_radius)
-	double m_radius = 16;
+	const double m_radius = 16;
+
+	//! Robot commanded motion 1=forward, 2=cw rotation, 3=ccw rotation, 4=stop
+	int m_motor_command = 0;
 
 protected:
 	//! [Kilolib API] Kilobot clock variable
@@ -106,43 +110,119 @@ private:
 
 	void controller()
 	{
-		if (message_sent)
+		// Call the user's code
+		loop();
+
+		bool battery_dead = false;
+
+		// A battery value of -1 artificially defines an infinite-life battery
+		if (-1 < battery && battery > 0)
 		{
-			tx_request = 0;
-			message_sent = false;
-			message_tx_success();
+			timer++;
+			if (m_motor_command)
+			{
+				// 0 is not moving; otherwise discount battery by fixed amount
+				battery -= 0.5;
+			}
 		}
-		kilo_ticks++;
-		const double tick_rand = uniform_rand_real(0, 1);
-		if (tick_rand < 0.1)
+		else
 		{
-			if (tick_rand < 0.05)
-				kilo_ticks--;
+			// Robot is dead. Stop movement and don't let it do anything
+			m_forward_speed = 0;
+			m_turn_speed = 0;
+			m_motor_command = 4;
+			color[0] = .3;
+			color[1] = .3;
+			color[2] = .3;
+			tx_request = 0;
+			battery_dead = true;
+		}
+
+		if (!battery_dead)
+		{
+			// Callback for successful message transmission
+			if (message_sent)
+			{
+				tx_request = 0;
+				message_sent = false;
+				message_tx_success();
+			}
+
+			// Clock (with some uncertainty)
+			kilo_ticks++;
+			const double tick_rand = uniform_rand_real(0, 1);
+			if (tick_rand < 0.1)
+			{
+				if (tick_rand < 0.05)
+					kilo_ticks--;
+				else
+					kilo_ticks++;
+			}
+
+			// Motor commands/movement
+			m_motor_command = 4;
+			if (right_ready && m_turn_right == kilo_turn_right)
+			{
+				m_motor_command -= 2;
+			}
 			else
-				kilo_ticks++;
+			{
+				right_ready = false;
+			}
+			if (left_ready && m_turn_left == kilo_turn_left)
+			{
+				m_motor_command -= 1;
+			}
+			else
+			{
+				left_ready = false;
+			}
+
+			// Sending a new message if one is ready to be sent
+			if (message_tx())
+				tx_request = 1;
+			else
+				tx_request = 0;
 		}
-		this->loop();
-		m_motor_command = 4;
-		if (right_ready && m_turn_right == kilo_turn_right)
+	}
+
+	RobotPose robot_compute_next_step() const
+	{
+		double radius = get_radius();
+		double temp_x = x;
+		double temp_y = y;
+		double temp_theta = theta;
+		switch (m_motor_command)
 		{
-			m_motor_command -= 2;
+		case 1:
+		{ // forward
+			const double speed = m_forward_speed * m_tick_delta_t;
+			temp_x = speed * cos(temp_theta) + x;
+			temp_y = speed * sin(temp_theta) + y;
+			break;
 		}
-		else
-		{
-			right_ready = false;
+		case 2:
+		{ // CW rotation
+			const double phi = -m_turn_speed * m_tick_delta_t;
+			temp_theta += phi;
+			const double temp_cos = radius * cos(temp_theta + 4 * PI / 3);
+			const double temp_sin = radius * sin(temp_theta + 4 * PI / 3);
+			temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
+			temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
+			break;
 		}
-		if (left_ready && m_turn_left == kilo_turn_left)
-		{
-			m_motor_command -= 1;
+		case 3:
+		{ // CCW rotation
+			const double phi = m_turn_speed * m_tick_delta_t;
+			temp_theta += phi;
+			const double temp_cos = radius * cos(temp_theta + 2 * PI / 3);
+			const double temp_sin = radius * sin(temp_theta + 2 * PI / 3);
+			temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
+			temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
+			break;
 		}
-		else
-		{
-			left_ready = false;
 		}
-		if (message_tx())
-			tx_request = 1;
-		else
-			tx_request = 0;
+		return {temp_x, temp_y, wrap_angle(temp_theta)};
 	}
 
 protected:

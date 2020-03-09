@@ -126,7 +126,7 @@ void World::run_controllers()
     {
         if (uniform_rand_real(0, 1) < m_prob_control_execute)
         {
-            m_robots[i]->robot_controller();
+            m_robots[i]->controller();
         }
     }
 }
