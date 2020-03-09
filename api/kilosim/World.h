@@ -65,7 +65,7 @@ private:
   LightPattern m_light_pattern;
 
 private:
-  CollisionBoxes cb;
+  CollisionBoxes collision_boxes;
   Timer timer_controllers;
   Timer timer_collisions;
   Timer timer_move;

@@ -36,6 +36,7 @@ void Robot::robot_controller()
 
 RobotPose Robot::robot_compute_next_step() const
 {
+	double radius = get_radius();
 	double temp_x = x;
 	double temp_y = y;
 	double temp_theta = theta;
@@ -52,8 +53,8 @@ RobotPose Robot::robot_compute_next_step() const
 	{ // CW rotation
 		const double phi = -m_turn_speed * m_tick_delta_t;
 		temp_theta += phi;
-		const double temp_cos = RADIUS * cos(temp_theta + 4 * PI / 3);
-		const double temp_sin = RADIUS * sin(temp_theta + 4 * PI / 3);
+		const double temp_cos = radius * cos(temp_theta + 4 * PI / 3);
+		const double temp_sin = radius * sin(temp_theta + 4 * PI / 3);
 		temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
 		temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
 		break;
@@ -62,8 +63,8 @@ RobotPose Robot::robot_compute_next_step() const
 	{ // CCW rotation
 		const double phi = m_turn_speed * m_tick_delta_t;
 		temp_theta += phi;
-		const double temp_cos = RADIUS * cos(temp_theta + 2 * PI / 3);
-		const double temp_sin = RADIUS * sin(temp_theta + 2 * PI / 3);
+		const double temp_cos = radius * cos(temp_theta + 2 * PI / 3);
+		const double temp_sin = radius * sin(temp_theta + 2 * PI / 3);
 		temp_x = x + temp_cos - temp_cos * cos(phi) + temp_sin * sin(phi);
 		temp_y = y + temp_sin - temp_cos * sin(phi) - temp_sin * cos(phi);
 		break;
