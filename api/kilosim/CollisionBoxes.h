@@ -25,14 +25,19 @@ private:
   typedef std::vector<int> ivec;
   ivec agent_positions;
   ivec cells_used;
-  double diameter; //Collision diameter
-  int bwidth;      //Width in bins
-  int bheight;     //Height in bins
+  double diameter; // Collision diameter
+  int bwidth;      // Width in bins
+  int bheight;     // Height in bins
 
 public:
   CollisionBoxes() = default;
 
   CollisionBoxes(const double width0, const double height0, const double diameter0)
+  {
+    init(width0, height0, diameter0);
+  }
+
+  void init(const double width0, const double height0, const double diameter0)
   {
     diameter = diameter0;
     bwidth = std::ceil(width0 / diameter);
@@ -44,7 +49,7 @@ public:
   template <class T>
   void update(const std::vector<T> &agents)
   {
-    //Clear bins of their occupants
+    // Clear bins of their occupants
     for (const auto &p : cells_used)
       agent_positions[p] = -1;
     cells_used.clear();

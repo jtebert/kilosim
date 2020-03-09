@@ -10,7 +10,8 @@ namespace Kilosim
 World::World(const double arena_width, const double arena_height,
              const std::string light_pattern_src, const uint32_t num_threads)
     : m_arena_width(arena_width), m_arena_height(arena_height),
-      cb(arena_width, arena_height, 2 * RADIUS)
+      collision_boxes()
+//   collision_boxes(arena_width, arena_height, 2 * 16)
 {
     if (light_pattern_src.size() > 0)
     {
@@ -101,6 +102,13 @@ void World::set_light_pattern(std::string light_pattern_src)
 
 void World::add_robot(Robot *robot)
 {
+
+    // If this is the first robot added, initialize the collision boxes using
+    // its radius
+    if (m_robots.size() == 0)
+    {
+        collision_boxes.init(m_arena_width, m_arena_height, 2 * robot->get_radius());
+    }
     robot->add_to_world(m_light_pattern, m_tick_delta_t);
     m_robots.push_back(robot);
 }
@@ -186,7 +194,7 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
 
     //This updates a grid structure which enables robots to quickly identify
     //other robots with whom they might be colliding.
-    cb.update(new_poses);
+    collision_boxes.update(new_poses);
 
     //The following checks whether a robot is colliding with a wall or any other
     //robots. Only the collision status of the focal robot is changed. This
@@ -198,12 +206,13 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
     // #pragma omp parallel for schedule(static)
     for (unsigned int ci = 0; ci < m_robots.size(); ci++)
     {
+        const double radius = m_robots[ci]->get_radius();
         const auto &cr = new_poses[ci];
         // Check for collisions with walls
-        if (cr.x <= RADIUS ||
-            cr.x >= m_arena_width - RADIUS ||
-            cr.y <= RADIUS ||
-            cr.y >= m_arena_height - RADIUS)
+        if (cr.x <= radius ||
+            cr.x >= m_arena_width - radius ||
+            cr.y <= radius ||
+            cr.y >= m_arena_height - radius)
         {
             // There's a collision with the wall.
             // Don't even bother to check for collisions with other robots
@@ -217,11 +226,11 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
             const auto &nr = new_poses[ni];
             const double distance = pow(cr.x - nr.x, 2) + pow(cr.y - nr.y, 2);
 
-            //Check to see if robots' centers are within 2*RADIUS of each other,
+            //Check to see if robots' centers are within 2*radius of each other,
             //since that means their edges would be touching. But we actually
-            //check (2*RADIUS)^2 because we don't take the square root of the
+            //check (2*radius)^2 because we don't take the square root of the
             //distance above.
-            if (distance < 4 * RADIUS * RADIUS)
+            if (distance < 4 * radius * radius)
             {
                 collisions[ci] = 1;
                 // Don't need to worry about more than 1 collision
@@ -231,18 +240,19 @@ void World::find_collisions(const std::vector<RobotPose> &new_poses, std::vector
             return true; //Look at more neighbours
         };
 
-        cb.considerNeighbours(cr.x, cr.y, func);
+        collision_boxes.considerNeighbours(cr.x, cr.y, func);
     }
 
 #ifdef CHECKSANE
     for (unsigned int ci = 0; ci < m_robots.size(); ci++)
     {
+        const double radius = m_robots[ci]->get_radius();
         const auto &cr = new_poses[ci];
         for (unsigned int ni = ci + 1; ni < m_robots.size(); ni++)
         {
             const auto &nr = new_poses[ni];
             const double distance = pow(cr.x - nr.x, 2) + pow(cr.y - nr.y, 2);
-            if (distance < 4 * RADIUS * RADIUS && (collisions[ni] == 0 || collisions[ci] == 0))
+            if (distance < 4 * radius * radius && (collisions[ni] == 0 || collisions[ci] == 0))
             {
                 std::cerr << "Robots " << ci << " and " << ni << " overlap!" << std::endl;
                 std::cerr << "collisions[" << ci << "] = " << collisions[ci] << std::endl;
@@ -308,7 +318,7 @@ void World::printTimes() const
 
 void World::check_validity() const
 {
-    //Do any of the robots overlap with each other?
+    // Do any of the robots overlap with each other?
     for (unsigned int ci = 0; ci < m_robots.size(); ci++)
     {
         const auto &cr = *m_robots.at(ci);
@@ -316,7 +326,7 @@ void World::check_validity() const
         {
             const auto &nr = *m_robots.at(ni);
             const double distance = pow(cr.x - nr.x, 2) + pow(cr.y - nr.y, 2);
-            if (distance < 4 * RADIUS * RADIUS)
+            if (distance < 4 * m_robots[ci]->get_radius() * m_robots[ni]->get_radius())
                 throw std::runtime_error("Found overlapping robots!");
         }
     }

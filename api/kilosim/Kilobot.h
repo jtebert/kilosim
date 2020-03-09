@@ -67,6 +67,9 @@ private:
 	double distance_measurement;
 	bool message_sent = false;
 
+	//! Radius of the robot in mm (get with get_radius)
+	double m_radius = 16;
+
 protected:
 	//! [Kilolib API] Kilobot clock variable
 	uint32_t kilo_ticks = 0;
@@ -287,8 +290,8 @@ protected:
 		if (m_light_pattern)
 		{
 			// Get point at front/nose of robot
-			int pos_x = x + RADIUS * 1 * cos(theta);
-			int pos_y = y + RADIUS * 1 * sin(theta);
+			int pos_x = x + m_radius * 1 * cos(theta);
+			int pos_y = y + m_radius * 1 * sin(theta);
 			// Get the 10-bit light intensity from the robot
 			return m_light_pattern->get_ambientlight(pos_x, pos_y);
 		}
@@ -357,6 +360,11 @@ protected:
 	void receive_msg(void *msg, double dist)
 	{
 		message_rx((message_t *)msg, &dist);
+	}
+
+	double get_radius() const
+	{
+		return m_radius;
 	}
 
 	char *get_debug_info(char *buffer, char *rt)

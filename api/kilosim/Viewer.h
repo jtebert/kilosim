@@ -49,6 +49,8 @@ private:
   double m_scale;
   //! Texture used for drawing all the robots
   sf::RenderTexture m_robot_texture;
+  //! Whether robot texture has been initialized (done the first time a robot is drawn)
+  bool m_is_robot_texture_valid = false;
   //! Settings for SFML
   sf::ContextSettings m_settings;
 

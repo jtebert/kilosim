@@ -14,7 +14,7 @@ constexpr uint32_t GAUSS = 10000;
 constexpr uint8_t right = 2;
 constexpr uint8_t left = 3;
 constexpr uint8_t sensor_lightsource = 1;
-constexpr uint8_t RADIUS = 16;
+// constexpr uint8_t RADIUS = 16;
 constexpr uint8_t X = 0;
 constexpr uint8_t Y = 1;
 constexpr uint8_t T = 2;
@@ -248,6 +248,15 @@ public:
 	 * implementation.
 	 */
 	virtual void receive_msg(void *msg, double dist) = 0;
+
+	/*!
+	 * Get the radius of the robot in mm.
+	 *
+	 * This is used for drawing the robot and computing collisions
+	 *
+	 * @return Radius of the robot.
+	 */
+	virtual double get_radius() const = 0;
 
 protected:
 	/*!

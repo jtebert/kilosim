@@ -34,17 +34,6 @@ Viewer::Viewer(World &world, const int window_width)
         m_bg_texture.create(m_window_width, m_window_height);
     }
     m_background.setTexture(&m_bg_texture);
-
-    // Create the texture for the Kilobot robots once
-    if (!m_robot_texture.create(RADIUS * 2 * m_scale, RADIUS * 2 * m_scale))
-        printf("Failed to make robot texture\n");
-    sf::CircleShape shape(RADIUS * m_scale);
-    m_robot_texture.draw(shape);
-
-    sf::RectangleShape line(sf::Vector2f(RADIUS * m_scale, 2));
-    line.setFillColor(sf::Color::Black);
-    line.setPosition(RADIUS * m_scale, RADIUS * m_scale - 1);
-    m_robot_texture.draw(line);
 }
 
 void Viewer::draw()
@@ -67,11 +56,9 @@ void Viewer::draw()
     m_window.draw(m_background);
     draw_time();
 
-    // TODO: Implement this
     for (auto &r : m_world.get_robots())
     {
         draw_robot(r);
-        // r->draw();
     }
 
     m_window.display();
@@ -79,12 +66,31 @@ void Viewer::draw()
 
 void Viewer::draw_robot(Robot *r)
 {
-    // TODO : Implement this
     // Maybe move this to Robot.h (each robot responsible for determining its
     // own representation)
 
+    // Create the robot texture if it hasn't been done yet.
+    // Texture is created based on the first robot drawn, but all robots should
+    // be the same for the way that the whole simulator is structured
+    double radius = r->get_radius();
+    if (!m_is_robot_texture_valid)
+    {
+        printf("No texture\n");
+        // Create the texture for the Robots once
+        if (!m_robot_texture.create(radius * 2 * m_scale, radius * 2 * m_scale))
+            printf("Failed to make robot texture\n");
+        sf::CircleShape shape(radius * m_scale);
+        m_robot_texture.draw(shape);
+
+        sf::RectangleShape line(sf::Vector2f(radius * m_scale, 2));
+        line.setFillColor(sf::Color::Black);
+        line.setPosition(radius * m_scale, radius * m_scale - 1);
+        m_robot_texture.draw(line);
+        m_is_robot_texture_valid = true;
+    }
+
     sf::Sprite sprite;
-    sprite.setOrigin(RADIUS * m_scale, RADIUS * m_scale);
+    sprite.setOrigin(radius * m_scale, radius * m_scale);
     sprite.setTexture(m_robot_texture.getTexture());
     sprite.setColor(sf::Color(r->color[0] * 255,
                               r->color[1] * 255,
