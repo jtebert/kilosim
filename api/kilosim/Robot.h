@@ -14,7 +14,6 @@ constexpr uint32_t GAUSS = 10000;
 constexpr uint8_t right = 2;
 constexpr uint8_t left = 3;
 constexpr uint8_t sensor_lightsource = 1;
-// constexpr uint8_t RADIUS = 16;
 constexpr uint8_t X = 0;
 constexpr uint8_t Y = 1;
 constexpr uint8_t T = 2;
@@ -87,8 +86,7 @@ protected:
 	//! Value of how motors differ from ideal.
 	//! (Don't use these; that's cheating!) Set in robot_init()
 	double m_motor_error;
-	//! Robot commanded motion 1=forward, 2=cw rotation, 3=ccw rotation, 4=stop
-	int m_motor_command;
+
 	//! Base forward speed in mm/s
 	//! (Will be randomized around this in robot_init())
 	double m_forward_speed = 24;
@@ -161,10 +159,12 @@ public:
 	void robot_init(double x, double y, double theta);
 
 	/*!
-	 * Run the simulated control of the physical Robot (such as battery, and
-	 * color). This also calls the child-specific `controller()`.
+	 * Internal control loop for the specific Robot subclass implementation.
+	 * This performs any robot-specific controls such as setting motors,
+	 * battery levels, communication flags, and calling user implementation loop
+	 * functions. It is called every simulation time step by the World.
 	 */
-	void robot_controller();
+	virtual void controller() = 0;
 
 	/*!
 	 * Add a pointer to the world that the robot is part of and set the
@@ -191,7 +191,7 @@ public:
 	 *
 	 * @return Vector of (x, y, and wrapped theta) to possibly move t
 	 */
-	RobotPose robot_compute_next_step() const;
+	virtual RobotPose robot_compute_next_step() const = 0;
 
 	/*!
 	 * Move the Robot according to the collision-ignorant `new_pose` and any
@@ -268,14 +268,6 @@ protected:
 	 * the `battery` member variable.
 	 */
 	virtual void init() = 0;
-
-	/*!
-	 * Internal control loop for the specific Robot subclass implementation.
-	 * This performs any robot-specific controls such as setting motors,
-	 * communication flags, and calling user implementation loop functions.
-	 * It is called every simulation time step by `robot_controller()`
-	 */
-	virtual void controller() = 0;
 
 	//! Wrap an angle to be within [0, 2*pi)
 	double wrap_angle(double angle) const;
