@@ -32,11 +32,11 @@ void Robot::robot_move(const RobotPose &new_pose, const int16_t &collision)
 	{ // Collision with another robot
 		if (m_collision_turn_dir == 0)
 		{
-			new_theta = theta - m_turn_speed * m_tick_delta_t; // left/CCW
+			new_theta = theta - m_collision_turn_speed * m_tick_delta_t; // left/CCW
 		}
 		else
 		{
-			new_theta = theta + m_turn_speed * m_tick_delta_t; // right/CW
+			new_theta = theta + m_collision_turn_speed * m_tick_delta_t; // right/CW
 		}
 		if (m_collision_timer > m_max_collision_timer)
 		{ // Change turn dir
@@ -57,38 +57,16 @@ void Robot::robot_init(double x0, double y0, double theta0)
 	m_collision_turn_dir = uniform_rand_int(0, 1);
 	m_collision_timer = 0;
 	m_max_collision_timer = uniform_rand_int(10, 30) * SECOND;
-	// Initialize robot variables
+
+	// Initialize pose
 	x = x0;
 	y = y0;
 	theta = theta0;
 
-	incoming_message_flag = 0;
-	tx_request = 0;
+	// Assign unique ID
 	id = uniform_rand_int(0, 2147483640);
-	// Generate CLAMPED motor error (avoid extremes by regenerating)
-	m_motor_error = 100;
-	double motor_error_clamp = motion_error_std * 1.1;
-	while (abs(m_motor_error) > motor_error_clamp)
-	{
-		m_motor_error = normal_rand(0.0, 1.0) * motion_error_std;
-	}
-	// Add random variation to forward/turn speeds
-	double turn_speed_error = 100;
-	double turn_speed_error_std = m_turn_speed * 0.1; // 5% of turn speed
-	double turn_speed_error_clamp = turn_speed_error_std * 1.1;
-	while (abs(turn_speed_error) > turn_speed_error_clamp)
-	{
-		turn_speed_error = normal_rand(0.0, 1.0) * turn_speed_error_std;
-	}
-	m_turn_speed = m_turn_speed + turn_speed_error;
-	double forward_speed_error = 100;
-	double forward_speed_error_std = m_forward_speed * 0.1; // 5% of turn speed
-	double forward_speed_error_clamp = forward_speed_error_std * 1.1;
-	while (abs(forward_speed_error) > forward_speed_error_clamp)
-	{
-		forward_speed_error = normal_rand(0.0, 1.0) * forward_speed_error_std;
-	}
-	m_forward_speed = m_forward_speed + forward_speed_error;
+
+	// Run implementation-specific initialization
 	init();
 }
 
