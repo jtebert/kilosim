@@ -7,9 +7,10 @@
 #ifndef __collision_boxes_h_
 #define __collision_boxes_h_
 
-#include "Robot.h"
-#include <cmath>
+#include <kilosim/Robot.h>
+
 #include <cassert>
+#include <cmath>
 #include <unordered_map>
 
 namespace Kilosim

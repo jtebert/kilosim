@@ -1,5 +1,5 @@
-#include "World.h"
-#include "Viewer.h"
+#include <kilosim/World.h>
+#include <kilosim/Viewer.h>
 
 int main(int argc, char *argv[])
 {

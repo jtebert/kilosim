@@ -7,9 +7,10 @@
 #ifndef __KILOSIM_LIGHTPATTERN_H
 #define __KILOSIM_LIGHTPATTERN_H
 
-#include <string>
-#include <iostream>
 #include <SFML/Graphics.hpp>
+
+#include <iostream>
+#include <string>
 
 namespace Kilosim
 {

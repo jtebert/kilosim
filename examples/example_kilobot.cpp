@@ -2,7 +2,8 @@
     This is a barebones example implementation of a Kilobot class
 */
 
-#include "Kilobot.h"
+#include <kilosim/Kilobot.h>
+
 #include <iostream>
 
 namespace Kilosim

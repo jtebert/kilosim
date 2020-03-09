@@ -1,10 +1,11 @@
-#include "Kilobot.h"
-#include "Logger.h"
-#include "Viewer.h"
-#include "ConfigParser.h"
-#include "MyKilobot.cpp"
-#include "random.hpp"
-#include "Timer.hpp"
+#include <MyKilobot.h>
+
+#include <kilosim/ConfigParser.h>
+#include <kilosim/Kilobot.h>
+#include <kilosim/Logger.h>
+#include <kilosim/Random.h>
+#include <kilosim/Timer.h>
+#include <kilosim/Viewer.h>
 
 std::vector<double> mean_colors(std::vector<Kilosim::Robot *> &robots)
 {
@@ -31,7 +32,14 @@ int main(int argc, char *argv[])
     timer_overall.start();
 
     // Create parser to manage configuration
-    Kilosim::ConfigParser config("exampleConfig.json");
+    // Get config file name
+    std::vector<std::string> args(argv, argv + argc);
+    if (args.size() < 2)
+    {
+        std::cout << "ERROR: You must provide a config file name" << std::endl;
+        exit(1);
+    }
+    Kilosim::ConfigParser config(args[1]);
 
     seed_rand(config.get("seed"));
 
@@ -75,7 +83,7 @@ int main(int argc, char *argv[])
         logger.log_config(config);
 
         // Create Viewer to visualize the world
-        // Kilosim::Viewer viewer(world);
+        Kilosim::Viewer viewer(world);
 
         int step_count = 0;
         while (world.get_time() < trial_duration)
@@ -89,7 +97,7 @@ int main(int argc, char *argv[])
             timer_step.stop();
 
             // Draw the world
-            // viewer.draw();
+            viewer.draw();
 
             if ((world.get_tick() % (log_freq * world.get_tick_rate())) == 0)
             {

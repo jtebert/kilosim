@@ -2,8 +2,8 @@
 #define KILOLIB_H
 #undef RGB
 
-#include "Robot.h"
-#include "random.hpp"
+#include <kilosim/Robot.h>
+#include <kilosim/Random.h>
 
 namespace Kilosim
 {
@@ -47,6 +47,11 @@ struct message_t
  */
 class Kilobot : public Robot
 {
+
+	/*! @example example_kilobot.cpp
+ 	 * Example of a minimal custom Kilobot implementation
+	 */
+
 private:
 	//! Is the left motor ready to move? (aka used spinup_motors())
 	bool left_ready = false;
@@ -360,9 +365,6 @@ protected:
 	}
 };
 
-/*! \example example_kilobot.cpp
- * Example of a minimal custom Kilobot implementation
- */
 } // namespace Kilosim
 
 #endif

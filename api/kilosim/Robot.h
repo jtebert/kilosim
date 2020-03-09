@@ -1,10 +1,12 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
+#include <SFML/Graphics.hpp>
+
+#include <kilosim/LightPattern.h>
+
 #include <iostream>
 #include <cmath>
-#include <SFML/Graphics.hpp>
-#include "LightPattern.h"
 
 constexpr double motion_error_std = .02;
 constexpr double PI = 3.14159265358979324;
@@ -266,7 +268,6 @@ protected:
 	 */
 	virtual void controller() = 0;
 
-private:
 	//! Wrap an angle to be within [0, 2*pi)
 	double wrap_angle(double angle) const;
 };

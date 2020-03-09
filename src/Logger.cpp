@@ -4,8 +4,10 @@
     Created 2018-10 by Julia Ebert
 */
 
+#include <kilosim/Logger.h>
+
 #include <typeinfo>
-#include "Logger.h"
+
 namespace Kilosim
 {
 
@@ -166,20 +168,20 @@ void Logger::log_param(const std::string name, const json val, const bool show_w
     else
     {
         H5::PredType val_type = h5_type(val);
-        H5::DataSpace *dataspace = new H5::DataSpace();
+        H5::DataSpace dataspace;
         if (val_type == H5::PredType::C_S1)
         {
             std::string str_val = val.get<std::string>();
             hid_t strtype = H5Tcopy(H5T_C_S1);
             H5Tset_size(strtype, H5T_VARIABLE);
             H5::DataSet dataset =
-                m_h5_file->createDataSet(dset_name, strtype, *dataspace);
+                m_h5_file->createDataSet(dset_name, strtype, dataspace);
             dataset.write(&str_val, strtype);
         }
         else
         {
             H5::DataSet dataset =
-                m_h5_file->createDataSet(dset_name, val_type, *dataspace);
+                m_h5_file->createDataSet(dset_name, val_type, dataspace);
             // Save scalar...
 
             if (val_type == H5::PredType::NATIVE_HBOOL)

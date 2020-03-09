@@ -10,15 +10,17 @@
 #ifndef __KILOSIM_LOGGER_H
 #define __KILOSIM_LOGGER_H
 
+#include <kilosim/Robot.h>
+#include <kilosim/World.h>
+#include <kilosim/ConfigParser.h>
+
 #include <H5PacketTable.h>
 #include <H5Cpp.h>
-#include "Robot.h"
-#include "World.h"
-#include "ConfigParser.h"
-#include "../include/json.hpp"
-#include <unordered_map>
-#include <string>
+#include <nlohmann/json.hpp>
+
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 using json = nlohmann::json;
@@ -78,6 +80,11 @@ namespace Kilosim
  */
 class Logger
 {
+
+  /*! @example example_logger.cpp
+   * Example minimal usage of a Logger
+   */
+
 public:
   /*!
    * A function mapping Robots to values
@@ -238,9 +245,6 @@ private:
   void log_param(const std::string name, const json val, const bool show_warnings);
 };
 
-/*! \example example_logger.cpp
- * Example minimal usage of a Logger
- */
 } // namespace Kilosim
 
 #endif
