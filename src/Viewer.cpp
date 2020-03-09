@@ -75,7 +75,6 @@ void Viewer::draw_robot(Robot *r)
     double radius = r->get_radius();
     if (!m_is_robot_texture_valid)
     {
-        printf("No texture\n");
         // Create the texture for the Robots once
         if (!m_robot_texture.create(radius * 2 * m_scale, radius * 2 * m_scale))
             printf("Failed to make robot texture\n");
