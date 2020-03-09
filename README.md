@@ -118,8 +118,6 @@ If you are having issues installing or using the simulator, [open an issue](http
 
 If you use this software, please cite it as follows:
 
-**DOI (v0.3):** [10.5281/zenodo.3406865](https://doi.org/10.5281/zenodo.3406865)
-
 **DOI (all/latest version):** [10.5281/zenodo.3406864](https://doi.org/10.5281/zenodo.3406864)
 
 **BibTeX:**
@@ -130,7 +128,7 @@ If you use this software, please cite it as follows:
                   Barnes, Richard},
   title        = {Kilosim},
   month        = mar,
-  year         = 20120,
+  year         = 2020,
   doi          = {10.5281/zenodo.3406865},
   url          = {https://doi.org/10.5281/zenodo.3406865}
 }
