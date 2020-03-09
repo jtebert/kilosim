@@ -50,8 +50,6 @@ class Kilobot : public Robot
 
 	/*! @example example_kilobot.cpp
  	 * Example of a minimal custom Kilobot implementation
- 	 * @example CMakeLists.txt
-	 * Example for how to use the compiled kilosim library in another project
 	 */
 
 private:

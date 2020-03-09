@@ -268,7 +268,6 @@ protected:
 	 */
 	virtual void controller() = 0;
 
-private:
 	//! Wrap an angle to be within [0, 2*pi)
 	double wrap_angle(double angle) const;
 };
