@@ -32,6 +32,14 @@ private:
 public:
   CollisionBoxes() = default;
 
+  CollisionBoxes(const double width0, const double height0)
+  {
+    bwidth = std::ceil(width0 / diameter);
+    bheight = std::ceil(height0 / diameter);
+
+    agent_positions.resize(PSIZE * bwidth * bheight, -1);
+  }
+
   CollisionBoxes(const double width0, const double height0, const double diameter0)
   {
     init(width0, height0, diameter0);
