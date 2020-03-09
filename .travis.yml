@@ -43,6 +43,7 @@ script:
   - make kilosim_docs
   - make install
   - make examples
+  - cd ..
 
 # Deploy using travis builtin GitHub Pages support
 deploy:
