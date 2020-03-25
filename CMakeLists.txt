@@ -78,7 +78,7 @@ endif(DOXYGEN_FOUND)
 
 
 
-add_executable(kilosim_example EXCLUDE_FROM_ALL examples/test.cpp)
+add_executable(kilosim_example examples/test.cpp)
 # add_executable(example_viewer examples/example_viewer.cpp)
 # add_executable(example_logger examples/example_logger.cpp)
 
@@ -99,6 +99,3 @@ install(TARGETS kilosim_example RUNTIME DESTINATION bin OPTIONAL)
 # target_compile_options(example_logger PRIVATE -g -march=native -Wall -Wextra)
 # target_compile_features(example_logger PRIVATE cxx_std_14)
 # install(TARGETS example_logger RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-
-add_custom_target( examples )
-add_dependencies( examples kilosim_example )
