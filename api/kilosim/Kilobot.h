@@ -452,7 +452,7 @@ protected:
 		return dist <= m_comm_range;
 	}
 
-	void *get_message()
+	void *get_tx_message()
 	{
 		void *m = this->message_tx();
 		if (m)

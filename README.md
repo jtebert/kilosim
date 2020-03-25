@@ -150,7 +150,7 @@ See a [full list of the contributors and their contributions here]([CONTRIBUTORS
 
 ### Build Documentation
 
-Build the HTML documentation: (Requires Doxygen to be installed.)
+Build the HTML documentation: (Requires Doxygen and Graphviz to be installed.)
 
     make docs
 

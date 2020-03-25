@@ -120,7 +120,7 @@ public:
 	 * callbacks for successful message transmission
 	 * @return Pointer to message to transmit
 	 */
-	virtual void *get_message() = 0;
+	virtual void *get_tx_message() = 0;
 
 public:
 	virtual ~Robot() = default;
