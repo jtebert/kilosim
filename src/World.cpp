@@ -141,7 +141,7 @@ void World::communicate()
         {
             Robot &tx_r = *m_robots[tx_i];
             // Loop over all transmitting robots
-            void *msg = tx_r.get_message();
+            void *msg = tx_r.get_tx_message();
             if (msg)
             {
                 for (unsigned int rx_i = 0; rx_i < m_robots.size(); rx_i++)
