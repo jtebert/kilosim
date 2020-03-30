@@ -41,8 +41,7 @@ script:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=../ ..
   - make
-  - make kilosim_docs
-  - make examples
+  - make docs
   - make install
   - cd ..
 

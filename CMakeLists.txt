@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.9)
 
 project (kilosim
-  VERSION 0.4.0
+  VERSION 0.4.1
   DESCRIPTION "TODO"
   LANGUAGES C CXX
 )
@@ -66,7 +66,7 @@ install(TARGETS kilosim ARCHIVE DESTINATION lib)
 
 if (DOXYGEN_FOUND)
   add_custom_target(
-    kilosim_docs
+    docs
     COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Generating API documentation with Doxygen"
@@ -78,7 +78,7 @@ endif(DOXYGEN_FOUND)
 
 
 
-add_executable(kilosim_example EXCLUDE_FROM_ALL examples/test.cpp)
+add_executable(kilosim_example examples/test.cpp)
 # add_executable(example_viewer examples/example_viewer.cpp)
 # add_executable(example_logger examples/example_logger.cpp)
 
@@ -99,6 +99,3 @@ install(TARGETS kilosim_example RUNTIME DESTINATION bin OPTIONAL)
 # target_compile_options(example_logger PRIVATE -g -march=native -Wall -Wextra)
 # target_compile_features(example_logger PRIVATE cxx_std_14)
 # install(TARGETS example_logger RUNTIME DESTINATION ${CMAKE_SOURCE_DIR}/bin)
-
-add_custom_target( examples )
-add_dependencies( examples kilosim_example )
