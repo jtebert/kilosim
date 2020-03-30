@@ -66,7 +66,7 @@ install(TARGETS kilosim ARCHIVE DESTINATION lib)
 
 if (DOXYGEN_FOUND)
   add_custom_target(
-    kilosim_docs
+    docs
     COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Generating API documentation with Doxygen"
