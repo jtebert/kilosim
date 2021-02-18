@@ -86,6 +86,12 @@ protected:
 	uint32_t m_max_collision_timer;
 	//! Turning speed during collisions in rad/s
 	double m_collision_turn_speed = 0.5;
+	//! Arena (World) width in mm. Depending on your robot capabilities, this
+	//! should not be used in its API
+	double m_arena_width;
+	//! Arena (World) height in mm. Depending on your robot capabilities, this
+	//! should not be used in its API
+	double m_arena_height;
 
 	/*!
 	 * Battery remaining (to be set in `init()`).
@@ -161,9 +167,12 @@ public:
 	 * World.
 	 *
 	 * @param light_pattern Reference to the World's LightPattern
+	 * @param arena_width Width of the arena (World) in mm
+	 * @param arena_height Height of the arena (World) in mm
 	 * @param dt Seconds per tick (World's simulation step size)
 	 */
-	void add_to_world(LightPattern &light_pattern, const double dt);
+	virtual void add_to_world(LightPattern &light_pattern, const double arena_width, 
+							  const double arena_height, const double dt);
 
 	// TODO: Not sure what use this timer is useful for?
 	//! Robot's internal timer

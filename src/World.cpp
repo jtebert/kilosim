@@ -108,7 +108,7 @@ void World::add_robot(Robot *robot)
     {
         collision_boxes.init(m_arena_width, m_arena_height, 2 * robot->get_radius());
     }
-    robot->add_to_world(m_light_pattern, m_tick_delta_t);
+    robot->add_to_world(m_light_pattern, m_arena_width, m_arena_height, m_tick_delta_t);
     m_robots.push_back(robot);
 }
 

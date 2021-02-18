@@ -70,10 +70,13 @@ void Robot::robot_init(double x0, double y0, double theta0)
 	init();
 }
 
-void Robot::add_to_world(LightPattern &light_pattern, const double dt)
+void Robot::add_to_world(LightPattern &light_pattern, const double arena_width,
+						 const double arena_height, const double dt)
 {
 	m_light_pattern = &light_pattern;
 	m_tick_delta_t = dt;
+	m_arena_width = arena_width;
+	m_arena_height = arena_height;
 }
 
 double Robot::wrap_angle(double angle) const
