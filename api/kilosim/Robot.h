@@ -192,7 +192,7 @@ public:
 	 * @param collision Whether there's a collision with a wall (-1), another
 	 * Robot (1), or no collision (0)
 	 */
-	void robot_move(const RobotPose &new_pose, const int16_t &collision);
+	virtual void robot_move(const RobotPose &new_pose, const int16_t &collision);
 
 	virtual char *get_debug_info(char *buffer, char *rt) = 0;
 
