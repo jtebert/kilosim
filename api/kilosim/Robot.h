@@ -178,7 +178,7 @@ public:
 	 *
 	 * @return Vector of (x, y, and wrapped theta) to possibly move t
 	 */
-	virtual RobotPose robot_compute_next_step() const = 0;
+	virtual RobotPose robot_compute_next_step() = 0;
 
 	/*!
 	 * Move the Robot according to the collision-ignorant `new_pose` and any

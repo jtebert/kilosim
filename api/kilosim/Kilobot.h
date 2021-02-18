@@ -216,7 +216,7 @@ private:
 		}
 	}
 
-	RobotPose robot_compute_next_step() const
+	RobotPose robot_compute_next_step()
 	{
 		double radius = get_radius();
 		double temp_x = x;
