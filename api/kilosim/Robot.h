@@ -143,7 +143,7 @@ public:
 	 * @param theta rotation/direction of the Robot in radians
 	 * (counterclockwise, where 0 is along positive x-axis)
 	 */
-	void robot_init(double x, double y, double theta);
+	virtual void robot_init(double x, double y, double theta);
 
 	/*!
 	 * Internal control loop for the specific Robot subclass implementation.
