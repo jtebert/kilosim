@@ -53,6 +53,8 @@ private:
   bool m_is_robot_texture_valid = false;
   //! Settings for SFML
   sf::ContextSettings m_settings;
+  //! Whether to draw the communication network
+  bool m_show_network = false;
 
 public:
   /*!
@@ -74,11 +76,20 @@ public:
    */
   void draw();
 
+  /*!
+   * Set whether to draw the communication network
+   *
+   * @param show_network Whether to draw the communication network
+   */
+  void set_show_network(const bool show_network);
+
 private:
   //! Draw a single robot onto the scene
   void draw_robot(Robot *robot);
   //! Add the current world time to the display
   void draw_time();
+  //! Draw the communication network
+  void draw_network();
 };
 
 } // namespace Kilosim

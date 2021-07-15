@@ -56,12 +56,46 @@ void Viewer::draw()
     m_window.draw(m_background);
     draw_time();
 
+    // Draw the communication network, if enabled
+    if (m_show_network) {
+        draw_network();
+    }
+
     for (auto &r : m_world.get_robots())
     {
         draw_robot(r);
     }
 
     m_window.display();
+
+}
+
+void Viewer::set_show_network(const bool show_network)
+{
+    m_show_network = show_network;
+}
+
+void Viewer::draw_network()
+{
+    std::vector<std::vector<int>> robot_edge_inds = m_world.get_network_edge_inds();
+    std::vector<Robot *> robots = m_world.get_robots();
+    for (auto i = 0; i < robot_edge_inds.size(); ++i)
+    {
+        if (robot_edge_inds[i][0] != -1 && robot_edge_inds[i][1] != -1)
+        {
+            Robot *robot0 = robots[robot_edge_inds[i][0]];
+            Robot *robot1 = robots[robot_edge_inds[i][1]];
+            std::vector<double> pos0 = {robot0->x, robot0->y};
+            std::vector<double> pos1 = {robot1->x, robot1->y};
+            if (pos0 != pos1) {
+                sf::Vertex line[] = {
+                    sf::Vertex(sf::Vector2f(pos0[0] * m_scale, m_window_height - (pos0[1] * m_scale))),
+                    sf::Vertex(sf::Vector2f(pos1[0] * m_scale, m_window_height - (pos1[1] * m_scale)))
+                };
+                m_window.draw(line, 2, sf::Lines);
+            }
+    }
+    }
 }
 
 void Viewer::draw_robot(Robot *r)
@@ -76,8 +110,9 @@ void Viewer::draw_robot(Robot *r)
     if (!m_is_robot_texture_valid)
     {
         // Create the texture for the Robots once
-        if (!m_robot_texture.create(radius * 2 * m_scale, radius * 2 * m_scale))
+        if (!m_robot_texture.create(radius * 2 * m_scale, radius * 2 * m_scale)){
             printf("Failed to make robot texture\n");
+        }
         sf::CircleShape shape(radius * m_scale);
         m_robot_texture.draw(shape);
 

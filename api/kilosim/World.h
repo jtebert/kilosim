@@ -54,7 +54,7 @@ private:
   //! Duration (seconds) of a tick
   const double m_tick_delta_t = 1.0 / m_tick_rate;
   //! Number of ticks between messages (eg, 3 means 10 messages per second)
-  const uint32_t m_comm_rate = 3;
+  uint32_t m_comm_rate = 3;
   //! Height of the arena in mm
   const double m_arena_width;
   //! Width of the arena in mm
@@ -63,6 +63,10 @@ private:
   const double m_prob_control_execute = .99;
   //! Background light pattern image
   LightPattern m_light_pattern;
+  //! Communication will modify this list of robot indices that the Viewer will
+  //! use to draw lines between robots to visualize communication network
+  //! (index of -1 indicates no robot in that slot)
+  std::vector<std::vector<int>> m_viewer_comm_lines;
 
 private:
   CollisionBoxes collision_boxes;
@@ -172,6 +176,13 @@ public:
   void remove_robot(Robot *robot);
 
   /*!
+   * Set the rate of communication between robots.
+   * 
+   * @param comm_rate Number of ticks between messages
+   */
+  void set_comm_rate(const uint32_t comm_rate);
+
+  /*!
    * Get the tick rate (should be 32)
    * @return Number of simulation ticks per second of real-world (wall clock)
    * time
@@ -204,6 +215,13 @@ public:
   std::vector<double> get_dimensions() const;
 
   void printTimes() const;
+
+  /*!
+   * Get the indices of all pairs of robots that can communicate with each other
+   * @return A 2D matrix of indices of communication pairs. Each row is a pair
+   * of indices of robots that can communicate with each other.
+   */
+  std::vector<std::vector<int>> get_network_edge_inds() const;
 
   /*!
     * Check that the world is in a valid state. Throws an exception if a problem

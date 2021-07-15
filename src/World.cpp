@@ -132,10 +132,12 @@ void World::run_controllers()
 
 void World::communicate()
 {
-    // TODO: Is the shuffling necessary? (I killed it)
-
+    
     if (m_tick % m_comm_rate == 0)
     {
+        std::vector<int> tmp {-1, -1};
+        std::fill(m_viewer_comm_lines.begin(), m_viewer_comm_lines.end(), tmp);
+        int comm_lines_ind = 0;
         // #pragma omp parallel for
         for (unsigned int tx_i = 0; tx_i < m_robots.size(); tx_i++)
         {
@@ -162,6 +164,20 @@ void World::communicate()
                             rx_r.receive_msg(msg, dist);
                             // Tell the sender that the message sent successfully
                             tx_r.received();
+                            if (tx_i < rx_i)
+                            {
+                                std::vector<int> pair = {(int)tx_i, (int)rx_i};
+                                // (This makes sure each edge of the pair is only drawn once)
+                                if (comm_lines_ind >= m_viewer_comm_lines.size())
+                                {
+                                    // This only extends vector when necessary
+                                    m_viewer_comm_lines.push_back(pair);
+                                } else {
+                                    m_viewer_comm_lines[comm_lines_ind] = pair;
+                                }
+                                // std::cout << "Communication line between " << tx_i << " and " << rx_i << std::endl;
+                                comm_lines_ind++;
+                            }
                         }
                     }
                 }
@@ -278,6 +294,12 @@ void World::move_robots(std::vector<RobotPose> &new_poses,
     }
 }
 
+void World::set_comm_rate(const uint32_t comm_rate)
+{
+    m_comm_rate = comm_rate;
+}
+
+
 uint16_t World::get_tick_rate() const
 {
     return m_tick_rate;
@@ -314,6 +336,12 @@ void World::printTimes() const
     std::cerr << "t timer_collisions        = " << timer_collisions.accumulated() << std::endl;
     std::cerr << "t timer_move              = " << timer_move.accumulated() << std::endl;
 }
+
+std::vector<std::vector<int>> World::get_network_edge_inds() const
+{
+    return m_viewer_comm_lines;
+}
+
 
 void World::check_validity() const
 {
