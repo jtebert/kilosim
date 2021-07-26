@@ -20,6 +20,19 @@ World::World(const double arena_width, const double arena_height,
     {
         m_light_pattern.pattern_init(arena_width);
     }
+    // Set the tags as fully transparent
+    m_tagged_positions.create(arena_width, arena_height, sf::Color(0, 0, 0, 0));
+    // Set the dimensions of the tagged_positions array
+    // m_tagged_positions.resize(arena_width);
+    // for (auto i = 0; i < m_tagged_positions.size(); ++i)
+    // {
+    //     m_tagged_positions[i].resize(arena_height);
+    //     for (auto j = 0; j < m_tagged_positions[i].size(); ++j)
+    //     {
+    //         // Each element is an RGB pixel color
+    //         m_tagged_positions[i][j].resize(3);
+    //     }
+    // }
 
 #ifdef _OPENMP
     // OpenMP settings
@@ -342,6 +355,22 @@ std::vector<std::vector<int>> World::get_network_edge_inds() const
     return m_viewer_comm_lines;
 }
 
+void World::tag(const int x, const int y, const std::vector<uint8_t> color)
+{
+    // Check that the color is valid
+    if (color.size() == 3) {
+        // Alpha channel is set to 63 (25% opaque)
+        m_tagged_positions.setPixel(x, y, sf::Color(color[0], color[1], color[2], 63));
+    }
+    else {
+        throw std::runtime_error("Invalid color vector size (should be length 3 - RGB");
+    }
+}
+
+sf::Image World::get_tagged_positions() const
+{
+    return m_tagged_positions;
+}
 
 void World::check_validity() const
 {

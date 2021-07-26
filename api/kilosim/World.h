@@ -67,6 +67,10 @@ private:
   //! use to draw lines between robots to visualize communication network
   //! (index of -1 indicates no robot in that slot)
   std::vector<std::vector<int>> m_viewer_comm_lines;
+  //! 2D list of tagged (marked) positions in the world.
+  //! Each position is marked with a 3-tuple of RGB color values.
+  // std::vector<std::vector<std::vector<uint8_t>>> m_tagged_positions;
+  sf::Image m_tagged_positions;
 
 private:
   CollisionBoxes collision_boxes;
@@ -176,11 +180,25 @@ public:
   void remove_robot(Robot *robot);
 
   /*!
+   * Tag a grid cell in the world with a specific color.
+   * @param x X position of the cell to tag
+   * @param y Y position of the cell to tag
+   * @param color Color to tag the cell with
+   */
+  void tag(const int x, const int y, const std::vector<uint8_t> color);
+
+  /*!
    * Set the rate of communication between robots.
    * 
    * @param comm_rate Number of ticks between messages
    */
   void set_comm_rate(const uint32_t comm_rate);
+
+  /*!
+   * Get the image of the tagged positions in the world
+   * @return SFML Image showing the tagged positions in the world
+   */
+  sf::Image get_tagged_positions() const;
 
   /*!
    * Get the tick rate (should be 32)

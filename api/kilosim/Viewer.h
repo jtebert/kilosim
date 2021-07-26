@@ -53,8 +53,16 @@ private:
   bool m_is_robot_texture_valid = false;
   //! Settings for SFML
   sf::ContextSettings m_settings;
+
+  //! Attributes for drawing tags
+  sf::Texture m_tag_texture;
+  sf::RectangleShape m_tag_bg;
+
+
   //! Whether to draw the communication network
   bool m_show_network = false;
+  //! Whether to draw the tagged positions from the World
+  bool m_show_tags = false;
 
 public:
   /*!
@@ -83,11 +91,19 @@ public:
    */
   void set_show_network(const bool show_network);
 
+  /*!
+   * Set whether to draw tags
+   * @param show_tags Whether to draw tagged locations
+   */
+  void set_show_tags(const bool show_tags);
+
 private:
   //! Draw a single robot onto the scene
   void draw_robot(Robot *robot);
   //! Add the current world time to the display
   void draw_time();
+  //! Draw the tagged positions/cells in the World
+  void draw_tags();
   //! Draw the communication network
   void draw_network();
 };

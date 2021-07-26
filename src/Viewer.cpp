@@ -33,6 +33,7 @@ Viewer::Viewer(World &world, const int window_width)
         // If world doesn't have a light source texture, use blank black
         m_bg_texture.create(m_window_width, m_window_height);
     }
+    m_tag_bg.setSize(sf::Vector2f(m_window_width, m_window_height));
     m_background.setTexture(&m_bg_texture);
 }
 
@@ -56,6 +57,12 @@ void Viewer::draw()
     m_window.draw(m_background);
     draw_time();
 
+    // Draw any tagged cells
+    if (m_show_tags)
+    {
+        draw_tags();
+    }
+
     // Draw the communication network, if enabled
     if (m_show_network) {
         draw_network();
@@ -70,9 +77,27 @@ void Viewer::draw()
 
 }
 
+void Viewer::set_show_tags(const bool show_tags)
+{
+    m_show_tags = show_tags;
+}
+
 void Viewer::set_show_network(const bool show_network)
 {
     m_show_network = show_network;
+}
+
+void Viewer::draw_tags()
+{
+    // Get the tagged_positions from the World
+    sf::Image tag_image = m_world.get_tagged_positions();
+    // Draw the image as a texture on the background
+    m_tag_texture.loadFromImage(tag_image);
+    m_tag_bg.setTexture(&m_tag_texture);
+
+    // Draw the tagged_positions Image to the viewer (m_window)
+    m_window.draw(m_tag_bg);
+    
 }
 
 void Viewer::draw_network()
