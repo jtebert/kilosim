@@ -8,3 +8,4 @@ include/
 !include/README.md
 build/
 lib/
+venv/
