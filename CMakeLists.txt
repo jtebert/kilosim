@@ -20,7 +20,6 @@ endif()
 find_package(OpenMP)
 
 
-
 add_library(kilosim
   src/ConfigParser.cpp
   src/LightPattern.cpp

@@ -47,11 +47,11 @@ if read_the_docs_build:
 # -- Project information -----------------------------------------------------
 
 project = 'Kilosim'
-copyright = '2021, Julia Ebert, Richard Barnes'
-author = 'Julia Ebert, Richard Barnes'
+copyright = '2021, Kilosim Contributors'
+author = 'Kilosim Contributors'
 
 # The full version, including alpha/beta/rc tags
-release = '0.5'
+release = '0.4.1'
 
 
 # -- General configuration ---------------------------------------------------

@@ -1,0 +1,10 @@
+cff-version: 1.1.0
+message: "If you use this software, please cite it as below."
+authors:
+    - family-names: Ebert
+      given-names: Julia
+      orcid:
+Title: Kilosim
+version: 0.4.1
+doi: 10.5281/zenodo.3406864
+date-released: 2020-03-30

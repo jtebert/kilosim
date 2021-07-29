@@ -2,8 +2,8 @@
 Installation
 ============
 
-.. contents:: Table of Contents
-    :depth: 3
+.. contents:: On this page
+  :local:
 
 Dependencies
 ============
