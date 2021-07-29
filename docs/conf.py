@@ -43,6 +43,7 @@ if read_the_docs_build:
     output_dir = '.'
     configureDoxyfile(input_dir, output_dir)
     subprocess.call('doxygen', shell=True)
+    print(os.listdir())
     breathe_projects['Kilosim'] = os.path.join(output_dir, 'doxygen', 'xml')
 
 
