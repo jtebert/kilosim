@@ -118,7 +118,7 @@ set(DOXYGEN_INPUT_DIR "${PROJECT_SOURCE_DIR}/api/kilosim")
 set(DOXYGEN_EXAMPLES_DIR ${PROJECT_SOURCE_DIR}/examples)
 set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/docs/doxygen)
 set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/xml/index.xml)
-set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in)
 set(DOXYFILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
 #Replace variables inside @@ with the current values
