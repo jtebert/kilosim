@@ -33,11 +33,13 @@ private:
 
 public:
   /*!
-   * Create a parser to handle the values in the given JSON file
+   * Create a parser to handle the values in the given JSON file.
+   *
    * This will automatically load the contents into the parser
    * @param config_file Name/location of JSON file for config.
    */
   ConfigParser(std::string config_file);
+  
   /*!
    * Get a value from the configuration by name.
    *
@@ -53,11 +55,13 @@ public:
    * @return Wrapped output value. Use `.type_name()` to get the type
    */
   json get(const std::string val_name) const;
-  /*!
+
+  /*! \internal
    * Get the whole JSON object from the parser. This essentially strips the
    * ConfigParser wrapping around the contents, which is not necessary for
    * basic usage.
    * @return Raw nlohmann/json object
+   * \endinternal
    */
   json get() const;
 };

@@ -8,17 +8,31 @@ Welcome to Kilosim's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :titlesonly:
+
+   getting_started/index
+   reference/index
+   development
 
 
+## License
 
-Indices and tables
-==================
+This software is released under the [MIT License](https://github.com/jtebert/kilosim/blob/master/LICENSE).
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+If you use this software for a publication, please cite it.
 
 
-.. doxygenclass:: Kilosim::World
-   :members:
+## License
+
+This software is released under the [MIT License](https://github.com/jtebert/kilosim/blob/master/LICENSE).
+
+If you use this software for a publication, please cite it.
+
+## Support
+
+If you are having issues installing or using the simulator, [open an issue](https://github.com/jtebert/kilosim/issues/new) or [email Julia](mailto:julia@juliaebert.com).
+
+### Known Issues
+
+- Fails with GCC 8 (We suspect this is a GCC bug; see [issue #23](https://github.com/jtebert/kilosim/issues/23).) **Workaround:** Change your GCC version.
+- Viewer does not work over SSH

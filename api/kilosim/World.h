@@ -48,7 +48,7 @@ private:
   //! Robots in the world
   std::vector<Robot *> m_robots;
   //! How many ticks per second in simulation
-  const uint16_t m_tick_rate = 32;
+  uint16_t m_tick_rate = 32;
   //! Current tick of the system (starts at 0)
   uint32_t m_tick = 0;
   //! Duration (seconds) of a tick
@@ -121,9 +121,11 @@ public:
    */
   World(const double arena_width, const double arena_height,
         const std::string light_pattern_src = "", const uint32_t num_threads = 0);
-  //! Destructor, destroy all objects within the world
-  /*!
+
+  /*! \internal
+   * Destructor, destroy all objects within the world
    * This does not destroy any Robots that have pointers stored in the world.
+   * \endinternal
    */
   virtual ~World();
 
@@ -136,10 +138,11 @@ public:
    */
   void step();
 
-  /*!
+  /*! \internal
    * Get the current light in the world
    * @return SFML Image showing the visible light in the world
-   */
+   * \endinternal
+   */ 
   sf::Image get_light_pattern() const;
 
   /*!
@@ -172,11 +175,17 @@ public:
   void remove_robot(Robot *robot);
 
   /*!
-   * Get the tick rate (should be 32)
+   * Get the tick rate (should be 32 by default, if not changed by user).
    * @return Number of simulation ticks per second of real-world (wall clock)
    * time
    */
   uint16_t get_tick_rate() const;
+
+  /*!
+   * Set the tick rate of the simulation (how many ticks per second are simulated).
+   * @param tick_rate Number of simulation ticks per second of real-world (wall clock) time
+   */
+  void set_tick_rate(const uint16_t tick_rate);
 
   /*!
    * Get the current tick of the simulation (only set by simulator)
@@ -191,8 +200,9 @@ public:
   double get_time() const;
 
   /*!
-   * Get a reference to a vector of pointers to all robots in the world
-   * This is useful for Logger and Viewer functions
+   * Get a reference to a vector of pointers to all robots in the world.
+   * This is useful for Logger and Viewer functions, but you likely won't need
+   * to use it as an end-user.
    * @return All the Robots added to the world
    */
   std::vector<Robot *> &get_robots();
@@ -206,8 +216,11 @@ public:
   void printTimes() const;
 
   /*!
-    * Check that the world is in a valid state. Throws an exception if a problem
-    * is found.
+    * Check that the world is in a valid state.
+    * (i.e., all ``Robots`` in the World are within the arena bounds, and none
+    * are overlapping).
+    * @throw std::runtime_error if any robots are out of bounds or overlapping
+    * @note If you want to allow intersections, you can just not call this.
   */
   void check_validity() const;
 };

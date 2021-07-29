@@ -274,6 +274,11 @@ uint16_t World::get_tick_rate() const
     return m_tick_rate;
 }
 
+void World::set_tick_rate(const uint16_t tick_rate)
+{
+    m_tick_rate = tick_rate;
+}
+
 uint32_t World::get_tick() const
 {
     return m_tick;

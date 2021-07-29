@@ -56,7 +56,7 @@ public:
   /*!
    * Create a Viewer with the pointer to the given world
    *
-   * @param world Pointe_r to the World that will be displayed
+   * @param world Pointer to the World that will be displayed
    * @param window_width Width (in pixels) to draw the display window. Height
    * will be automatically determined from the aspect ratio of the World's
    * dimensions.

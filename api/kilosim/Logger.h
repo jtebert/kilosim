@@ -164,11 +164,12 @@ public:
 
   /*!
    * Set which trial is being logged.
+   *
    * This allows you to create a single logger and use it for many trials,
    * without having to re-initialize and re-add your aggregators. You DO have
    * to manually re-log parameters for each trial, if you want to do that.
    *
-   * The same overwrite_trials flag from initialization is still in effect
+   * The same overwrite_trials flag from initialization is still in effect.
    *
    * @param trial_num New trial you want to log.
    */
@@ -182,8 +183,11 @@ public:
   uint get_trial() const;
 
   /*!
-   * Add an aggregator function that will be run on log_state when #log_state is
-   * called, all aggregator functions will be called on the robots in the World.
+   * Add an aggregator function that will be run when #log_state is called.
+   * 
+   * (When #log_state is called, all aggregator functions will be called on the
+   * robots in the World.)
+   * 
    * The output is saved as a row in a dataset named by `agg_name`
    *
    * @param agg_name Name of the dataset in with to store the output of the
@@ -229,7 +233,7 @@ public:
    */
   void log_param(const std::string name, const json val);
 
-  //! Save a vector (TODO: DEBUGGING; integrate into log_param)
+  //! Save a vector of values to the HDF5 file
   void log_vector(const std::string name, const std::vector<double> val_vec);
 
 private:
