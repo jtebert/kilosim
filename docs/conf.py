@@ -27,7 +27,7 @@ def configureDoxyfile(input_dir, output_dir):
     filedata = filedata.replace('@DOXYGEN_INPUT_DIR@', input_dir)
     filedata = filedata.replace('@DOXYGEN_OUTPUT_DIR@', output_dir)
 
-    print(filedata)
+    print("current directory pwd", os.getcwd)
 
     with open('Doxyfile', 'w') as file:
         file.write(filedata)
