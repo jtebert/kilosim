@@ -27,8 +27,6 @@ def configureDoxyfile(input_dir, output_dir):
     filedata = filedata.replace('@DOXYGEN_INPUT_DIR@', input_dir)
     filedata = filedata.replace('@DOXYGEN_OUTPUT_DIR@', output_dir)
 
-    print("current directory pwd", os.getcwd())
-
     with open('Doxyfile', 'w') as file:
         file.write(filedata)
 
@@ -43,7 +41,6 @@ if read_the_docs_build:
     output_dir = '.'
     configureDoxyfile(input_dir, output_dir)
     subprocess.call('doxygen', shell=True)
-    print(os.listdir())
     breathe_projects['Kilosim'] = os.path.join(output_dir, 'xml')
 
 
@@ -74,7 +71,6 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-
 
 # -- Options for HTML output -------------------------------------------------
 
