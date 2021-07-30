@@ -11,3 +11,4 @@ Each page contains details and API reference for the classes in Kilosim.
     viewer
     config_parser
     logger
+    kilobot

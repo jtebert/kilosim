@@ -13,7 +13,9 @@ Kilosim Documentation
    self
    getting_started/index
    reference/index
+   advanced_usage/index
    development
+   changelog
 
 About
 =====
