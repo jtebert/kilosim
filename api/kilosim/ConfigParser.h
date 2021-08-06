@@ -39,6 +39,25 @@ public:
    */
   ConfigParser(std::string config_file);
   /*!
+   * Get a value from the configuration file by name, or return a default value
+   * if the value isn't found.
+   * 
+   * This can be automatically cast to the native type by defining the type on
+   * the returned value.
+   * For example, `int my_val = config.get("key_to_int_val");` will cast the
+   * output to an integer. If you use `auto`, I think you'll get back the `json`
+   * type.
+   * 
+   * Alternatively, you can directly pass the output to a function taking the
+   * relevant type without needing to explicitly specify the type.
+   * 
+   * @param key Name of the value to retrieve.
+   * @param default_value Default value to return if the key isn't found.
+   * @return Value of the key, or default_value if the key isn't found.
+   */
+  json get(const std::string val_name, json default_val) const;
+   
+  /*!
    * Get a value from the configuration by name.
    *
    * This can be automatically cast to the native type by defining the type on
@@ -46,6 +65,7 @@ public:
    * For example, `int my_val = config.get("key_to_int_val");` will cast the
    * output to an integer. If you use `auto`, I think you'll get back the `json`
    * type.
+   * 
    * Alternatively, you can directly pass the output to a function taking the
    * relevant type without needing to explicitly specify the type.
    *

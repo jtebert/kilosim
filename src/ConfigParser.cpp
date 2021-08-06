@@ -25,6 +25,21 @@ ConfigParser::ConfigParser(const std::string config_file)
     }
 }
 
+json ConfigParser::get(const std::string val_name, json default_val) const
+{
+    // If the value is not in the config file, return the default value
+    try
+    {
+        return m_config.at(val_name);
+    }
+    catch(nlohmann::detail::out_of_range&)
+    {
+        return default_val;
+    }
+    
+}
+
+
 json ConfigParser::get(const std::string val_name) const
 {
     try
