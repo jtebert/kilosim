@@ -48,8 +48,10 @@ json ConfigParser::get(const std::string val_name) const
     }
     catch (nlohmann::detail::out_of_range&)
     {
-        std::cerr << "[ConfigParser.get()] ERROR: Invalid or nonexistent key: " << val_name << std::endl;
-        exit(EXIT_FAILURE);
+        // std::cerr << "[ConfigParser.get()] ERROR: Invalid or nonexistent key: " << val_name << std::endl;
+        std::string err_msg = "ERROR: Invalid or nonexistent key: " + val_name;
+        throw std::invalid_argument(err_msg);
+        // exit(EXIT_FAILURE);
     }
 }
 json ConfigParser::get() const
